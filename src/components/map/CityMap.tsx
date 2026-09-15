@@ -36,6 +36,9 @@ export function CityMap({
     import("maplibre-gl").then((maplibregl) => {
       if (cancelled || !container.current) return;
 
+      // Copied to public/ by scripts/copy-maplibre-worker.mjs on install.
+      maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+
       const instance = new maplibregl.Map({
         container: container.current,
         style: {
