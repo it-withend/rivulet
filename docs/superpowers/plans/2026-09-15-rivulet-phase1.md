@@ -22,6 +22,9 @@
 - **Local extension code system:** `https://rivulet.eco/fhir/CodeSystem/rivulet-derived` for concepts absent from the OAH IG (Forel–Ule index, WFD class, data confidence). Every local code must be listed in `src/lib/fhir/codes.ts` with a comment naming the gap it fills.
 - **Node 24 LTS.** TypeScript `strict: true`. No `any` anywhere in `src/lib/`. Untyped external JSON (Overpass responses, PostgREST GeoJSON columns) is cast to a declared type once, at the boundary where it enters.
 - **Commit after every task.** Push to `origin main` at the end of each task.
+- **Execution order.** Tasks 1–11, then 15, 12, 13, 16, 14. Task 15 (design system) lands before any UI task; Task 16 (field journal) lands before Task 14 renders its community counters.
+- **Visual design.** From Task 15 onward all UI uses the Rivulet design system: `@theme` tokens in `src/app/globals.css` and components in `src/components/ui/`. The JSX in Tasks 12, 13, 14 and 16 fixes structure, copy, accessibility attributes and behaviour; its Tailwind utility classes are layout sketches and must be replaced with design-system styling. The Forel–Ule scale is the visual signature. WFD status colours are reserved for ecological status and appear nowhere else.
+- **Gamification rewards contribution quality, never volume.** No points, no counters of submissions per person. Badges mark scientifically meaningful acts. The on-device field journal never influences any assessment.
 
 ---
 
@@ -3540,7 +3543,7 @@ git push
 - Test: `src/app/api/fhir/__tests__/bundle.test.ts`
 
 **Interfaces:**
-- Consumes: `toObservationIndicators`, `toLocationOah` (Task 10), `computeSnapshot` (Task 9)
+- Consumes: `toObservationIndicators`, `toLocationOah` (Task 10), `computeSnapshot` (Task 9), `CommunityCounters` (Task 16), design system components (Task 15)
 - Produces: `buildBundle(entries: FhirResource[]): FhirBundle`, `GET /api/fhir/Observation?waterbody=<id>`
 
 - [ ] **Step 1: Write the failing test**
@@ -3746,6 +3749,8 @@ export async function GET(request: Request) {
 Replace `src/app/page.tsx`:
 
 ```tsx
+import { CommunityCounters } from "@/components/community/CommunityCounters";
+
 export default function LandingPage() {
   return (
     <main className="mx-auto max-w-4xl space-y-16 p-6 py-16">
@@ -3770,6 +3775,8 @@ export default function LandingPage() {
           </a>
         </div>
       </section>
+
+      <CommunityCounters />
 
       <section className="space-y-4">
         <h2 className="text-2xl font-medium">The problem</h2>
@@ -3896,6 +3903,1272 @@ Open the deployment URL and walk the full path: landing page, map, a water body 
 ```bash
 git add -A
 git commit -m "Add FHIR export endpoint, landing page and open data documentation"
+git push
+```
+
+---
+
+### Task 15: Design system and visual identity
+
+**Execution order:** after Task 11, before Task 12.
+
+**Files:**
+- Modify: `src/app/layout.tsx`, `src/app/globals.css`, `src/app/page.tsx`
+- Create: `src/components/ui/Button.tsx`, `src/components/ui/Chip.tsx`, `src/components/ui/Panel.tsx`, `src/components/ui/ForelUleRibbon.tsx`, `src/components/ui/SiteHeader.tsx`, `src/components/ui/SiteFooter.tsx`, `src/app/design/page.tsx`
+- Test: `src/components/ui/__tests__/ui.test.tsx`
+
+**Interfaces:**
+- Consumes: `FU_TABLE` (Task 2)
+- Produces:
+  - `Button(props: { variant?: "primary" | "secondary"; href?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>)` — renders an `<a>` when `href` is given, otherwise a `<button>`
+  - `Chip(props: { pressed: boolean; onClick: () => void; children: React.ReactNode })` — a toggle with `aria-pressed`
+  - `Panel(props: { children: React.ReactNode; className?: string; tone?: "paper" | "ink" })`
+  - `ForelUleRibbon(props: { active?: number | null; collected?: number[]; size?: "sm" | "md" })` — renders a list of 21 `<li>` swatches; each has `aria-label` starting `Forel–Ule {n}`, `data-srgb` set to the table colour, `data-collected` `"true"`/`"false"`, and `aria-current="true"` on the active one
+  - `SiteHeader()` with links: Map `/map`, Record `/observe`, Journal `/journal`, Open data `/open-data`
+  - `SiteFooter()` naming the IEEE OneAquaHealth Global Hackathon 2026 and citing the OneAquaHealth project in text only — no third-party logos
+  - CSS custom properties `--color-wfd-high`, `--color-wfd-good`, `--color-wfd-moderate`, `--color-wfd-poor`, `--color-wfd-bad`, `--color-insufficient` holding exactly the hex values from Global Constraints
+
+**Design direction (binding).**
+
+*Concept.* A field notebook for urban hydrology. Rivulet should feel like a well-made scientific field guide that a resident is proud to carry to the river — credible to an ecologist on the jury, warm to a teenager at the stream. It is not a SaaS dashboard.
+
+*Signature.* The 21-colour Forel–Ule scale is the brand. It appears as a thin ribbon beneath the site header, as the live colour reading in the wizard, and as the collection in the field journal. Its colours always mean water colour; never reuse them decoratively.
+
+*Colour.* Warm paper off-white ground, near-black ink text, one restrained accent taken from the scale's river blue-green (around FU 5–7). Body text reaches at least 7:1 contrast on the ground, because the product is used outdoors in daylight.
+
+*Type.* Three families loaded with `next/font/google`, each with a system fallback stack: an editorial serif with character for display headings (Fraunces or Newsreader); a humanist sans for interface text (IBM Plex Sans or Source Sans 3); a monospace with tabular figures for every number and measurement (IBM Plex Mono). Numbers are data and look like data.
+
+*Texture.* Hairline rules and borders instead of shadows. Small radii (6px or less). A faint topographic contour-line SVG pattern, used only in the landing hero. Generous whitespace, strong typographic hierarchy.
+
+*Forbidden.* Purple or indigo gradients, glassmorphism, blurred colour blobs, emoji used as icons, the default slate-grey Tailwind look, grids of shadowed cards, "AI-powered" or sparkle copy, stock illustrations.
+
+*Accessibility.* Mobile first at 375px wide. Tap targets at least 44px. Visible focus rings on every interactive element. Motion respects `prefers-reduced-motion`.
+
+*Tailwind.* create-next-app ships Tailwind v4, which has no `tailwind.config.ts`. Define tokens with `@theme` in `globals.css`.
+
+- [ ] **Step 1: Load the frontend design skill**
+
+Invoke the `frontend-design:frontend-design` skill and apply it within the direction above. Where the skill and this direction disagree, this direction governs.
+
+- [ ] **Step 2: Write the failing tests**
+
+Create `src/components/ui/__tests__/ui.test.tsx`:
+
+```tsx
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { ForelUleRibbon } from "../ForelUleRibbon";
+import { Chip } from "../Chip";
+import { Button } from "../Button";
+import { FU_TABLE } from "@/lib/science/forel-ule-table";
+
+describe("ForelUleRibbon", () => {
+  it("renders all 21 colours of the scale", () => {
+    render(<ForelUleRibbon />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(21);
+  });
+
+  it("uses the reference colour for each swatch", () => {
+    render(<ForelUleRibbon />);
+    const items = screen.getAllByRole("listitem");
+    items.forEach((item, i) => {
+      expect(item.getAttribute("data-srgb")).toBe(FU_TABLE[i].srgb);
+    });
+  });
+
+  it("marks the active reading and only that one", () => {
+    render(<ForelUleRibbon active={9} />);
+    expect(
+      screen.getByLabelText(/^Forel–Ule 9\b/).getAttribute("aria-current"),
+    ).toBe("true");
+    expect(
+      screen.getByLabelText(/^Forel–Ule 10\b/).getAttribute("aria-current"),
+    ).toBeNull();
+  });
+
+  it("marks collected colours", () => {
+    render(<ForelUleRibbon collected={[3, 9]} />);
+    expect(
+      screen.getByLabelText(/^Forel–Ule 3\b/).getAttribute("data-collected"),
+    ).toBe("true");
+    expect(
+      screen.getByLabelText(/^Forel–Ule 4\b/).getAttribute("data-collected"),
+    ).toBe("false");
+  });
+});
+
+describe("Chip", () => {
+  it("exposes its pressed state", () => {
+    render(
+      <Chip pressed onClick={() => {}}>
+        Sewage
+      </Chip>,
+    );
+    expect(
+      screen.getByRole("button", { name: "Sewage" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
+  it("calls onClick when pressed", () => {
+    const onClick = vi.fn();
+    render(
+      <Chip pressed={false} onClick={onClick}>
+        Foam
+      </Chip>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Foam" }));
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+});
+
+describe("Button", () => {
+  it("renders a link when given an href", () => {
+    render(<Button href="/map">See the map</Button>);
+    expect(
+      screen.getByRole("link", { name: "See the map" }).getAttribute("href"),
+    ).toBe("/map");
+  });
+
+  it("renders a button otherwise", () => {
+    render(<Button type="button">Send</Button>);
+    expect(screen.getByRole("button", { name: "Send" })).toBeTruthy();
+  });
+});
+```
+
+- [ ] **Step 3: Run the tests to verify they fail**
+
+Run: `npx vitest run src/components/ui/__tests__/ui.test.tsx`
+Expected: FAIL — cannot resolve `../ForelUleRibbon`.
+
+- [ ] **Step 4: Define tokens and fonts**
+
+In `src/app/globals.css`, replace the scaffold styles with `@import "tailwindcss";` followed by an `@theme` block holding the paper, ink, accent, rule, the six WFD/insufficient colours, and the three font-family variables. In `src/app/layout.tsx`, load the three fonts with `next/font/google`, expose them as CSS variables, set `<html lang="en">`, set the page title to "Rivulet — urban streams, read honestly", and render `<SiteHeader />` above and `<SiteFooter />` below `{children}`.
+
+- [ ] **Step 5: Implement the components**
+
+Implement the six components to the interfaces above, styled entirely from the tokens.
+
+- [ ] **Step 6: Build the reference page**
+
+Create `src/app/design/page.tsx` showing the type scale, colour tokens, every component in each state, the ribbon with an active reading and with a partial collection, and the five WFD colours beside the insufficient-data colour. This page is how reviewers verify the system.
+
+- [ ] **Step 7: Replace the scaffold home page**
+
+Replace the create-next-app content in `src/app/page.tsx` with a single display heading reading "Rivulet" and one sentence: "Urban streams, read honestly." Task 14 builds the real landing page.
+
+- [ ] **Step 8: Run the tests and build**
+
+Run: `npx vitest run src/components/ui/__tests__/ui.test.tsx && npm run build`
+Expected: all tests pass; build succeeds.
+
+- [ ] **Step 9: Commit and push**
+
+```bash
+git add src/app src/components/ui
+git commit -m "Establish Rivulet design system around the Forel-Ule scale"
+git push
+```
+
+---
+
+### Task 16: Field journal and contribution feedback
+
+**Execution order:** after Task 13, before Task 14.
+
+**Files:**
+- Create: `src/lib/journal/journal.ts`, `src/lib/journal/storage.ts`, `src/lib/science/delta.ts`, `src/components/wizard/ObservationResult.tsx`, `src/components/journal/FieldJournal.tsx`, `src/app/journal/page.tsx`, `src/components/community/CommunityCounters.tsx`
+- Modify: `src/app/api/observations/route.ts`, `src/components/wizard/ObservationWizard.tsx`
+- Test: `src/lib/journal/__tests__/journal.test.ts`, `src/lib/journal/__tests__/storage.test.ts`, `src/lib/science/__tests__/delta.test.ts`, `src/components/wizard/__tests__/ObservationResult.test.tsx`, `src/components/journal/__tests__/FieldJournal.test.tsx`
+
+**Interfaces:**
+- Consumes: `TaxonCode` (Task 4), `computeSnapshot`, `StoredObservation`, `Snapshot` (Task 9), `WfdClass` (Task 7), `CLASS_LABEL` (Task 13), `Button`, `Panel`, `ForelUleRibbon` (Task 15), `supabaseAdmin`, `supabaseAnon` (Task 8)
+- Produces:
+  - `type JournalEntry = { observationId: string; waterbodyId: string; waterbodyName: string; observedAt: string; forelUle: number | null; indicatorTaxa: TaxonCode[]; visibleAlgae: boolean; wasDataGap: boolean }`
+  - `type BadgeCode = "first-observation" | "colour-collector" | "clean-water-sentinel" | "bloom-spotter" | "stream-explorer" | "returning-guardian" | "gap-filler"`
+  - `type Badge = { code: BadgeCode; title: string; description: string; earned: boolean }`
+  - `evaluateBadges(entries: JournalEntry[]): Badge[]`, `newlyEarned(before: JournalEntry[], after: JournalEntry[]): BadgeCode[]`, `colourCollection(entries: JournalEntry[]): number[]`
+  - `JOURNAL_KEY`, `loadJournal(store?)`, `appendEntry(entry, store?)`
+  - `type AssessmentSummary`, `type AssessmentDelta`, `assessmentDelta(before: Snapshot, after: Snapshot): AssessmentDelta`
+  - `POST /api/observations` now responds `{ id, qualityWeight, waterbodyName, delta: AssessmentDelta }`
+  - `ObservationResult`, `FieldJournal`, `CommunityCounters`, route `/journal`
+
+**Why this shape.** Badges mark acts that matter scientifically — finding pollution-sensitive animals, spotting a bloom, returning to the same stream, observing where data is missing. The journal lives on the device, needs no account, and is explicitly separate from the assessment model, so it cannot be gamed into distorting the science.
+
+- [ ] **Step 1: Write the failing journal tests**
+
+Create `src/lib/journal/__tests__/journal.test.ts`:
+
+```typescript
+import { describe, it, expect } from "vitest";
+import {
+  colourCollection,
+  evaluateBadges,
+  newlyEarned,
+  type JournalEntry,
+} from "../journal";
+
+function entry(overrides: Partial<JournalEntry> = {}): JournalEntry {
+  return {
+    observationId: "o1",
+    waterbodyId: "wb1",
+    waterbodyName: "Ribeira de Coselhas",
+    observedAt: "2026-09-15T10:00:00.000Z",
+    forelUle: 5,
+    indicatorTaxa: [],
+    visibleAlgae: false,
+    wasDataGap: false,
+    ...overrides,
+  };
+}
+
+const earned = (entries: JournalEntry[]) =>
+  evaluateBadges(entries)
+    .filter((b) => b.earned)
+    .map((b) => b.code);
+
+describe("evaluateBadges", () => {
+  it("lists every badge whether earned or not", () => {
+    expect(evaluateBadges([])).toHaveLength(7);
+  });
+
+  it("earns nothing with an empty journal", () => {
+    expect(earned([])).toEqual([]);
+  });
+
+  it("earns first-observation after one entry", () => {
+    expect(earned([entry()])).toContain("first-observation");
+  });
+
+  it("requires five distinct colours for colour-collector", () => {
+    const four = [1, 2, 3, 4].map((fu) =>
+      entry({ observationId: `o${fu}`, forelUle: fu }),
+    );
+    expect(earned(four)).not.toContain("colour-collector");
+    expect(
+      earned([...four, entry({ observationId: "o9", forelUle: 9 })]),
+    ).toContain("colour-collector");
+  });
+
+  it("does not count a repeated colour twice", () => {
+    const same = [1, 2, 3, 4, 5].map((i) =>
+      entry({ observationId: `o${i}`, forelUle: 7 }),
+    );
+    expect(earned(same)).not.toContain("colour-collector");
+  });
+
+  it("awards clean-water-sentinel only for pollution-sensitive taxa", () => {
+    expect(earned([entry({ indicatorTaxa: ["worm", "leech"] })])).not.toContain(
+      "clean-water-sentinel",
+    );
+    expect(earned([entry({ indicatorTaxa: ["caddisfly"] })])).toContain(
+      "clean-water-sentinel",
+    );
+  });
+
+  it("awards bloom-spotter for a reported bloom", () => {
+    expect(earned([entry({ visibleAlgae: true })])).toContain("bloom-spotter");
+  });
+
+  it("requires three distinct streams for stream-explorer", () => {
+    const two = ["a", "b"].map((id) =>
+      entry({ observationId: id, waterbodyId: id }),
+    );
+    expect(earned(two)).not.toContain("stream-explorer");
+    expect(
+      earned([...two, entry({ observationId: "c", waterbodyId: "c" })]),
+    ).toContain("stream-explorer");
+  });
+
+  it("requires three separate days at one stream for returning-guardian", () => {
+    const sameDay = [1, 2, 3].map((h) =>
+      entry({
+        observationId: `o${h}`,
+        observedAt: `2026-09-15T0${h}:00:00.000Z`,
+      }),
+    );
+    expect(earned(sameDay)).not.toContain("returning-guardian");
+
+    const days = [15, 16, 17].map((d) =>
+      entry({
+        observationId: `o${d}`,
+        observedAt: `2026-09-${d}T10:00:00.000Z`,
+      }),
+    );
+    expect(earned(days)).toContain("returning-guardian");
+  });
+
+  it("awards gap-filler for observing a stream that lacked data", () => {
+    expect(earned([entry({ wasDataGap: true })])).toContain("gap-filler");
+  });
+});
+
+describe("newlyEarned", () => {
+  it("returns only badges unlocked by the latest entry", () => {
+    const before = [entry()];
+    const after = [...before, entry({ observationId: "o2", visibleAlgae: true })];
+    expect(newlyEarned(before, after)).toEqual(["bloom-spotter"]);
+  });
+});
+
+describe("colourCollection", () => {
+  it("returns distinct colours in scale order and ignores missing readings", () => {
+    const list = [
+      entry({ observationId: "a", forelUle: 9 }),
+      entry({ observationId: "b", forelUle: 3 }),
+      entry({ observationId: "c", forelUle: 9 }),
+      entry({ observationId: "d", forelUle: null }),
+    ];
+    expect(colourCollection(list)).toEqual([3, 9]);
+  });
+});
+```
+
+- [ ] **Step 2: Run to verify failure**
+
+Run: `npx vitest run src/lib/journal/__tests__/journal.test.ts`
+Expected: FAIL — cannot resolve `../journal`.
+
+- [ ] **Step 3: Implement the journal rules**
+
+Create `src/lib/journal/journal.ts`:
+
+```typescript
+import type { TaxonCode } from "@/types/observation";
+
+export type JournalEntry = {
+  observationId: string;
+  waterbodyId: string;
+  waterbodyName: string;
+  observedAt: string;
+  forelUle: number | null;
+  indicatorTaxa: TaxonCode[];
+  visibleAlgae: boolean;
+  wasDataGap: boolean;
+};
+
+export type BadgeCode =
+  | "first-observation"
+  | "colour-collector"
+  | "clean-water-sentinel"
+  | "bloom-spotter"
+  | "stream-explorer"
+  | "returning-guardian"
+  | "gap-filler";
+
+export type Badge = {
+  code: BadgeCode;
+  title: string;
+  description: string;
+  earned: boolean;
+};
+
+const SENSITIVE_TAXA: TaxonCode[] = ["mayfly", "stonefly", "caddisfly"];
+
+const RULES: {
+  code: BadgeCode;
+  title: string;
+  description: string;
+  test: (entries: JournalEntry[]) => boolean;
+}[] = [
+  {
+    code: "first-observation",
+    title: "First sample",
+    description: "Recorded your first observation.",
+    test: (entries) => entries.length >= 1,
+  },
+  {
+    code: "colour-collector",
+    title: "Colour collector",
+    description: "Recorded five different Forel–Ule water colours.",
+    test: (entries) => colourCollection(entries).length >= 5,
+  },
+  {
+    code: "clean-water-sentinel",
+    title: "Clean water sentinel",
+    description:
+      "Found mayflies, stoneflies or caddisflies — animals that only live in clean water.",
+    test: (entries) =>
+      entries.some((e) => e.indicatorTaxa.some((t) => SENSITIVE_TAXA.includes(t))),
+  },
+  {
+    code: "bloom-spotter",
+    title: "Bloom spotter",
+    description: "Reported visible algae, an early sign of nutrient pollution.",
+    test: (entries) => entries.some((e) => e.visibleAlgae),
+  },
+  {
+    code: "stream-explorer",
+    title: "Stream explorer",
+    description: "Observed three different water bodies.",
+    test: (entries) => new Set(entries.map((e) => e.waterbodyId)).size >= 3,
+  },
+  {
+    code: "returning-guardian",
+    title: "Returning guardian",
+    description: "Checked the same stream on three separate days.",
+    test: returnedOnThreeDays,
+  },
+  {
+    code: "gap-filler",
+    title: "Gap filler",
+    description: "Recorded a stream that had too little data to assess.",
+    test: (entries) => entries.some((e) => e.wasDataGap),
+  },
+];
+
+function returnedOnThreeDays(entries: JournalEntry[]): boolean {
+  const daysByStream = new Map<string, Set<string>>();
+  for (const e of entries) {
+    const days = daysByStream.get(e.waterbodyId) ?? new Set<string>();
+    days.add(e.observedAt.slice(0, 10));
+    daysByStream.set(e.waterbodyId, days);
+  }
+  return [...daysByStream.values()].some((days) => days.size >= 3);
+}
+
+export function colourCollection(entries: JournalEntry[]): number[] {
+  const colours = entries
+    .map((e) => e.forelUle)
+    .filter((fu): fu is number => fu !== null);
+  return [...new Set(colours)].sort((a, b) => a - b);
+}
+
+export function evaluateBadges(entries: JournalEntry[]): Badge[] {
+  return RULES.map(({ test, ...badge }) => ({ ...badge, earned: test(entries) }));
+}
+
+export function newlyEarned(
+  before: JournalEntry[],
+  after: JournalEntry[],
+): BadgeCode[] {
+  const had = new Set(
+    evaluateBadges(before)
+      .filter((b) => b.earned)
+      .map((b) => b.code),
+  );
+  return evaluateBadges(after)
+    .filter((b) => b.earned && !had.has(b.code))
+    .map((b) => b.code);
+}
+```
+
+- [ ] **Step 4: Run to verify the journal tests pass**
+
+Run: `npx vitest run src/lib/journal/__tests__/journal.test.ts`
+Expected: all passed.
+
+- [ ] **Step 5: Write the failing storage tests**
+
+Create `src/lib/journal/__tests__/storage.test.ts`:
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { appendEntry, JOURNAL_KEY, loadJournal } from "../storage";
+import type { JournalEntry } from "../journal";
+
+const sample: JournalEntry = {
+  observationId: "o1",
+  waterbodyId: "wb1",
+  waterbodyName: "Ribeira de Coselhas",
+  observedAt: "2026-09-15T10:00:00.000Z",
+  forelUle: 6,
+  indicatorTaxa: ["mayfly"],
+  visibleAlgae: false,
+  wasDataGap: true,
+};
+
+function memoryStore(initial: string | null = null) {
+  let value = initial;
+  return {
+    getItem: (key: string) => (key === JOURNAL_KEY ? value : null),
+    setItem: (_key: string, next: string) => {
+      value = next;
+    },
+  };
+}
+
+describe("journal storage", () => {
+  it("returns an empty journal when nothing is stored", () => {
+    expect(loadJournal(memoryStore())).toEqual([]);
+  });
+
+  it("returns an empty journal when storage is unavailable", () => {
+    expect(loadJournal(null)).toEqual([]);
+  });
+
+  it("round-trips an entry", () => {
+    const store = memoryStore();
+    appendEntry(sample, store);
+    expect(loadJournal(store)).toEqual([sample]);
+  });
+
+  it("ignores corrupt stored data", () => {
+    expect(loadJournal(memoryStore("{not json"))).toEqual([]);
+  });
+
+  it("does not duplicate an observation saved twice", () => {
+    const store = memoryStore();
+    appendEntry(sample, store);
+    appendEntry(sample, store);
+    expect(loadJournal(store)).toHaveLength(1);
+  });
+
+  it("still returns the entry when storage throws", () => {
+    const broken = {
+      getItem: () => {
+        throw new Error("blocked");
+      },
+      setItem: () => {
+        throw new Error("blocked");
+      },
+    };
+    expect(loadJournal(broken)).toEqual([]);
+    expect(appendEntry(sample, broken)).toEqual([sample]);
+  });
+});
+```
+
+- [ ] **Step 6: Run to verify failure**
+
+Run: `npx vitest run src/lib/journal/__tests__/storage.test.ts`
+Expected: FAIL — cannot resolve `../storage`.
+
+- [ ] **Step 7: Implement storage**
+
+Create `src/lib/journal/storage.ts`:
+
+```typescript
+import type { JournalEntry } from "./journal";
+
+export const JOURNAL_KEY = "rivulet.journal.v1";
+
+type KeyValueStore = Pick<Storage, "getItem" | "setItem">;
+
+function browserStorage(): KeyValueStore | null {
+  try {
+    return typeof window === "undefined" ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function loadJournal(
+  store: KeyValueStore | null = browserStorage(),
+): JournalEntry[] {
+  if (!store) return [];
+  try {
+    const raw = store.getItem(JOURNAL_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as JournalEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function appendEntry(
+  entry: JournalEntry,
+  store: KeyValueStore | null = browserStorage(),
+): JournalEntry[] {
+  const next = [
+    ...loadJournal(store).filter((e) => e.observationId !== entry.observationId),
+    entry,
+  ];
+  if (store) {
+    try {
+      store.setItem(JOURNAL_KEY, JSON.stringify(next));
+    } catch {
+      // Private browsing or full storage: the observation itself is already
+      // saved server-side, so losing the personal journal entry is acceptable.
+    }
+  }
+  return next;
+}
+```
+
+- [ ] **Step 8: Run to verify the storage tests pass**
+
+Run: `npx vitest run src/lib/journal/__tests__/storage.test.ts`
+Expected: 6 passed.
+
+- [ ] **Step 9: Write the failing delta tests**
+
+Create `src/lib/science/__tests__/delta.test.ts`:
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { assessmentDelta } from "../delta";
+import { computeSnapshot, type StoredObservation } from "../snapshot";
+import type { SurveyAnswers } from "@/types/observation";
+
+const clean: SurveyAnswers = {
+  odour: "none",
+  foam: false,
+  litter: 0,
+  deadFish: false,
+  visibleAlgae: false,
+  clarity: "clear",
+  flow: "normal",
+  indicatorTaxa: ["mayfly"],
+  forelUle: 3,
+  measurements: {},
+};
+
+function observations(count: number): StoredObservation[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `o${i}`,
+    observerId: `observer-${i}`,
+    observedAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    survey: clean,
+    qualityWeight: 0.8,
+  }));
+}
+
+describe("assessmentDelta", () => {
+  it("flags a data gap when the stream had no assessment before", () => {
+    const delta = assessmentDelta(
+      computeSnapshot([]),
+      computeSnapshot(observations(1)),
+    );
+    expect(delta.wasDataGap).toBe(true);
+    expect(delta.confidenceGain).toBeGreaterThan(0);
+  });
+
+  it("reports no data gap for an already assessed stream", () => {
+    const delta = assessmentDelta(
+      computeSnapshot(observations(12)),
+      computeSnapshot(observations(13)),
+    );
+    expect(delta.wasDataGap).toBe(false);
+  });
+
+  it("detects when the class changes", () => {
+    const delta = assessmentDelta(
+      computeSnapshot([]),
+      computeSnapshot(observations(12)),
+    );
+    expect(delta.before.klass).toBeNull();
+    expect(delta.after.klass).not.toBeNull();
+    expect(delta.classChanged).toBe(true);
+  });
+
+  it("reports no change when the class holds", () => {
+    const delta = assessmentDelta(
+      computeSnapshot(observations(12)),
+      computeSnapshot(observations(13)),
+    );
+    expect(delta.classChanged).toBe(false);
+  });
+});
+```
+
+- [ ] **Step 10: Run to verify failure**
+
+Run: `npx vitest run src/lib/science/__tests__/delta.test.ts`
+Expected: FAIL — cannot resolve `../delta`.
+
+- [ ] **Step 11: Implement the delta**
+
+Create `src/lib/science/delta.ts`:
+
+```typescript
+import type { Snapshot } from "./snapshot";
+import type { WfdClass } from "./wfd";
+
+export type AssessmentSummary = {
+  klass: WfdClass | null;
+  mean: number;
+  confidence: number;
+  sufficientData: boolean;
+};
+
+export type AssessmentDelta = {
+  before: AssessmentSummary;
+  after: AssessmentSummary;
+  classChanged: boolean;
+  confidenceGain: number;
+  wasDataGap: boolean;
+};
+
+function summarise(snapshot: Snapshot): AssessmentSummary {
+  return {
+    klass: snapshot.assessment.klass,
+    mean: snapshot.posterior.mean,
+    confidence: snapshot.confidence,
+    sufficientData: snapshot.assessment.sufficientData,
+  };
+}
+
+export function assessmentDelta(
+  before: Snapshot,
+  after: Snapshot,
+): AssessmentDelta {
+  const b = summarise(before);
+  const a = summarise(after);
+  return {
+    before: b,
+    after: a,
+    classChanged: b.klass !== a.klass,
+    confidenceGain: a.confidence - b.confidence,
+    wasDataGap: !b.sufficientData,
+  };
+}
+```
+
+- [ ] **Step 12: Run to verify the delta tests pass**
+
+Run: `npx vitest run src/lib/science/__tests__/delta.test.ts`
+Expected: 4 passed.
+
+- [ ] **Step 13: Return the assessment delta from the submission route**
+
+Replace `src/app/api/observations/route.ts`:
+
+```typescript
+import { NextResponse } from "next/server";
+import { observationSchema } from "@/lib/validation/observation-schema";
+import { toIndicators } from "@/lib/science/indicators";
+import { observationWeight } from "@/lib/science/weighting";
+import { computeSnapshot, type StoredObservation } from "@/lib/science/snapshot";
+import { assessmentDelta } from "@/lib/science/delta";
+import { supabaseAdmin } from "@/lib/db/client";
+
+export async function POST(request: Request) {
+  const parsed = observationSchema.safeParse(await request.json());
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "invalid_payload", issues: parsed.error.issues },
+      { status: 400 },
+    );
+  }
+
+  const payload = parsed.data;
+  const db = supabaseAdmin();
+
+  const [{ data: waterbody }, { data: existing }] = await Promise.all([
+    db.from("waterbodies").select("name").eq("id", payload.waterbodyId).maybeSingle(),
+    db
+      .from("observations")
+      .select("id, observed_at, observer_id, survey, quality_weight")
+      .eq("waterbody_id", payload.waterbodyId),
+  ]);
+
+  if (!waterbody) {
+    return NextResponse.json({ error: "unknown_waterbody" }, { status: 404 });
+  }
+
+  const ageHours =
+    (Date.now() - new Date(payload.observedAt).getTime()) / 3_600_000;
+
+  const weight = observationWeight({
+    hasPhoto: payload.forelUleIndex !== null,
+    forelUleConfidence: payload.forelUleConfidence,
+    gpsAccuracyMetres: payload.gpsAccuracyM,
+    measurementCount: Object.keys(payload.survey.measurements).length,
+    ageHours: Math.max(0, ageHours),
+  });
+
+  const { data, error } = await db
+    .from("observations")
+    .insert({
+      waterbody_id: payload.waterbodyId,
+      observed_at: payload.observedAt,
+      location: `SRID=4326;POINT(${payload.longitude} ${payload.latitude})`,
+      gps_accuracy_m: payload.gpsAccuracyM,
+      forel_ule_index: payload.forelUleIndex,
+      forel_ule_confidence: payload.forelUleConfidence,
+      survey: payload.survey,
+      indicators: toIndicators(payload.survey),
+      quality_weight: weight,
+      validation_status: "pending",
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: "insert_failed" }, { status: 500 });
+  }
+
+  const prior: StoredObservation[] = (existing ?? []).map((o) => ({
+    id: o.id,
+    observedAt: o.observed_at,
+    observerId: o.observer_id,
+    survey: o.survey,
+    qualityWeight: Number(o.quality_weight),
+  }));
+
+  const current: StoredObservation = {
+    id: data.id,
+    observedAt: payload.observedAt,
+    observerId: null,
+    survey: payload.survey,
+    qualityWeight: weight,
+  };
+
+  return NextResponse.json(
+    {
+      id: data.id,
+      qualityWeight: weight,
+      waterbodyName: waterbody.name,
+      delta: assessmentDelta(
+        computeSnapshot(prior),
+        computeSnapshot([...prior, current]),
+      ),
+    },
+    { status: 201 },
+  );
+}
+```
+
+- [ ] **Step 14: Write the failing result screen tests**
+
+Create `src/components/wizard/__tests__/ObservationResult.test.tsx`:
+
+```tsx
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { ObservationResult } from "../ObservationResult";
+import type { AssessmentDelta } from "@/lib/science/delta";
+
+function delta(overrides: Partial<AssessmentDelta> = {}): AssessmentDelta {
+  return {
+    before: { klass: null, mean: 0.5, confidence: 0.1, sufficientData: false },
+    after: { klass: null, mean: 0.6, confidence: 0.3, sufficientData: false },
+    classChanged: false,
+    confidenceGain: 0.2,
+    wasDataGap: true,
+    ...overrides,
+  };
+}
+
+const base = {
+  waterbodyId: "wb1",
+  waterbodyName: "Ribeira de Coselhas",
+  forelUle: 6,
+  newBadges: [],
+};
+
+describe("ObservationResult", () => {
+  it("shows how confidence in the assessment changed", () => {
+    render(<ObservationResult {...base} delta={delta()} />);
+    expect(screen.getByTestId("confidence-change").textContent).toContain(
+      "10% → 30%",
+    );
+  });
+
+  it("explains the data gap only when there was one", () => {
+    const { rerender } = render(<ObservationResult {...base} delta={delta()} />);
+    expect(screen.queryByTestId("data-gap")).not.toBeNull();
+    rerender(
+      <ObservationResult {...base} delta={delta({ wasDataGap: false })} />,
+    );
+    expect(screen.queryByTestId("data-gap")).toBeNull();
+  });
+
+  it("announces a class change with the new class label", () => {
+    render(
+      <ObservationResult
+        {...base}
+        delta={delta({
+          classChanged: true,
+          after: { klass: "good", mean: 0.7, confidence: 0.4, sufficientData: true },
+        })}
+      />,
+    );
+    expect(screen.getByTestId("class-change").textContent).toContain("Good");
+  });
+
+  it("lists newly earned badges", () => {
+    render(
+      <ObservationResult
+        {...base}
+        delta={delta()}
+        newBadges={[
+          {
+            code: "gap-filler",
+            title: "Gap filler",
+            description: "Recorded a stream that had too little data to assess.",
+            earned: true,
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Gap filler")).toBeTruthy();
+  });
+
+  it("omits the colour collection line when there was no photo", () => {
+    render(<ObservationResult {...base} forelUle={null} delta={delta()} />);
+    expect(screen.queryByText(/colour collection/)).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 15: Run to verify failure**
+
+Run: `npx vitest run src/components/wizard/__tests__/ObservationResult.test.tsx`
+Expected: FAIL — cannot resolve `../ObservationResult`.
+
+- [ ] **Step 16: Implement the result screen**
+
+Create `src/components/wizard/ObservationResult.tsx` (style with the design system; structure, copy and test ids are fixed):
+
+```tsx
+import { Button } from "@/components/ui/Button";
+import { ForelUleRibbon } from "@/components/ui/ForelUleRibbon";
+import { CLASS_LABEL } from "@/lib/ui/wfd-colours";
+import type { AssessmentDelta } from "@/lib/science/delta";
+import type { Badge } from "@/lib/journal/journal";
+
+export type ObservationResultProps = {
+  waterbodyId: string;
+  waterbodyName: string;
+  forelUle: number | null;
+  delta: AssessmentDelta;
+  newBadges: Badge[];
+};
+
+const percent = (value: number) => `${Math.round(value * 100)}%`;
+
+export function ObservationResult({
+  waterbodyId,
+  waterbodyName,
+  forelUle,
+  delta,
+  newBadges,
+}: ObservationResultProps) {
+  return (
+    <section aria-live="polite" className="space-y-6">
+      <header>
+        <p>Observation recorded</p>
+        <h2>{waterbodyName}</h2>
+      </header>
+
+      {forelUle !== null && (
+        <div className="space-y-2">
+          <ForelUleRibbon active={forelUle} size="md" />
+          <p>Forel–Ule {forelUle} is now in your colour collection.</p>
+        </div>
+      )}
+
+      <p data-testid="confidence-change">
+        Confidence in this stream&apos;s assessment:{" "}
+        {percent(delta.before.confidence)} → {percent(delta.after.confidence)}
+      </p>
+
+      {delta.wasDataGap && (
+        <p data-testid="data-gap">
+          This stream had too little data to assess. Observations like yours are
+          exactly what closes that gap.
+        </p>
+      )}
+
+      {delta.classChanged && delta.after.klass && (
+        <p data-testid="class-change">
+          Its ecological status now reads {CLASS_LABEL[delta.after.klass]}.
+        </p>
+      )}
+
+      {newBadges.length > 0 && (
+        <div className="space-y-2">
+          <h3>New in your field journal</h3>
+          <ul>
+            {newBadges.map((badge) => (
+              <li key={badge.code}>
+                <strong>{badge.title}</strong> — {badge.description}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <Button href="/journal">Open your field journal</Button>
+        <Button href={`/water/${waterbodyId}`} variant="secondary">
+          See this stream
+        </Button>
+      </div>
+    </section>
+  );
+}
+```
+
+- [ ] **Step 17: Run to verify the result screen tests pass**
+
+Run: `npx vitest run src/components/wizard/__tests__/ObservationResult.test.tsx`
+Expected: 5 passed.
+
+- [ ] **Step 18: Wire the wizard to the journal**
+
+In `src/components/wizard/ObservationWizard.tsx`:
+
+Replace the `submitted` boolean state with:
+
+```tsx
+const [result, setResult] = useState<ObservationResultProps | null>(null);
+```
+
+After the `if (!response.ok) { ... }` guard in `submit()`, replace `setSubmitted(true);` with:
+
+```tsx
+const body = (await response.json()) as {
+  id: string;
+  waterbodyName: string;
+  delta: AssessmentDelta;
+};
+
+const entry: JournalEntry = {
+  observationId: body.id,
+  waterbodyId,
+  waterbodyName: body.waterbodyName,
+  observedAt: new Date().toISOString(),
+  forelUle: fu?.index ?? null,
+  indicatorTaxa: survey.indicatorTaxa,
+  visibleAlgae: survey.visibleAlgae,
+  wasDataGap: body.delta.wasDataGap,
+};
+
+const before = loadJournal();
+const after = appendEntry(entry);
+const unlocked = newlyEarned(before, after);
+
+setResult({
+  waterbodyId,
+  waterbodyName: body.waterbodyName,
+  forelUle: entry.forelUle,
+  delta: body.delta,
+  newBadges: evaluateBadges(after).filter((b) => unlocked.includes(b.code)),
+});
+```
+
+Replace the `if (submitted) { ... }` block with:
+
+```tsx
+if (result) {
+  return <ObservationResult {...result} />;
+}
+```
+
+Add the imports:
+
+```tsx
+import { ObservationResult, type ObservationResultProps } from "./ObservationResult";
+import { appendEntry, loadJournal } from "@/lib/journal/storage";
+import { evaluateBadges, newlyEarned, type JournalEntry } from "@/lib/journal/journal";
+import type { AssessmentDelta } from "@/lib/science/delta";
+```
+
+- [ ] **Step 19: Write the failing journal page test**
+
+Create `src/components/journal/__tests__/FieldJournal.test.tsx`:
+
+```tsx
+import { describe, it, expect, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { FieldJournal } from "../FieldJournal";
+import { JOURNAL_KEY } from "@/lib/journal/storage";
+
+describe("FieldJournal", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("invites a first observation when the journal is empty", async () => {
+    render(<FieldJournal />);
+    expect(await screen.findByText(/journal is empty/i)).toBeTruthy();
+  });
+
+  it("shows collected colours and earned badges from stored entries", async () => {
+    localStorage.setItem(
+      JOURNAL_KEY,
+      JSON.stringify([
+        {
+          observationId: "o1",
+          waterbodyId: "wb1",
+          waterbodyName: "Ribeira de Coselhas",
+          observedAt: "2026-09-15T10:00:00.000Z",
+          forelUle: 6,
+          indicatorTaxa: ["mayfly"],
+          visibleAlgae: false,
+          wasDataGap: false,
+        },
+      ]),
+    );
+
+    render(<FieldJournal />);
+
+    expect((await screen.findByTestId("colour-count")).textContent).toContain(
+      "1 of 21",
+    );
+    expect(
+      screen.getByText("First sample").closest("li")!.getAttribute("data-earned"),
+    ).toBe("true");
+    expect(
+      screen
+        .getByText("Colour collector")
+        .closest("li")!
+        .getAttribute("data-earned"),
+    ).toBe("false");
+  });
+});
+```
+
+- [ ] **Step 20: Run to verify failure**
+
+Run: `npx vitest run src/components/journal/__tests__/FieldJournal.test.tsx`
+Expected: FAIL — cannot resolve `../FieldJournal`.
+
+- [ ] **Step 21: Implement the journal page**
+
+Create `src/components/journal/FieldJournal.tsx` (style with the design system; structure, copy and data attributes are fixed):
+
+```tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { ForelUleRibbon } from "@/components/ui/ForelUleRibbon";
+import { Panel } from "@/components/ui/Panel";
+import {
+  colourCollection,
+  evaluateBadges,
+  type JournalEntry,
+} from "@/lib/journal/journal";
+import { loadJournal } from "@/lib/journal/storage";
+
+export function FieldJournal() {
+  const [entries, setEntries] = useState<JournalEntry[] | null>(null);
+
+  // localStorage exists only in the browser; reading it during render would
+  // make the server HTML disagree with the first client render.
+  useEffect(() => {
+    setEntries(loadJournal());
+  }, []);
+
+  if (entries === null) return null;
+
+  if (entries.length === 0) {
+    return (
+      <Panel>
+        <h2>Your journal is empty</h2>
+        <p>
+          Record your first observation and it will appear here, along with the
+          colour of the water you found.
+        </p>
+        <Button href="/map">Find a stream</Button>
+      </Panel>
+    );
+  }
+
+  const colours = colourCollection(entries);
+  const badges = evaluateBadges(entries);
+
+  return (
+    <div className="space-y-10">
+      <section className="space-y-3">
+        <h2>Colour collection</h2>
+        <p data-testid="colour-count">{colours.length} of 21 water colours found</p>
+        <ForelUleRibbon collected={colours} size="md" />
+      </section>
+
+      <section className="space-y-3">
+        <h2>Badges</h2>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {badges.map((badge) => (
+            <li key={badge.code} data-earned={badge.earned}>
+              <strong>{badge.title}</strong>
+              <p>{badge.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="space-y-3">
+        <h2>Observations</h2>
+        <ol>
+          {[...entries].reverse().map((e) => (
+            <li key={e.observationId}>
+              <a href={`/water/${e.waterbodyId}`}>{e.waterbodyName}</a>{" "}
+              <time dateTime={e.observedAt}>{e.observedAt.slice(0, 10)}</time>
+              {e.forelUle !== null && <span> · FU {e.forelUle}</span>}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <p>
+        Your journal is stored only on this device. It is a personal record and
+        has no effect on how any stream is assessed.
+      </p>
+    </div>
+  );
+}
+```
+
+Create `src/app/journal/page.tsx`:
+
+```tsx
+import { FieldJournal } from "@/components/journal/FieldJournal";
+
+export default function JournalPage() {
+  return (
+    <main className="mx-auto max-w-2xl space-y-8 p-6">
+      <h1>Field journal</h1>
+      <FieldJournal />
+    </main>
+  );
+}
+```
+
+- [ ] **Step 22: Run to verify the journal page tests pass**
+
+Run: `npx vitest run src/components/journal/__tests__/FieldJournal.test.tsx`
+Expected: 2 passed.
+
+- [ ] **Step 23: Add community counters**
+
+Create `src/components/community/CommunityCounters.tsx` (style with the design system; numbers set in the monospace family):
+
+```tsx
+import { supabaseAnon } from "@/lib/db/client";
+
+export async function CommunityCounters() {
+  const db = supabaseAnon();
+
+  const [{ count: observationCount }, { data: rows }] = await Promise.all([
+    db.from("observations").select("id", { count: "exact", head: true }),
+    db.from("observations").select("waterbody_id"),
+  ]);
+
+  const streamCount = new Set((rows ?? []).map((r) => r.waterbody_id)).size;
+
+  const stats = [
+    { value: observationCount ?? 0, label: "observations recorded" },
+    { value: streamCount, label: "streams with citizen data" },
+    { value: 5, label: "OneAquaHealth pilot cities" },
+  ];
+
+  return (
+    <section aria-label="Community" className="grid gap-6 sm:grid-cols-3">
+      {stats.map((stat) => (
+        <div key={stat.label}>
+          <p>{stat.value.toLocaleString("en")}</p>
+          <p>{stat.label}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+```
+
+- [ ] **Step 24: Run the full suite and build**
+
+Run: `npm test && npm run build`
+Expected: all tests pass; build succeeds.
+
+- [ ] **Step 25: Commit and push**
+
+```bash
+git add src/lib/journal src/lib/science src/components src/app
+git commit -m "Add on-device field journal with badges for meaningful contributions"
 git push
 ```
 
