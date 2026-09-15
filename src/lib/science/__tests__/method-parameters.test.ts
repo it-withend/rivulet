@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { METHOD_PARAMETERS, type MethodParameter } from "../method-parameters";
 import { EVIDENCE_WEIGHTS } from "../indicators";
 import { OBSERVATION_WEIGHTING } from "../weighting";
+import { DATA_CONFIDENCE } from "../bayes";
 
 type Prior = Extract<MethodParameter, { kind: "prior" }>;
 
@@ -60,6 +61,13 @@ describe("METHOD_PARAMETERS", () => {
     const byId = new Map(METHOD_PARAMETERS.map((p) => [p.id, p]));
     for (const key of Object.keys(OBSERVATION_WEIGHTING)) {
       expect(byId.get(`weighting.${key}`)?.kind, key).toBe("prior");
+    }
+  });
+
+  it("documents every data confidence parameter as a prior", () => {
+    const byId = new Map(METHOD_PARAMETERS.map((p) => [p.id, p]));
+    for (const key of Object.keys(DATA_CONFIDENCE)) {
+      expect(byId.get(`confidence.${key}`)?.kind, key).toBe("prior");
     }
   });
 });

@@ -14,6 +14,7 @@ import {
   TAXON_SENSITIVITY,
 } from "./indicators";
 import { OBSERVATION_WEIGHTING } from "./weighting";
+import { CREDIBLE_MASS, DATA_CONFIDENCE, UNIFORM_PRIOR } from "./bayes";
 
 type ParameterValue = number | readonly number[];
 
@@ -68,6 +69,18 @@ const WEIGHTING_RATIONALE: Record<keyof typeof OBSERVATION_WEIGHTING, string> = 
   halfLifeHours:
     "An observation's weight halves after this many hours (30 days), reflecting how quickly stream condition can change.",
   floor: "Minimum weight, so no accepted observation is silently discarded.",
+};
+
+const CONFIDENCE_RATIONALE: Record<keyof typeof DATA_CONFIDENCE, string> = {
+  volumeScale:
+    "Effective observation weight at which the volume component reaches about 63% of its maximum.",
+  diversityScale:
+    "Number of distinct observers at which the diversity component reaches about 63% of its maximum.",
+  recencyHalfLifeHours:
+    "The recency component halves after this many hours (60 days) since the newest observation.",
+  volumeWeight: "Share of data confidence given to the amount of weighted evidence.",
+  diversityWeight: "Share of data confidence given to the number of independent observers.",
+  recencyWeight: "Share of data confidence given to how recent the newest observation is.",
 };
 
 export const METHOD_PARAMETERS: MethodParameter[] = [
@@ -159,6 +172,27 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
       value: OBSERVATION_WEIGHTING[key],
       kind: "prior",
       rationale: `${WEIGHTING_RATIONALE[key]} ${UNCALIBRATED}`,
+    }),
+  ),
+  {
+    id: "bayes.uniform-prior",
+    value: [UNIFORM_PRIOR.alpha, UNIFORM_PRIOR.beta],
+    kind: "standard",
+    source:
+      "Bayes–Laplace uniform prior Beta(1, 1) for a proportion with no prior information (Gelman et al., Bayesian Data Analysis, 3rd ed., 2013, chapter 2)",
+  },
+  {
+    id: "bayes.credible-mass",
+    value: CREDIBLE_MASS,
+    kind: "prior",
+    rationale: `Probability mass of the reported equal-tailed credible interval; a reporting convention chosen for Rivulet v1. ${UNCALIBRATED}`,
+  },
+  ...(Object.keys(DATA_CONFIDENCE) as (keyof typeof DATA_CONFIDENCE)[]).map(
+    (key): MethodParameter => ({
+      id: `confidence.${key}`,
+      value: DATA_CONFIDENCE[key],
+      kind: "prior",
+      rationale: `${CONFIDENCE_RATIONALE[key]} ${UNCALIBRATED}`,
     }),
   ),
 ];
