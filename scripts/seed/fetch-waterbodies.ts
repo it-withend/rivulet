@@ -22,7 +22,16 @@ async function fetchCity(city: { name: string; adminLevel: number }) {
     );
     out geom;
   `;
-  const response = await fetch(ENDPOINT, { method: "POST", body: query });
+  const response = await fetch(ENDPOINT, {
+    method: "POST",
+    // Overpass answers 406 to requests without an identifying User-Agent.
+    headers: {
+      "User-Agent": "Rivulet/0.1 (IEEE OneAquaHealth hackathon prototype)",
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    body: `data=${encodeURIComponent(query)}`,
+  });
   if (!response.ok) throw new Error(`${city.name}: ${response.status}`);
   const data = (await response.json()) as { elements: OverpassWay[] };
 

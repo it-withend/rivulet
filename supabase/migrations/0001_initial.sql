@@ -1,4 +1,4 @@
-create extension if not exists postgis;
+create extension if not exists postgis with schema extensions;
 
 create table waterbodies (
   id uuid primary key default gen_random_uuid(),
