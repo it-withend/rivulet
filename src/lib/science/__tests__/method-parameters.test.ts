@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { METHOD_PARAMETERS, type MethodParameter } from "../method-parameters";
 import { EVIDENCE_WEIGHTS } from "../indicators";
+import { OBSERVATION_WEIGHTING } from "../weighting";
 
 type Prior = Extract<MethodParameter, { kind: "prior" }>;
 
@@ -53,5 +54,12 @@ describe("METHOD_PARAMETERS", () => {
     const taxa = METHOD_PARAMETERS.find((p) => p.id === "indicators.taxon-sensitivity");
     expect(taxa?.kind).toBe("prior");
     expect(taxa && taxa.kind === "prior" ? taxa.rationale : "").toMatch(/BMWP/);
+  });
+
+  it("documents every observation weighting parameter as a prior", () => {
+    const byId = new Map(METHOD_PARAMETERS.map((p) => [p.id, p]));
+    for (const key of Object.keys(OBSERVATION_WEIGHTING)) {
+      expect(byId.get(`weighting.${key}`)?.kind, key).toBe("prior");
+    }
   });
 });

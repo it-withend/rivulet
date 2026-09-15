@@ -13,6 +13,7 @@ import {
   EVIDENCE_WEIGHTS,
   TAXON_SENSITIVITY,
 } from "./indicators";
+import { OBSERVATION_WEIGHTING } from "./weighting";
 
 type ParameterValue = number | readonly number[];
 
@@ -47,6 +48,26 @@ const EVIDENCE_RATIONALE: Record<keyof typeof EVIDENCE_WEIGHTS, string> = {
   heavyLitter: "Evidence added for heavy litter on the margins.",
   clearWater: "Evidence added when the resident reports clear water.",
   opaqueWater: "Evidence added when the resident reports opaque water.",
+};
+
+const WEIGHTING_RATIONALE: Record<keyof typeof OBSERVATION_WEIGHTING, string> = {
+  base: "Starting weight of an observation before evidence-quality adjustments.",
+  photoBonus:
+    "Largest weight added when a photo yields a Forel–Ule reading, scaled by that reading's confidence.",
+  unknownPhotoConfidence:
+    "Colour confidence assumed for a photo whose reading confidence is unknown.",
+  measurementBonus:
+    "Weight added for each instrument reading (pH, dissolved oxygen, temperature, nitrate).",
+  maxCountedMeasurements: "Instrument readings beyond this count add no further weight.",
+  preciseGpsMetres: "GPS accuracy at or better than this many metres carries no penalty.",
+  approximateGpsMetres: "GPS accuracy up to this many metres counts as approximate.",
+  approximateGpsFactor: "Weight multiplier for an approximate GPS position.",
+  poorGpsFactor: "Weight multiplier for a poor or unknown GPS position.",
+  unknownGpsMetres:
+    "Accuracy assumed when the device reports none, so unknown precision is treated as poor rather than good.",
+  halfLifeHours:
+    "An observation's weight halves after this many hours (30 days), reflecting how quickly stream condition can change.",
+  floor: "Minimum weight, so no accepted observation is silently discarded.",
 };
 
 export const METHOD_PARAMETERS: MethodParameter[] = [
@@ -130,6 +151,14 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
       value: EVIDENCE_WEIGHTS[key],
       kind: "prior",
       rationale: `${EVIDENCE_RATIONALE[key]} ${UNCALIBRATED}`,
+    }),
+  ),
+  ...(Object.keys(OBSERVATION_WEIGHTING) as (keyof typeof OBSERVATION_WEIGHTING)[]).map(
+    (key): MethodParameter => ({
+      id: `weighting.${key}`,
+      value: OBSERVATION_WEIGHTING[key],
+      kind: "prior",
+      rationale: `${WEIGHTING_RATIONALE[key]} ${UNCALIBRATED}`,
     }),
   ),
 ];
