@@ -1,26 +1,132 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Rivulet design tokens.
+ *
+ * The default Tailwind palette is removed on purpose: every colour in the UI
+ * comes from this list. Forel–Ule swatch colours are NOT tokens — they live in
+ * FU_TABLE and only ever mean water colour.
+ */
+@theme static {
+  --color-*: initial;
+
+  /* Ground and ink — recycled field-notebook paper, blue-black pencil ink */
+  --color-paper: #eeede5;
+  --color-paper-raised: #f7f6f1;
+  --color-ink: #151b1c; /* 14.8:1 on paper */
+  --color-ink-muted: #3b4546; /* 8.4:1 on paper */
+
+  /* Hairlines replace shadows */
+  --color-rule: #c8c6bb;
+  --color-rule-strong: #8a887e;
+
+  /* The one accent: river blue-green, a darkened reading of FU 5–7 */
+  --color-river: #185157;
+  --color-river-deep: #113c41;
+
+  /* Ecological status — reserved for WFD classes, used nowhere else */
+  --color-wfd-high: #1a9641;
+  --color-wfd-good: #a6d96a;
+  --color-wfd-moderate: #ffffbf;
+  --color-wfd-poor: #fdae61;
+  --color-wfd-bad: #d7191c;
+  --color-insufficient: #9e9e9e;
+
+  --radius-sm: 3px;
+  --radius-md: 6px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-newsreader), "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-plex-sans), "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    line-height: 1.55;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 500;
+    letter-spacing: -0.012em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Numbers are data and look like data */
+  data,
+  code,
+  kbd,
+  samp,
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  ::selection {
+    background: var(--color-river);
+    color: var(--color-paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Specimen label: small mono caps for units, indices and section labels */
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+
+  /* Insufficient data is hatched so it can never be mistaken for a class colour */
+  .hatch-insufficient {
+    background-color: var(--color-insufficient);
+    background-image: repeating-linear-gradient(
+      135deg,
+      transparent 0 5px,
+      rgb(21 27 28 / 0.35) 5px 6px
+    );
+  }
 }
