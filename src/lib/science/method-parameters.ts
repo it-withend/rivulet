@@ -8,6 +8,11 @@ import {
   SRGB_TRANSFER,
 } from "./forel-ule";
 import { FU_TABLE, FU_TABLE_SOURCE } from "./forel-ule-table";
+import {
+  BMWP_MAX_SCORE,
+  EVIDENCE_WEIGHTS,
+  TAXON_SENSITIVITY,
+} from "./indicators";
 
 type ParameterValue = number | readonly number[];
 
@@ -17,6 +22,32 @@ export type MethodParameter =
 
 const UNCALIBRATED =
   "Uncalibrated Rivulet v1 expert-judgement prior; calibration against official water-quality data is planned.";
+
+const EVIDENCE_RATIONALE: Record<keyof typeof EVIDENCE_WEIGHTS, string> = {
+  sensitiveTaxonThreshold:
+    "Taxa scoring at or above this BMWP-scale value count as evidence of good condition; below it, as evidence of organic pollution.",
+  forelUleClearMax:
+    "Forel–Ule classes up to this value (blue to greenish-blue water) count as evidence of low algal enrichment.",
+  forelUleEnrichedMin:
+    "Forel–Ule classes from this value (yellowish-green to brown water) count as evidence of enrichment or heavy humic and sediment load.",
+  forelUleClear: "Evidence added for a clear-water Forel–Ule class.",
+  forelUleEnriched: "Evidence added for an enriched Forel–Ule class.",
+  forelUleIntermediate:
+    "Weak positive evidence for intermediate Forel–Ule classes, which are common in healthy lowland streams.",
+  pollutedOdour:
+    "Sewage or chemical odour is treated as strong evidence of contamination.",
+  foam: "Persistent surface foam is treated as moderate evidence of detergents or organic load.",
+  deadFish:
+    "Dead fish are treated as the strongest single survey signal of acute pollution or oxygen depletion.",
+  visibleAlgae:
+    "Visible algal growth is treated as evidence of nutrient enrichment.",
+  stagnantFlow:
+    "Stagnant flow is treated as mild evidence of degraded condition through low oxygen and warming.",
+  heavyLitterMin: "Litter levels from this value on the 0–3 survey scale count as heavy.",
+  heavyLitter: "Evidence added for heavy litter on the margins.",
+  clearWater: "Evidence added when the resident reports clear water.",
+  opaqueWater: "Evidence added when the resident reports opaque water.",
+};
 
 export const METHOD_PARAMETERS: MethodParameter[] = [
   {
@@ -73,4 +104,32 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
     kind: "prior",
     rationale: `A circular hue spread of this many degrees across the sampled region maps to zero confidence, falling linearly from full confidence at zero spread. ${UNCALIBRATED}`,
   },
+  {
+    id: "indicators.bmwp-max-score",
+    value: BMWP_MAX_SCORE,
+    kind: "standard",
+    source:
+      "Maximum family score of the Biological Monitoring Working Party score system (Armitage, Moss, Wright & Furse 1983, Water Research 17:333–347)",
+  },
+  {
+    id: "indicators.taxon-sensitivity",
+    value: [
+      TAXON_SENSITIVITY.stonefly,
+      TAXON_SENSITIVITY.mayfly,
+      TAXON_SENSITIVITY.caddisfly,
+      TAXON_SENSITIVITY.freshwater_shrimp,
+      TAXON_SENSITIVITY.leech,
+      TAXON_SENSITIVITY.worm,
+    ],
+    kind: "prior",
+    rationale: `Sensitivity for the taxon groups a resident can recognise (stonefly, mayfly, caddisfly, freshwater shrimp, leech, sludge worm), set on the 1–10 BMWP family scale (Armitage et al. 1983). Mayfly and caddisfly groups contain families with a wide range of BMWP scores, so single representative values are used. ${UNCALIBRATED}`,
+  },
+  ...(Object.keys(EVIDENCE_WEIGHTS) as (keyof typeof EVIDENCE_WEIGHTS)[]).map(
+    (key): MethodParameter => ({
+      id: `indicators.evidence.${key}`,
+      value: EVIDENCE_WEIGHTS[key],
+      kind: "prior",
+      rationale: `${EVIDENCE_RATIONALE[key]} ${UNCALIBRATED}`,
+    }),
+  ),
 ];

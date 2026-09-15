@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { METHOD_PARAMETERS, type MethodParameter } from "../method-parameters";
+import { EVIDENCE_WEIGHTS } from "../indicators";
 
 type Prior = Extract<MethodParameter, { kind: "prior" }>;
 
@@ -39,5 +40,18 @@ describe("METHOD_PARAMETERS", () => {
         "forel-ule.confidence-spread-scale",
       ]),
     );
+  });
+
+  it("documents every survey evidence weight as a prior", () => {
+    const byId = new Map(METHOD_PARAMETERS.map((p) => [p.id, p]));
+    for (const key of Object.keys(EVIDENCE_WEIGHTS)) {
+      expect(byId.get(`indicators.evidence.${key}`)?.kind, key).toBe("prior");
+    }
+  });
+
+  it("registers taxon sensitivity as a prior grounded in BMWP", () => {
+    const taxa = METHOD_PARAMETERS.find((p) => p.id === "indicators.taxon-sensitivity");
+    expect(taxa?.kind).toBe("prior");
+    expect(taxa && taxa.kind === "prior" ? taxa.rationale : "").toMatch(/BMWP/);
   });
 });
