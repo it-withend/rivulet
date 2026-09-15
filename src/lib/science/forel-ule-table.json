@@ -1,0 +1,149 @@
+[
+  {
+    "index": 1,
+    "hueAngleMin": 227.168,
+    "hueAngleMax": 232,
+    "srgb": "#2158bc",
+    "description": "Indigo blue — very clear water with little algae"
+  },
+  {
+    "index": 2,
+    "hueAngleMin": 220.977,
+    "hueAngleMax": 227.168,
+    "srgb": "#316dc5",
+    "description": "Deep blue — very clear water with little algae"
+  },
+  {
+    "index": 3,
+    "hueAngleMin": 209.994,
+    "hueAngleMax": 220.977,
+    "srgb": "#327cbb",
+    "description": "Blue — clear water with little algae"
+  },
+  {
+    "index": 4,
+    "hueAngleMin": 190.779,
+    "hueAngleMax": 209.994,
+    "srgb": "#4b80a0",
+    "description": "Greenish blue — clear water with some algae"
+  },
+  {
+    "index": 5,
+    "hueAngleMin": 163.084,
+    "hueAngleMax": 190.779,
+    "srgb": "#568f96",
+    "description": "Greenish blue — clear water with some algae"
+  },
+  {
+    "index": 6,
+    "hueAngleMin": 132.999,
+    "hueAngleMax": 163.084,
+    "srgb": "#6d9298",
+    "description": "Bluish green — moderate algae"
+  },
+  {
+    "index": 7,
+    "hueAngleMin": 109.054,
+    "hueAngleMax": 132.999,
+    "srgb": "#698c86",
+    "description": "Bluish green — moderate algae"
+  },
+  {
+    "index": 8,
+    "hueAngleMin": 94.037,
+    "hueAngleMax": 109.054,
+    "srgb": "#759e72",
+    "description": "Green — noticeable algae"
+  },
+  {
+    "index": 9,
+    "hueAngleMin": 83.346,
+    "hueAngleMax": 94.037,
+    "srgb": "#7ba654",
+    "description": "Green — noticeable algae"
+  },
+  {
+    "index": 10,
+    "hueAngleMin": 74.572,
+    "hueAngleMax": 83.346,
+    "srgb": "#7dae38",
+    "description": "Green — high algae content"
+  },
+  {
+    "index": 11,
+    "hueAngleMin": 67.957,
+    "hueAngleMax": 74.572,
+    "srgb": "#95b645",
+    "description": "Green — high algae content"
+  },
+  {
+    "index": 12,
+    "hueAngleMin": 62.186,
+    "hueAngleMax": 67.957,
+    "srgb": "#94b660",
+    "description": "Yellowish green — high algae content"
+  },
+  {
+    "index": 13,
+    "hueAngleMin": 56.435,
+    "hueAngleMax": 62.186,
+    "srgb": "#a5bc76",
+    "description": "Yellowish green — high algae content"
+  },
+  {
+    "index": 14,
+    "hueAngleMin": 50.665,
+    "hueAngleMax": 56.435,
+    "srgb": "#aab86d",
+    "description": "Greenish brown — algae with dissolved organic matter"
+  },
+  {
+    "index": 15,
+    "hueAngleMin": 45.129,
+    "hueAngleMax": 50.665,
+    "srgb": "#adb55f",
+    "description": "Greenish brown — algae with dissolved organic matter"
+  },
+  {
+    "index": 16,
+    "hueAngleMin": 39.769,
+    "hueAngleMax": 45.129,
+    "srgb": "#a8a965",
+    "description": "Greenish brown — algae with dissolved organic matter"
+  },
+  {
+    "index": 17,
+    "hueAngleMin": 34.906,
+    "hueAngleMax": 39.769,
+    "srgb": "#ae9f5c",
+    "description": "Brownish — humic matter or sediment"
+  },
+  {
+    "index": 18,
+    "hueAngleMin": 30.439,
+    "hueAngleMax": 34.906,
+    "srgb": "#b3a053",
+    "description": "Brownish — humic matter or sediment"
+  },
+  {
+    "index": 19,
+    "hueAngleMin": 26.337,
+    "hueAngleMax": 30.439,
+    "srgb": "#af8a44",
+    "description": "Brown — humic matter or sediment"
+  },
+  {
+    "index": 20,
+    "hueAngleMin": 22.741,
+    "hueAngleMax": 26.337,
+    "srgb": "#a46905",
+    "description": "Brown — high humic matter or sediment"
+  },
+  {
+    "index": 21,
+    "hueAngleMin": 0,
+    "hueAngleMax": 22.741,
+    "srgb": "#a14d04",
+    "description": "Cola brown — high humic matter or sediment"
+  }
+]
