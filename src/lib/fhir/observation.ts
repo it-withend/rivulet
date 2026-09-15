@@ -1,0 +1,116 @@
+import {
+  OAH_PROFILE_INDICATORS,
+  OAH_PROFILE_LOCATION,
+  RIVULET_CODES,
+  systemFor,
+} from "./codes";
+
+export type WaterbodyRecord = {
+  id: string;
+  name: string;
+  city: string;
+  centroidLon: number;
+  centroidLat: number;
+};
+
+export type FhirLocation = {
+  resourceType: "Location";
+  id: string;
+  meta: { profile: string[] };
+  name: string;
+  position?: { longitude: number; latitude: number };
+  address: { city: string };
+};
+
+export type FhirCoding = { system: string; code: string; display?: string };
+
+export type FhirObservation = {
+  resourceType: "Observation";
+  id: string;
+  meta: { profile: string[]; tag?: FhirCoding[] };
+  status: "final";
+  code: { coding: FhirCoding[] };
+  subject: { reference: string };
+  effectiveDateTime: string;
+  performer: { display: string }[];
+  valueQuantity?: { value: number; unit: string };
+  valueCodeableConcept?: { coding: FhirCoding[] };
+};
+
+export type IndicatorValue =
+  | { kind: "quantity"; value: number; unit: string }
+  | { kind: "code"; code: string; display: string };
+
+export type IndicatorObservationInput = {
+  id: string;
+  waterbodyId: string;
+  effectiveDateTime: string;
+  performerDisplay: string;
+  code: string;
+  value: IndicatorValue;
+  synthetic?: boolean;
+};
+
+export function toLocationOah(waterbody: WaterbodyRecord): FhirLocation {
+  return {
+    resourceType: "Location",
+    id: waterbody.id,
+    meta: { profile: [OAH_PROFILE_LOCATION] },
+    name: waterbody.name,
+    position: {
+      longitude: waterbody.centroidLon,
+      latitude: waterbody.centroidLat,
+    },
+    address: { city: waterbody.city },
+  };
+}
+
+export function toObservationIndicators(
+  input: IndicatorObservationInput,
+): FhirObservation {
+  const system = systemFor(input.code);
+  const display =
+    system.includes("rivulet")
+      ? RIVULET_CODES[input.code as keyof typeof RIVULET_CODES]
+      : undefined;
+
+  const observation: FhirObservation = {
+    resourceType: "Observation",
+    id: input.id,
+    meta: { profile: [OAH_PROFILE_INDICATORS] },
+    status: "final",
+    code: { coding: [{ system, code: input.code, display }] },
+    subject: { reference: `Location/${input.waterbodyId}` },
+    effectiveDateTime: input.effectiveDateTime,
+    performer: [{ display: input.performerDisplay }],
+  };
+
+  if (input.synthetic) {
+    observation.meta.tag = [
+      {
+        system: "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+        code: "HTEST",
+        display: "test health data",
+      },
+    ];
+  }
+
+  if (input.value.kind === "quantity") {
+    observation.valueQuantity = {
+      value: input.value.value,
+      unit: input.value.unit,
+    };
+  } else {
+    observation.valueCodeableConcept = {
+      coding: [
+        {
+          system: systemFor(input.code),
+          code: input.value.code,
+          display: input.value.display,
+        },
+      ],
+    };
+  }
+
+  return observation;
+}
