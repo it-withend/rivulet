@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { PhotoStep, type ForelUleResult } from "./PhotoStep";
 import { SurveyStep } from "./SurveyStep";
+import { ObservationResult, type ObservationResultProps } from "./ObservationResult";
 import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
+import { appendEntry, loadJournal } from "@/lib/journal/storage";
+import { evaluateBadges, newlyEarned, type JournalEntry } from "@/lib/journal/journal";
+import type { AssessmentDelta } from "@/lib/science/delta";
 import type { SurveyAnswers } from "@/types/observation";
 
 const EMPTY: SurveyAnswers = {
@@ -26,7 +30,7 @@ export function ObservationWizard({ waterbodyId }: { waterbodyId: string }) {
   const [step, setStep] = useState(0);
   const [survey, setSurvey] = useState<SurveyAnswers>(EMPTY);
   const [fu, setFu] = useState<ForelUleResult | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [result, setResult] = useState<ObservationResultProps | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,7 +72,34 @@ export function ObservationWizard({ waterbodyId }: { waterbodyId: string }) {
         return;
       }
 
-      setSubmitted(true);
+      const body = (await response.json()) as {
+        id: string;
+        waterbodyName: string;
+        delta: AssessmentDelta;
+      };
+
+      const entry: JournalEntry = {
+        observationId: body.id,
+        waterbodyId,
+        waterbodyName: body.waterbodyName,
+        observedAt: new Date().toISOString(),
+        forelUle: fu?.index ?? null,
+        indicatorTaxa: survey.indicatorTaxa,
+        visibleAlgae: survey.visibleAlgae,
+        wasDataGap: body.delta.wasDataGap,
+      };
+
+      const before = loadJournal();
+      const after = appendEntry(entry);
+      const unlocked = newlyEarned(before, after);
+
+      setResult({
+        waterbodyId,
+        waterbodyName: body.waterbodyName,
+        forelUle: entry.forelUle,
+        delta: body.delta,
+        newBadges: evaluateBadges(after).filter((b) => unlocked.includes(b.code)),
+      });
     } catch {
       setError("We could not save your observation. Please try again.");
     } finally {
@@ -76,17 +107,8 @@ export function ObservationWizard({ waterbodyId }: { waterbodyId: string }) {
     }
   }
 
-  if (submitted) {
-    return (
-      <Panel>
-        <p className="field-label m-0">Recorded</p>
-        <h2 className="mt-2 mb-2 text-2xl">Thank you</h2>
-        <p className="m-0 text-sm">
-          Your observation has been recorded and will be included in this
-          stream&apos;s next assessment.
-        </p>
-      </Panel>
-    );
+  if (result) {
+    return <ObservationResult {...result} />;
   }
 
   return (
