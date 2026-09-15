@@ -99,6 +99,10 @@ describe("pixelsToForelUle", () => {
     for (let i = 0; i < 401; i++) arr[i * 4 + 3] = 0;
     expect(pixelsToForelUle(arr)).toBeNull();
   });
+
+  it("ignores near-neutral pixels that carry no water colour", () => {
+    expect(pixelsToForelUle(solidBlock(128, 128, 128, 500))).toBeNull();
+  });
 });
 
 describe("circularMeanDegrees", () => {

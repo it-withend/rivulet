@@ -1,11 +1,29 @@
 import { FU_TABLE } from "./forel-ule-table";
 
-const HUE_REFERENCE = { x: 1 / 3, y: 1 / 3 };
-const MIN_USABLE_PIXELS = 100;
+export const HUE_REFERENCE = { x: 1 / 3, y: 1 / 3 };
+export const D65_WHITE = { x: 0.3127, y: 0.329 };
+export const MIN_USABLE_PIXELS = 100;
+export const MIN_CHROMA_DISTANCE = 0.01;
+export const CONFIDENCE_SPREAD_SCALE_DEGREES = 30;
+
+export const SRGB_TRANSFER = {
+  threshold: 0.04045,
+  linearSlope: 12.92,
+  offset: 0.055,
+  exponent: 2.4,
+} as const;
+
+export const SRGB_TO_XYZ = [
+  [0.4124564, 0.3575761, 0.1804375],
+  [0.2126729, 0.7151522, 0.072175],
+  [0.0193339, 0.119192, 0.9503041],
+] as const;
 
 function gammaExpand(channel: number): number {
   const c = channel / 255;
-  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return c <= SRGB_TRANSFER.threshold
+    ? c / SRGB_TRANSFER.linearSlope
+    : Math.pow((c + SRGB_TRANSFER.offset) / (1 + SRGB_TRANSFER.offset), SRGB_TRANSFER.exponent);
 }
 
 export function srgbToXyz(r: number, g: number, b: number) {
@@ -13,9 +31,9 @@ export function srgbToXyz(r: number, g: number, b: number) {
   const gl = gammaExpand(g);
   const bl = gammaExpand(b);
   return {
-    x: 0.4124564 * rl + 0.3575761 * gl + 0.1804375 * bl,
-    y: 0.2126729 * rl + 0.7151522 * gl + 0.072175 * bl,
-    z: 0.0193339 * rl + 0.119192 * gl + 0.9503041 * bl,
+    x: SRGB_TO_XYZ[0][0] * rl + SRGB_TO_XYZ[0][1] * gl + SRGB_TO_XYZ[0][2] * bl,
+    y: SRGB_TO_XYZ[1][0] * rl + SRGB_TO_XYZ[1][1] * gl + SRGB_TO_XYZ[1][2] * bl,
+    z: SRGB_TO_XYZ[2][0] * rl + SRGB_TO_XYZ[2][1] * gl + SRGB_TO_XYZ[2][2] * bl,
   };
 }
 
@@ -67,6 +85,12 @@ export function pixelsToForelUle(pixels: Uint8ClampedArray) {
       srgbToXyz(pixels[i], pixels[i + 1], pixels[i + 2]),
     );
     if (chroma.x === 0 && chroma.y === 0) continue;
+    if (
+      Math.hypot(chroma.x - D65_WHITE.x, chroma.y - D65_WHITE.y) <
+      MIN_CHROMA_DISTANCE
+    ) {
+      continue;
+    }
     angles.push(hueAngle(chroma));
   }
 
@@ -77,6 +101,6 @@ export function pixelsToForelUle(pixels: Uint8ClampedArray) {
   return {
     index: hueAngleToForelUle(mean),
     hueAngle: mean,
-    confidence: Math.max(0, Math.min(1, 1 - spread / 30)),
+    confidence: Math.max(0, Math.min(1, 1 - spread / CONFIDENCE_SPREAD_SCALE_DEGREES)),
   };
 }
