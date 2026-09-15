@@ -15,6 +15,7 @@ import {
 } from "./indicators";
 import { OBSERVATION_WEIGHTING } from "./weighting";
 import { CREDIBLE_MASS, DATA_CONFIDENCE, UNIFORM_PRIOR } from "./bayes";
+import { MIN_CONFIDENCE_FOR_CLASS, WFD_BOUNDARIES } from "./wfd";
 
 type ParameterValue = number | readonly number[];
 
@@ -195,4 +196,21 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
       rationale: `${CONFIDENCE_RATIONALE[key]} ${UNCALIBRATED}`,
     }),
   ),
+  {
+    id: "wfd.class-boundaries",
+    value: [
+      WFD_BOUNDARIES.poor.min,
+      WFD_BOUNDARIES.moderate.min,
+      WFD_BOUNDARIES.good.min,
+      WFD_BOUNDARIES.high.min,
+    ],
+    kind: "prior",
+    rationale: `Directive 2000/60/EC (Annex V) defines five ecological status classes on an Ecological Quality Ratio from 0 to 1, but sets class boundaries per quality element through intercalibration; Rivulet v1 uses equal-width bands with boundaries at 0.2, 0.4, 0.6 and 0.8. ${UNCALIBRATED}`,
+  },
+  {
+    id: "wfd.min-confidence-for-class",
+    value: MIN_CONFIDENCE_FOR_CLASS,
+    kind: "prior",
+    rationale: `Below this data confidence no ecological status class is assigned and the stream is shown as having insufficient data. ${UNCALIBRATED}`,
+  },
 ];

@@ -3,6 +3,7 @@ import { METHOD_PARAMETERS, type MethodParameter } from "../method-parameters";
 import { EVIDENCE_WEIGHTS } from "../indicators";
 import { OBSERVATION_WEIGHTING } from "../weighting";
 import { DATA_CONFIDENCE } from "../bayes";
+import { MIN_CONFIDENCE_FOR_CLASS, WFD_BOUNDARIES } from "../wfd";
 
 type Prior = Extract<MethodParameter, { kind: "prior" }>;
 
@@ -69,5 +70,11 @@ describe("METHOD_PARAMETERS", () => {
     for (const key of Object.keys(DATA_CONFIDENCE)) {
       expect(byId.get(`confidence.${key}`)?.kind, key).toBe("prior");
     }
+  });
+
+  it("registers the WFD class boundaries and class threshold as priors", () => {
+    const byId = new Map(METHOD_PARAMETERS.map((p) => [p.id, p]));
+    expect(byId.get("wfd.class-boundaries")?.kind).toBe("prior");
+    expect(byId.get("wfd.min-confidence-for-class")?.kind).toBe("prior");
   });
 });
