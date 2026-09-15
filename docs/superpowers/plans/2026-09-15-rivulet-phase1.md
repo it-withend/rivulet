@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - **Scope tier.** This plan implements only the "must ship" tier of spec §17. Do not start satellite ingestion, the divergence engine, risk modelling, quests, Trust Score, or certificates. They belong to Phase 2.
-- **No invented metrics.** Every scientific constant, threshold and lookup table must carry a `source` field citing a named publication or standard. A value without a citation fails review.
+- **No invented metrics.** Every scientific constant, threshold and lookup table is registered in `METHOD_PARAMETERS` (`src/lib/science/method-parameters.ts`) either as `kind: "standard"` with a `source` naming the publication or standard, or as `kind: "prior"` with a `rationale` stating it is an uncalibrated Rivulet v1 expert-judgement value. A prior must never be presented as cited. Priors are shown to users in "Why this score?" and on the pitch's limitations slide; calibrating them against official Coimbra data is Phase 2. (Decided by the project owner on 2026-09-15.)
 - **Missing data never reads as good news.** No code path may assign a healthy status, a green colour, or a default "good" value when data is absent. Absence renders as an explicit insufficient-data state.
 - **Honest uncertainty.** Any function returning an ecological estimate returns a credible interval alongside the point estimate. Never return a bare number.
 - **Submission is never blocked by AI.** No LLM call sits on the observation write path in this phase (there are no LLM calls in Phase 1 at all).
