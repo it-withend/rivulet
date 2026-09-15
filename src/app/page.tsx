@@ -1,8 +1,9 @@
-/**
- * Placeholder home. Task 14 builds the real landing page; the contour field
- * below is the landing hero's texture and is used nowhere else.
- */
+import { Button } from "@/components/ui/Button";
+import { Panel } from "@/components/ui/Panel";
+import { ForelUleRibbon } from "@/components/ui/ForelUleRibbon";
+import { CommunityCounters } from "@/components/community/CommunityCounters";
 
+/** The landing hero's texture; a faint topographic reading of a stream valley. */
 function contourPaths(): string[] {
   const paths: string[] = [];
   const cx = 820;
@@ -26,35 +27,138 @@ function contourPaths(): string[] {
   return paths;
 }
 
+const SCIENCE_POINTS = [
+  "Forel–Ule water colour scale, derived via the WACODI chain",
+  "EU Water Framework Directive 2000/60/EC ecological status classes",
+  "BMWP macroinvertebrate family sensitivity scores",
+  "Beta–Bernoulli conjugate updating with 90% credible intervals",
+  "HL7 Europe OneAquaHealth FHIR Implementation Guide",
+];
+
+const STEPS = [
+  {
+    title: "You photograph the water.",
+    body: "We derive a Forel–Ule colour index from the image — a scale in scientific use since the 1890s.",
+  },
+  {
+    title: "We weigh the evidence.",
+    body: "Observations are combined in a Bayesian model that reports a range, not a falsely precise number.",
+  },
+  {
+    title: "The city gets an answer.",
+    body: "Results are expressed as EU Water Framework Directive status classes and exported through the OneAquaHealth FHIR standard.",
+  },
+];
+
 export default function Home() {
   return (
-    <section className="relative isolate overflow-hidden border-b border-rule">
-      <svg
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 h-full w-full"
-        viewBox="0 0 1000 500"
-        preserveAspectRatio="xMidYMid slice"
-        fill="none"
-      >
-        {contourPaths().map((d, i) => (
-          <path
-            key={d}
-            d={d}
-            stroke="var(--color-rule-strong)"
-            strokeOpacity={i % 5 === 4 ? 0.55 : 0.3}
-            strokeWidth={i % 5 === 4 ? 1.2 : 0.8}
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </svg>
-      <div className="mx-auto max-w-5xl px-4 pb-24 pt-20 sm:px-6 sm:pb-36 sm:pt-32">
-        <h1 className="m-0 font-display text-[4.5rem] font-medium italic leading-[0.9] sm:text-[8rem]">
-          Rivulet
-        </h1>
-        <p className="mt-6 max-w-md text-xl text-ink">
-          Urban streams, read honestly.
-        </p>
+    <div>
+      <section className="relative isolate overflow-hidden border-b border-rule">
+        <svg
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 h-full w-full"
+          viewBox="0 0 1000 500"
+          preserveAspectRatio="xMidYMid slice"
+          fill="none"
+        >
+          {contourPaths().map((d, i) => (
+            <path
+              key={d}
+              d={d}
+              stroke="var(--color-rule-strong)"
+              strokeOpacity={i % 5 === 4 ? 0.55 : 0.3}
+              strokeWidth={i % 5 === 4 ? 1.2 : 0.8}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </svg>
+        <div className="mx-auto max-w-5xl px-4 pb-16 pt-16 sm:px-6 sm:pb-24 sm:pt-24">
+          <p className="field-label m-0">Citizen science · urban freshwater</p>
+          <h1 className="m-0 mt-3 max-w-3xl font-display text-4xl font-medium leading-[1.05] italic sm:text-6xl">
+            The stream at the end of your street has a health record.
+          </h1>
+          <p className="mt-6 max-w-xl text-lg text-ink-muted">
+            Rivulet turns what residents notice about urban water into
+            scientifically grounded assessments — with the uncertainty stated
+            honestly, and every number traceable to a published method.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button href="/map">See the map</Button>
+            <Button variant="secondary" href="/observe">
+              Record an observation
+            </Button>
+          </div>
+          <div className="mt-12 max-w-2xl">
+            <ForelUleRibbon />
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-5xl space-y-16 px-4 py-16 sm:px-6">
+        <CommunityCounters />
+
+        <section className="border-t border-rule pt-10">
+          <p className="field-label m-0">The problem</p>
+          <h2 className="mt-2 mb-4 max-w-xl text-3xl">
+            Nobody can say how much to trust what residents see.
+          </h2>
+          <p className="m-0 max-w-xl text-ink-muted">
+            Official monitoring of urban streams is sparse in both space and
+            time. Residents see these waters every day, but what they notice
+            rarely reaches anyone who can act on it — and when it does, nobody
+            can say how much to trust it.
+          </p>
+        </section>
+
+        <section className="border-t border-rule pt-10">
+          <p className="field-label m-0">Method</p>
+          <h2 className="mt-2 mb-8 text-3xl">How it works</h2>
+          <ol className="m-0 grid list-none gap-8 p-0 sm:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="max-w-xs">
+                <p className="num m-0 text-sm text-ink-muted">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-2 mb-2 text-xl">{step.title}</h3>
+                <p className="m-0 text-sm text-ink-muted">{step.body}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="border-t border-rule pt-10">
+          <p className="field-label m-0">Rigour</p>
+          <h2 className="mt-2 mb-6 text-3xl">
+            There is real science behind this
+          </h2>
+          <Panel>
+            <ul className="m-0 list-disc space-y-1 pl-5 text-sm">
+              {SCIENCE_POINTS.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+            <p className="mt-4 mb-0 text-sm text-ink-muted">
+              These are proxy estimates from citizen observations, not
+              laboratory measurements. We say so everywhere the numbers
+              appear.
+            </p>
+          </Panel>
+        </section>
+
+        <section className="border-t border-rule pt-10">
+          <p className="field-label m-0">Standards</p>
+          <h2 className="mt-2 mb-4 text-3xl">Open by construction</h2>
+          <p className="m-0 max-w-xl text-ink-muted">
+            Every assessment is exportable as FHIR conforming to the
+            consortium&rsquo;s own implementation guide, so this data can flow
+            into the systems that already exist rather than sitting in another
+            silo.
+          </p>
+          <Button variant="secondary" href="/open-data" className="mt-5">
+            See the open data
+          </Button>
+        </section>
       </div>
-    </section>
+    </div>
   );
 }
