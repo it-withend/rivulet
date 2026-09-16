@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       const obs = firstOrSelf<{ display_name: string; trust_score: number | string | null }>(
         o.observers,
       );
-      const reason = o.flag_reason as FlagReason | null;
+      const reasons = (o.flag_reason ?? "").split(",").filter(Boolean) as FlagReason[];
       return {
         id: o.id,
         waterbodyId: o.waterbody_id,
@@ -47,8 +47,11 @@ export async function GET(request: Request) {
         forelUleConfidence:
           o.forel_ule_confidence === null ? null : Number(o.forel_ule_confidence),
         qualityWeight: Number(o.quality_weight),
-        flagReason: reason,
-        reasonLabel: reason ? (FLAG_REASON_LABEL[reason] ?? reason) : null,
+        flagReason: o.flag_reason,
+        reasonLabel:
+          reasons.length > 0
+            ? reasons.map((r) => FLAG_REASON_LABEL[r] ?? r).join("; ")
+            : null,
         isSynthetic: Boolean(o.is_synthetic),
         observerId: o.observer_id,
         observerName: obs?.display_name ?? null,

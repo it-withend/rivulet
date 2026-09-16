@@ -75,7 +75,16 @@ each submitted photo is sent once to a Groq vision model asking "does this look 
 confident "no" — a meme, a selfie, a screenshot — flags the observation for review instead of
 silently entering the model; a missing key, a timeout, or an uncertain answer all mean the check
 is skipped, never that the observation is flagged. The full-resolution photo is never uploaded,
-matching the on-device colour reading.
+matching the on-device colour reading. Every plausibility signal (GPS accuracy, the hourly rate
+limit, distance from the claimed water body, this photo check) is evaluated independently and all
+that apply are recorded in `flag_reason`, so a report already flagged for one reason still gets
+its photo checked for the others.
+
+**Certificates as a downloadable, printable document.** `/certificates/<id>` renders as a landscape
+card (seal, signature block, verification link) instead of a plain page, and
+`/api/certificates/<id>/pdf` (pure `pdf-lib`, no headless browser) returns the same design as an
+actual PDF file for a CV or portfolio. A revoked certificate, or one whose signature does not
+verify, is refused as a PDF rather than rendered.
 
 Full citations are in `src/lib/science/method-version.ts`.
 

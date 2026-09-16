@@ -4,7 +4,13 @@ import { toIndicators } from "@/lib/science/indicators";
 import { observationWeight } from "@/lib/science/weighting";
 import { computeSnapshot, type StoredObservation } from "@/lib/science/snapshot";
 import { assessmentDelta } from "@/lib/science/delta";
-import { isHeldForReview, plausibilityStatus, PLAUSIBILITY } from "@/lib/science/plausibility";
+import {
+  isHeldForReview,
+  plausibilityStatus,
+  PLAUSIBILITY,
+  type FlagReason,
+  type ValidationStatus,
+} from "@/lib/science/plausibility";
 import { photoCheck } from "@/lib/moderation/photo-check";
 import { embeddedTrustScore } from "@/lib/db/embed";
 import { observerFromRequest } from "@/lib/identity/token";
@@ -96,34 +102,39 @@ export async function POST(request: Request) {
     ageHours: Math.max(0, ageHours),
   });
 
-  let { status: validationStatus, reason: flagReason } = plausibilityStatus({
+  // Every plausibility signal is checked independently and all that apply
+  // are kept — an earlier version stopped at the first match, which meant a
+  // report already flagged for distance never got its photo looked at, so
+  // the photo check could look "broken" (it simply never ran). None of
+  // these ever reject a submission, only route it to /moderate.
+  const reasons: FlagReason[] = [];
+
+  const gpsCheck = plausibilityStatus({
     gpsAccuracyM: payload.gpsAccuracyM,
     recentByObserver,
   });
+  if (gpsCheck.reason) reasons.push(gpsCheck.reason);
 
-  // The point is never rejected for being far from the claimed water body —
-  // only flagged for human review, same as any other plausibility signal.
   if (
-    validationStatus === "auto_approved" &&
     distanceFromWaterbodyM !== null &&
     distanceFromWaterbodyM > PLAUSIBILITY.maxDistanceFromWaterbodyM
   ) {
-    validationStatus = "flagged";
-    flagReason = "distance_from_waterbody";
+    reasons.push("distance_from_waterbody");
   }
 
-  // A cheap "does this look like water?" check on the photo, never a
-  // rejection: a clear "no" only flags the observation for a person to
-  // look at, the same as any other plausibility signal. Skipped entirely
-  // (never flags) when GROQ_API_KEY is unset, the call errors, times out,
-  // or the answer is uncertain — see photoCheck's own doc comment.
-  if (validationStatus === "auto_approved" && payload.photoThumbnail) {
+  // Skipped entirely (never flags) when GROQ_API_KEY is unset, the call
+  // errors, times out, or the answer is uncertain — see photoCheck's own
+  // doc comment. Runs even when another check already flagged the report,
+  // so a moderator sees every reason at once.
+  if (payload.photoThumbnail) {
     const result = await photoCheck(payload.photoThumbnail);
     if (result && !result.isWater && result.confidence !== "low") {
-      validationStatus = "flagged";
-      flagReason = "ai_not_water";
+      reasons.push("ai_not_water");
     }
   }
+
+  const validationStatus: ValidationStatus = reasons.length > 0 ? "flagged" : "auto_approved";
+  const flagReason = reasons.length > 0 ? reasons.join(",") : null;
 
   const { data, error } = await db
     .from("observations")

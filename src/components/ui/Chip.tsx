@@ -24,24 +24,29 @@ export function Chip({ pressed, onClick, children, icon }: ChipProps) {
           : "border-rule-strong bg-paper-raised text-ink hover:border-ink")
       }
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 12 12"
-        className="size-3 shrink-0"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      >
-        {pressed ? (
-          <path d="M2 6.5 4.8 9 10 3" strokeLinecap="square" />
-        ) : (
-          <rect x="1.75" y="1.75" width="8.5" height="8.5" strokeWidth="1" />
-        )}
-      </svg>
-      {icon && (
+      {/* A custom icon already shows which chip this is and the fill colour
+          already shows pressed/unpressed, so the two never share one chip —
+          stacking a checkbox glyph next to a pictogram at this size just
+          crowded them into each other. */}
+      {icon ? (
         <span aria-hidden="true" className="inline-flex shrink-0 [&_svg]:size-4.5">
           {icon}
         </span>
+      ) : (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 12 12"
+          className="size-3 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          {pressed ? (
+            <path d="M2 6.5 4.8 9 10 3" strokeLinecap="square" />
+          ) : (
+            <rect x="1.75" y="1.75" width="8.5" height="8.5" strokeWidth="1" />
+          )}
+        </svg>
       )}
       {children}
     </button>
