@@ -10,6 +10,7 @@ import { ScoreDisclosure } from "@/components/water/ScoreDisclosure";
 import { DisplayModeToggle } from "@/components/water/DisplayModeToggle";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
+import { embeddedTrustScore } from "@/lib/db/embed";
 
 export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
   const { id } = await props.params;
@@ -27,7 +28,9 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
   // migration) — never select them here.
   const { data: observations, error: observationsError } = await db
     .from("observations")
-    .select("id, observed_at, observer_id, survey, quality_weight, is_synthetic")
+    .select(
+      "id, observed_at, observer_id, survey, quality_weight, is_synthetic, observers(trust_score)",
+    )
     .eq("waterbody_id", id)
     .order("observed_at", { ascending: false });
 
@@ -41,6 +44,7 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
       observerId: o.observer_id,
       survey: o.survey,
       qualityWeight: Number(o.quality_weight),
+      observerTrust: embeddedTrustScore(o.observers),
     })),
   );
 

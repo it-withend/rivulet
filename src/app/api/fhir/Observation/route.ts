@@ -7,6 +7,7 @@ import {
   type FhirObservation,
 } from "@/lib/fhir/observation";
 import { buildBundle, type FhirResource } from "./bundle";
+import { embeddedTrustScore } from "@/lib/db/embed";
 
 export async function GET(request: Request) {
   const waterbodyId = new URL(request.url).searchParams.get("waterbody");
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
   const { data: rows, error: observationsError } = await db
     .from("observations")
     .select(
-      "id, observed_at, observer_id, survey, indicators, quality_weight, is_synthetic",
+      "id, observed_at, observer_id, survey, indicators, quality_weight, is_synthetic, observers(trust_score)",
     )
     .eq("waterbody_id", waterbodyId)
     .order("observed_at", { ascending: false });
@@ -112,6 +113,7 @@ export async function GET(request: Request) {
       observerId: o.observer_id,
       survey: o.survey,
       qualityWeight: Number(o.quality_weight),
+      observerTrust: embeddedTrustScore(o.observers),
     })),
   );
 

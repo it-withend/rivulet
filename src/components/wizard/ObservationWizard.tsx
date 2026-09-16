@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
 import { appendEntry, loadJournal } from "@/lib/journal/storage";
 import { evaluateBadges, newlyEarned, type JournalEntry } from "@/lib/journal/journal";
+import { ensureObserver } from "@/lib/identity/client";
 import type { AssessmentDelta } from "@/lib/science/delta";
 import type { SurveyAnswers } from "@/types/observation";
 
@@ -52,9 +53,14 @@ export function ObservationWizard({ waterbodyId }: { waterbodyId: string }) {
     }
 
     try {
+      const observer = await ensureObserver();
+
       const response = await fetch("/api/observations", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(observer ? { authorization: `Bearer ${observer.token}` } : {}),
+        },
         body: JSON.stringify({
           waterbodyId,
           observedAt: new Date().toISOString(),

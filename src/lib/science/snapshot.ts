@@ -2,6 +2,7 @@ import { aggregate, dataConfidence, type Posterior } from "./bayes";
 import { classify, type WfdAssessment } from "./wfd";
 import { ecologicalEvidence } from "./indicators";
 import { METHOD_VERSION } from "./method-version";
+import { trustMultiplier, TRUST_PARAMETERS } from "./trust";
 import type { SurveyAnswers } from "@/types/observation";
 
 export type StoredObservation = {
@@ -10,6 +11,8 @@ export type StoredObservation = {
   observerId: string | null;
   survey: SurveyAnswers;
   qualityWeight: number;
+  /** Observer's trust score (0-1); neutral (0.5) if unknown or anonymous. */
+  observerTrust?: number;
 };
 
 export type SnapshotInput = {
@@ -35,9 +38,10 @@ export function computeSnapshot(
 ): Snapshot {
   const inputs: SnapshotInput[] = observations.map((o) => {
     const evidence = ecologicalEvidence(o.survey);
+    const multiplier = trustMultiplier(o.observerTrust ?? TRUST_PARAMETERS.neutralTrust);
     return {
       observationId: o.id,
-      weight: o.qualityWeight,
+      weight: o.qualityWeight * multiplier,
       good: evidence.good,
       bad: evidence.bad,
     };

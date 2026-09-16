@@ -16,6 +16,9 @@ import {
 import { OBSERVATION_WEIGHTING } from "./weighting";
 import { CREDIBLE_MASS, DATA_CONFIDENCE, UNIFORM_PRIOR } from "./bayes";
 import { MIN_CONFIDENCE_FOR_CLASS, WFD_BOUNDARIES } from "./wfd";
+import { TRUST_PARAMETERS } from "./trust";
+import { PLAUSIBILITY } from "./plausibility";
+import { CONTRIBUTION_PARAMETERS } from "@/lib/engagement/contribution";
 
 type ParameterValue = number | readonly number[];
 
@@ -70,6 +73,31 @@ const WEIGHTING_RATIONALE: Record<keyof typeof OBSERVATION_WEIGHTING, string> = 
   halfLifeHours:
     "An observation's weight halves after this many hours (30 days), reflecting how quickly stream condition can change.",
   floor: "Minimum weight, so no accepted observation is silently discarded.",
+};
+
+const TRUST_RATIONALE: Record<keyof typeof TRUST_PARAMETERS, string> = {
+  priorStrength:
+    "Pseudo-count weight of the neutral prior against an observer's own agreement evidence, in units of observations.",
+  minIndependent:
+    "An observation gives no trust signal unless at least this many observations by other observers exist for the same water body.",
+  multiplierMin: "Lower clamp on the trust multiplier applied to evidence weight.",
+  multiplierMax: "Upper clamp on the trust multiplier applied to evidence weight.",
+  neutralTrust: "Trust score with no effect on evidence weight (multiplier of 1).",
+};
+
+const PLAUSIBILITY_RATIONALE: Record<keyof typeof PLAUSIBILITY, string> = {
+  maxGpsAccuracyM:
+    "GPS accuracy worse than this many metres (or missing) flags the observation for human review instead of auto-approving it.",
+  maxPerHour:
+    "More than this many observations by the same observer in the previous hour flags the batch for human review as a basic anti-spam check.",
+};
+
+const CONTRIBUTION_RATIONALE: Record<keyof typeof CONTRIBUTION_PARAMETERS, string> = {
+  basePoints: "Points awarded for one counted, trust- and quality-weighted observation.",
+  gapBonus:
+    "Extra points for the first observation on a water body that had none in the preceding window, rewarding coverage over repetition.",
+  gapDays:
+    "A water body counts as a data gap if it had no observation in this many preceding days.",
 };
 
 const CONFIDENCE_RATIONALE: Record<keyof typeof DATA_CONFIDENCE, string> = {
@@ -213,4 +241,28 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
     kind: "prior",
     rationale: `Below this data confidence no ecological status class is assigned and the stream is shown as having insufficient data. ${UNCALIBRATED}`,
   },
+  ...(Object.keys(TRUST_PARAMETERS) as (keyof typeof TRUST_PARAMETERS)[]).map(
+    (key): MethodParameter => ({
+      id: `trust.${key}`,
+      value: TRUST_PARAMETERS[key],
+      kind: "prior",
+      rationale: `${TRUST_RATIONALE[key]} Trust is shrunk towards this neutral value using a Beta-binomial-style pseudo-count prior (Gelman et al., Bayesian Data Analysis, 3rd ed., 2013, chapter 5). ${UNCALIBRATED}`,
+    }),
+  ),
+  ...(Object.keys(PLAUSIBILITY) as (keyof typeof PLAUSIBILITY)[]).map(
+    (key): MethodParameter => ({
+      id: `plausibility.${key}`,
+      value: PLAUSIBILITY[key],
+      kind: "prior",
+      rationale: `${PLAUSIBILITY_RATIONALE[key]} ${UNCALIBRATED}`,
+    }),
+  ),
+  ...(Object.keys(CONTRIBUTION_PARAMETERS) as (keyof typeof CONTRIBUTION_PARAMETERS)[]).map(
+    (key): MethodParameter => ({
+      id: `contribution.${key}`,
+      value: CONTRIBUTION_PARAMETERS[key],
+      kind: "prior",
+      rationale: `${CONTRIBUTION_RATIONALE[key]} This is a programme rule, not a scientific estimate, but is declared here for transparency. ${UNCALIBRATED}`,
+    }),
+  ),
 ];

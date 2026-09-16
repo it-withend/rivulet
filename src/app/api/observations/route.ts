@@ -4,6 +4,9 @@ import { toIndicators } from "@/lib/science/indicators";
 import { observationWeight } from "@/lib/science/weighting";
 import { computeSnapshot, type StoredObservation } from "@/lib/science/snapshot";
 import { assessmentDelta } from "@/lib/science/delta";
+import { plausibilityStatus } from "@/lib/science/plausibility";
+import { observerFromRequest } from "@/lib/identity/token";
+import { recomputeTrust } from "@/lib/trust/recompute";
 import { supabaseAdmin } from "@/lib/db/client";
 
 export async function POST(request: Request) {
@@ -29,12 +32,24 @@ export async function POST(request: Request) {
   const payload = parsed.data;
   const db = supabaseAdmin();
 
-  const [{ data: waterbody }, { data: existing }] = await Promise.all([
+  // A missing or invalid token never blocks submission — the observation is
+  // stored anonymously either way.
+  const observer = await observerFromRequest(db, request);
+
+  const [{ data: waterbody }, { data: existing }, recentByObserver] = await Promise.all([
     db.from("waterbodies").select("name").eq("id", payload.waterbodyId).maybeSingle(),
     db
       .from("observations")
       .select("id, observed_at, observer_id, survey, quality_weight")
       .eq("waterbody_id", payload.waterbodyId),
+    observer
+      ? db
+          .from("observations")
+          .select("id", { count: "exact", head: true })
+          .eq("observer_id", observer.id)
+          .gte("observed_at", new Date(Date.now() - 3_600_000).toISOString())
+          .then(({ count }) => count ?? 0)
+      : Promise.resolve(0),
   ]);
 
   if (!waterbody) {
@@ -52,10 +67,16 @@ export async function POST(request: Request) {
     ageHours: Math.max(0, ageHours),
   });
 
+  const validationStatus = plausibilityStatus({
+    gpsAccuracyM: payload.gpsAccuracyM,
+    recentByObserver,
+  });
+
   const { data, error } = await db
     .from("observations")
     .insert({
       waterbody_id: payload.waterbodyId,
+      observer_id: observer?.id ?? null,
       observed_at: payload.observedAt,
       location: `SRID=4326;POINT(${payload.longitude} ${payload.latitude})`,
       gps_accuracy_m: payload.gpsAccuracyM,
@@ -64,13 +85,25 @@ export async function POST(request: Request) {
       survey: payload.survey,
       indicators: toIndicators(payload.survey),
       quality_weight: weight,
-      validation_status: "pending",
+      validation_status: validationStatus,
     })
     .select("id")
     .single();
 
   if (error) {
     return NextResponse.json({ error: "insert_failed" }, { status: 500 });
+  }
+
+  // Recompute trust for every observer who has observed this water body.
+  // Never fails the request: the observation is already saved.
+  try {
+    const observerIds = [
+      ...(existing ?? []).map((o) => o.observer_id),
+      observer?.id ?? null,
+    ];
+    await recomputeTrust(db, observerIds);
+  } catch (recomputeError) {
+    console.error("trust recompute failed:", recomputeError);
   }
 
   const prior: StoredObservation[] = (existing ?? []).map((o) => ({
@@ -84,7 +117,7 @@ export async function POST(request: Request) {
   const current: StoredObservation = {
     id: data.id,
     observedAt: payload.observedAt,
-    observerId: null,
+    observerId: observer?.id ?? null,
     survey: payload.survey,
     qualityWeight: weight,
   };
@@ -94,6 +127,7 @@ export async function POST(request: Request) {
       id: data.id,
       qualityWeight: weight,
       waterbodyName: waterbody.name,
+      observer: observer ? { id: observer.id, displayName: observer.displayName } : null,
       delta: assessmentDelta(
         computeSnapshot(prior),
         computeSnapshot([...prior, current]),

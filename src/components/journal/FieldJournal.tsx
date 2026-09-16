@@ -10,6 +10,7 @@ import {
   type JournalEntry,
 } from "@/lib/journal/journal";
 import { loadJournal } from "@/lib/journal/storage";
+import { ObserverIdentityPanel } from "./ObserverIdentityPanel";
 
 export function FieldJournal() {
   const [entries, setEntries] = useState<JournalEntry[] | null>(null);
@@ -24,17 +25,20 @@ export function FieldJournal() {
 
   if (entries.length === 0) {
     return (
-      <Panel>
-        <p className="field-label m-0">Field journal</p>
-        <h2 className="mt-2 mb-2 text-2xl">Your journal is empty</h2>
-        <p className="m-0 max-w-md text-sm text-ink-muted">
-          Record your first observation and it will appear here, along with
-          the colour of the water you found.
-        </p>
-        <div className="mt-4">
-          <Button href="/map">Find a stream</Button>
-        </div>
-      </Panel>
+      <div className="space-y-6">
+        <ObserverIdentityPanel />
+        <Panel>
+          <p className="field-label m-0">Field journal</p>
+          <h2 className="mt-2 mb-2 text-2xl">Your journal is empty</h2>
+          <p className="m-0 max-w-md text-sm text-ink-muted">
+            Record your first observation and it will appear here, along with
+            the colour of the water you found.
+          </p>
+          <div className="mt-4">
+            <Button href="/map">Find a stream</Button>
+          </div>
+        </Panel>
+      </div>
     );
   }
 
@@ -43,6 +47,8 @@ export function FieldJournal() {
 
   return (
     <div className="space-y-10">
+      <ObserverIdentityPanel />
+
       <section className="space-y-3">
         <p className="field-label m-0">Signature scale</p>
         <h2 className="m-0 text-2xl">Colour collection</h2>

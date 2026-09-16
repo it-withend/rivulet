@@ -2,6 +2,7 @@ import Link from "next/link";
 import type React from "react";
 import { CityMap, type MapFeature } from "@/components/map/CityMap";
 import { supabaseAnon } from "@/lib/db/client";
+import { embeddedTrustScore } from "@/lib/db/embed";
 import {
   computeSnapshot,
   type StoredObservation,
@@ -70,7 +71,7 @@ export default async function MapPage(props: PageProps<"/map">) {
   const { data: observations, error: observationsError } = await db
     .from("observations")
     .select(
-      "id, waterbody_id, observed_at, observer_id, survey, quality_weight, is_synthetic, waterbodies!inner(city)",
+      "id, waterbody_id, observed_at, observer_id, survey, quality_weight, is_synthetic, observers(trust_score), waterbodies!inner(city)",
     )
     .eq("waterbodies.city", city);
 
@@ -87,6 +88,7 @@ export default async function MapPage(props: PageProps<"/map">) {
         observerId: o.observer_id,
         survey: o.survey,
         qualityWeight: Number(o.quality_weight),
+        observerTrust: embeddedTrustScore(o.observers),
       });
       byWaterbody.set(o.waterbody_id, list);
     }
