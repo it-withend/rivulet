@@ -1,9 +1,16 @@
 # Rivulet
 
+**Live prototype:** https://rivulet-xi.vercel.app
+
+**Track: 2 — Data-to-Insight.** Rivulet turns what residents notice at an urban stream into a
+trust-weighted, uncertainty-aware picture of that stream's health that a city, a researcher or a
+neighbour can act on.
+
 Rivulet is a trust and quality layer for citizen observations of urban freshwater, built for the
 IEEE OneAquaHealth Global Hackathon 2026. It turns citizen stream observations into
-uncertainty-aware ecological assessments, expressed in EU Water Framework Directive ecological
-status classes and emitted through the OneAquaHealth HL7 FHIR Implementation Guide.
+uncertainty-aware indicative status classes named after the EU Water Framework Directive, and
+exports them as FHIR resources that declare the OneAquaHealth HL7 FHIR Implementation Guide
+profiles.
 
 See `docs/superpowers/specs/2026-09-15-rivulet-design.md` for the design specification and
 `docs/superpowers/plans/2026-09-15-rivulet-phase1.md` for the Phase 1 implementation plan.
@@ -26,14 +33,26 @@ surfaces it in the product itself under "Why this score?".
 
 Methods draw on:
 
-- The Forel–Ule water colour scale, read from a photo via the WACODI colour-science chain
-  (Novoa, Wernand & van der Woerd 2013; Novoa et al. 2015) and IEC 61966-2-1:1999 sRGB colour
-  management.
-- EU Water Framework Directive 2000/60/EC (Annex V) ecological status classes.
-- BMWP macroinvertebrate family sensitivity scores (Armitage, Moss, Wright & Furse 1983).
+- The Forel–Ule water colour scale, estimated on the phone with a simplified WACODI-style
+  conversion (Novoa, Wernand & van der Woerd 2013; Novoa et al. 2015) and IEC 61966-2-1:1999 sRGB
+  colour management. There is no per-camera calibration.
+- Five indicative status classes named after EU Water Framework Directive 2000/60/EC (Annex V).
+  The class limits are equal-width priors, not calibrated EQR boundaries, so this is not an
+  official WFD assessment.
+- Macroinvertebrate sensitivity values set on the BMWP 1–10 family scale (Armitage, Moss, Wright &
+  Furse 1983) for six groups a resident can recognise — a simplified proxy, not the BMWP protocol.
 - Beta–Bernoulli conjugate Bayesian updating with equal-tailed credible intervals
-  (Gelman et al., *Bayesian Data Analysis*, 3rd ed., 2013).
-- The HL7 Europe OneAquaHealth FHIR Implementation Guide.
+  (Gelman et al., *Bayesian Data Analysis*, 3rd ed., 2013), with each observation weighted by its
+  quality and by its observer's trust score.
+- FHIR resources declaring the HL7 Europe OneAquaHealth Implementation Guide profiles for
+  indicators and locations. Real measurements (pH, dissolved oxygen, temperature, nitrate) use the
+  guide's codes; signs a resident sees but cannot measure (clarity, sewage smell, algae, foam, dead
+  fish, litter) use a separate Rivulet code system. The export has not been run through the
+  guide's validator.
+
+Observations that fail plausibility checks (imprecise GPS, far from the stream, too many in an
+hour) are stored but held out of assessments, trust scores and exports until a person reviews
+them.
 
 Full citations are in `src/lib/science/method-version.ts`.
 
@@ -83,8 +102,18 @@ Apply the database migrations in `supabase/migrations/` to that project (in orde
 
 ```bash
 npx tsx scripts/seed/fetch-waterbodies.ts
-npx tsx scripts/seed/seed.ts
+npx tsx --env-file=.env.local scripts/seed/seed.ts
+npx tsx --env-file=.env.local scripts/seed/seed-observers.ts
+npx tsx --env-file=.env.local scripts/recompute-trust.ts
 ```
+
+The last two steps create the synthetic demo observers and compute their trust scores; without
+them the people leaderboard is empty. To add a city that is not in the bundled seed, run
+`npx tsx --env-file=.env.local scripts/seed/seed-city.ts <City> <admin_level>`.
+
+Signed volunteer certificates also need `RIVULET_ISSUER_PRIVATE_KEY`, an Ed25519 private key as
+base64-encoded PKCS#8 DER. Without it the certificate API answers `issuer_unavailable` rather than
+failing.
 
 Run the development server:
 

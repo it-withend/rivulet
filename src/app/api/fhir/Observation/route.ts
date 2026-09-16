@@ -8,6 +8,8 @@ import {
 } from "@/lib/fhir/observation";
 import { buildBundle, type FhirResource } from "./bundle";
 import { embeddedTrustScore } from "@/lib/db/embed";
+import { toIndicators } from "@/lib/science/indicators";
+import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
 
 export async function GET(request: Request) {
   const waterbodyId = new URL(request.url).searchParams.get("waterbody");
@@ -43,9 +45,11 @@ export async function GET(request: Request) {
   const { data: rows, error: observationsError } = await db
     .from("observations")
     .select(
-      "id, observed_at, observer_id, survey, indicators, quality_weight, is_synthetic, observers(trust_score)",
+      "id, observed_at, observer_id, survey, quality_weight, is_synthetic, observers(trust_score)",
     )
     .eq("waterbody_id", waterbodyId)
+    // Flagged observations wait for human review before they leave Rivulet.
+    .not("validation_status", "in", HELD_FOR_REVIEW_FILTER)
     .order("observed_at", { ascending: false });
 
   if (observationsError) {
@@ -75,7 +79,9 @@ export async function GET(request: Request) {
   for (const row of observations) {
     if (row.is_synthetic) anySynthetic = true;
 
-    for (const indicator of row.indicators as { code: string; value: number }[]) {
+    // Derived from the survey at export time rather than the stored
+    // `indicators` column, so older rows follow the current code mapping.
+    for (const indicator of toIndicators(row.survey)) {
       resources.push(
         toObservationIndicators({
           id: `${row.id}-${indicator.code}`,

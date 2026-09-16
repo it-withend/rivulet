@@ -18,6 +18,7 @@ const base = {
   waterbodyId: "wb1",
   waterbodyName: "Ribeira de Coselhas",
   forelUle: 6,
+  heldForReview: false,
   newBadges: [],
 };
 

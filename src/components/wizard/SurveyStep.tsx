@@ -20,16 +20,30 @@ const TAXA: { code: TaxonCode; label: string }[] = [
 
 const ODOURS = [
   { value: "none", label: "No smell" },
-  { value: "musty", label: "Musty" },
-  { value: "sewage", label: "Sewage" },
-  { value: "chemical", label: "Chemical" },
+  { value: "musty", label: "Earthy or musty" },
+  { value: "sewage", label: "Sewage or rotten eggs" },
+  { value: "chemical", label: "Chemical, like fuel or bleach" },
 ] as const;
 
 const CLARITIES = [
-  { value: "clear", label: "Clear" },
-  { value: "slightly_turbid", label: "Slightly turbid" },
-  { value: "turbid", label: "Turbid" },
-  { value: "opaque", label: "Opaque" },
+  { value: "clear", label: "Clear, I can see the bottom" },
+  { value: "slightly_turbid", label: "A bit cloudy" },
+  { value: "turbid", label: "Cloudy" },
+  { value: "opaque", label: "Can't see into it at all" },
+] as const;
+
+const FLOWS = [
+  { value: "normal", label: "Flowing" },
+  { value: "high", label: "Fast, after rain" },
+  { value: "low", label: "Barely moving" },
+  { value: "stagnant", label: "Not moving at all" },
+] as const;
+
+const LITTER = [
+  { value: 0, label: "None" },
+  { value: 1, label: "A few pieces" },
+  { value: 2, label: "Quite a lot" },
+  { value: 3, label: "Piles of rubbish" },
 ] as const;
 
 const SIGNS = [
@@ -86,12 +100,47 @@ export function SurveyStep({ value, onChange }: Props) {
       </fieldset>
 
       <fieldset className="m-0 border-0 p-0">
+        <legend className="mb-3 p-0 text-base font-medium">
+          Is the water moving?
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {FLOWS.map((flow) => (
+            <Chip
+              key={flow.value}
+              pressed={value.flow === flow.value}
+              onClick={() => onChange({ ...value, flow: flow.value })}
+            >
+              {flow.label}
+            </Chip>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="m-0 border-0 p-0">
+        <legend className="mb-3 p-0 text-base font-medium">
+          Any litter in or beside the water?
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {LITTER.map((level) => (
+            <Chip
+              key={level.value}
+              pressed={value.litter === level.value}
+              onClick={() => onChange({ ...value, litter: level.value })}
+            >
+              {level.label}
+            </Chip>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="m-0 border-0 p-0">
         <legend className="mb-1 p-0 text-base font-medium">
           Did you see any of these small creatures?
         </legend>
         <p className="mt-0 mb-3 max-w-xl text-sm text-ink-muted">
-          Lift a stone and look underneath. These animals tell us a lot about
-          the water.
+          Optional. Lift a stone and look underneath. Some of these animals
+          only live in clean water, so they tell us a lot about it. Skip this
+          if you did not look.
         </p>
         <div className="flex flex-wrap gap-2">
           {TAXA.map((taxon) => (

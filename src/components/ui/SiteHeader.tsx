@@ -9,7 +9,6 @@ const NAV = [
   { href: "/observe", label: "Record" },
   { href: "/journal", label: "Journal" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/open-data", label: "Open data" },
 ] as const;
 
 export function SiteHeader() {

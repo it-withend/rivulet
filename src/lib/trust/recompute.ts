@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { computeTrust, type TrustObservation } from "@/lib/science/trust";
+import { selectAll } from "@/lib/db/select-all";
+import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
 
 /**
  * Recomputes `observers.trust_score` for the given observer ids. Loads their
@@ -23,10 +25,15 @@ export async function recomputeTrust(
 
   const waterbodyIds = [...new Set(ownRows.map((r) => r.waterbody_id as string))];
 
-  const { data: rows, error: rowsError } = await db
-    .from("observations")
-    .select("id, observer_id, waterbody_id, survey, quality_weight")
-    .in("waterbody_id", waterbodyIds);
+  const { data: rows, error: rowsError } = await selectAll((from, to) =>
+    db
+      .from("observations")
+      .select("id, observer_id, waterbody_id, survey, quality_weight")
+      .in("waterbody_id", waterbodyIds)
+      .not("validation_status", "in", HELD_FOR_REVIEW_FILTER)
+      .order("id")
+      .range(from, to),
+  );
 
   if (rowsError || !rows) return;
 

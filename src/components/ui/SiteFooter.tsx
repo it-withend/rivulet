@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-rule print:hidden">
@@ -7,13 +9,20 @@ export function SiteFooter() {
           <p className="m-0 text-ink">
             The IEEE OneAquaHealth Global Hackathon 2026.
           </p>
+          <p className="field-label mt-5 mb-2">For researchers</p>
+          <p className="m-0">
+            <Link href="/open-data">Open data and FHIR export</Link>
+            {" · "}
+            <a href="https://github.com/it-withend/rivulet">Source code</a>
+          </p>
         </div>
         <div>
           <p className="field-label mb-2">Sources</p>
           <p className="m-0">
-            Indicator codes follow the implementation guide of the OneAquaHealth
-            project on urban freshwater ecosystems. Forel–Ule class limits after
-            Novoa, Wernand &amp; van der Woerd (2013).
+            FHIR resources declare profiles from the OneAquaHealth
+            implementation guide; signs residents report use a separate Rivulet
+            code system. Forel–Ule class limits after Novoa, Wernand &amp; van
+            der Woerd (2013).
           </p>
         </div>
       </div>
