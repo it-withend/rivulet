@@ -2,8 +2,9 @@ import { CityMap, type MapFeature } from "@/components/map/CityMap";
 import { loadCityStreams } from "@/lib/city-data";
 import { CITIES, CITY_CENTRES, DEFAULT_CITY } from "@/lib/cities";
 import { LEGEND, MAP_LAYERS, type MapLayer } from "@/lib/ui/map-layers";
-import { Camera, HeartPulse, Leaf, MousePointerClick, Satellite } from "lucide-react";
+import { Camera, HeartPulse, Leaf, MousePointerClick, Satellite, Sparkles } from "lucide-react";
 import { LinkChip as CityChip } from "@/components/ui/LinkChip";
+import { Button } from "@/components/ui/Button";
 
 export default async function MapPage(props: PageProps<"/map">) {
   const searchParams = await props.searchParams;
@@ -55,6 +56,20 @@ export default async function MapPage(props: PageProps<"/map">) {
           </CityChip>
         ))}
       </nav>
+
+      {checked === 0 && features.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-river/40 bg-paper-raised p-4">
+          <p className="m-0 flex items-center gap-2 text-sm">
+            <Sparkles aria-hidden="true" className="size-4 shrink-0 text-river" />
+            {city} was just added — its {features.length} stream sections are
+            mapped, but nobody has reported yet. That grey isn&apos;t a bug, it&apos;s
+            an open invitation.
+          </p>
+          <Button href="/observe" variant="secondary" className="shrink-0">
+            Be the first to check
+          </Button>
+        </div>
+      )}
 
       <nav aria-label="What the colours show" className="mb-4">
         <p className="field-label mb-2">What should the colours show?</p>

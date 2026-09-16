@@ -8,6 +8,7 @@ import {
   Download,
   MapPin,
   SearchCheck,
+  Sparkles,
   Users,
   Waves,
 } from "lucide-react";
@@ -115,6 +116,17 @@ export default async function CityReportPage(props: PageProps<"/city">) {
         <h2 id="status-heading" className="m-0 text-2xl">Water health across the city</h2>
         {streams.length === 0 ? (
           <p className="m-0 text-ink-muted">This city&apos;s water network has not been loaded yet.</p>
+        ) : rated.length === 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-river/40 bg-paper-raised p-4">
+            <p className="m-0 flex items-center gap-2 text-sm">
+              <Sparkles aria-hidden="true" className="size-4 shrink-0 text-river" />
+              {city} was just added to Rivulet: {streams.length} stream sections are
+              mapped, but nobody has reported on any of them yet.
+            </p>
+            <Button href="/observe" variant="secondary" className="shrink-0">
+              Send the first report
+            </Button>
+          </div>
         ) : (
           <>
             <div className="flex h-6 w-full overflow-hidden rounded-sm border border-rule" role="img"

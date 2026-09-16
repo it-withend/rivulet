@@ -129,6 +129,9 @@ cp .env.example .env.local
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `RIVULET_ISSUER_PRIVATE_KEY` — optional, needed to issue signed certificates (see below)
+- `RIVULET_MODERATOR_TOKEN` — optional, needed to use `/moderate` (see below)
+- `GROQ_API_KEY` — optional, needed for the photo authenticity check (see below)
 
 Apply the database migrations in `supabase/migrations/` to that project (in order), then seed it:
 
