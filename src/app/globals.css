@@ -109,7 +109,19 @@
   }
 }
 
+/* Printable certificate: A4 landscape, named page (Chromium/Edge support
+   named pages via the `page` property; other engines fall back to their
+   default page box, which is still readable). */
+@page certificate {
+  size: A4 landscape;
+  margin: 14mm;
+}
+
 @layer components {
+  .certificate-print-page {
+    page: certificate;
+  }
+
   /* Specimen label: small mono caps for units, indices and section labels */
   .field-label {
     font-family: var(--font-mono);

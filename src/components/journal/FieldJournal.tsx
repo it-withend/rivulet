@@ -11,6 +11,7 @@ import {
 } from "@/lib/journal/journal";
 import { loadJournal } from "@/lib/journal/storage";
 import { ObserverIdentityPanel } from "./ObserverIdentityPanel";
+import { CertificatesPanel } from "./CertificatesPanel";
 
 export function FieldJournal() {
   const [entries, setEntries] = useState<JournalEntry[] | null>(null);
@@ -27,6 +28,7 @@ export function FieldJournal() {
     return (
       <div className="space-y-6">
         <ObserverIdentityPanel />
+        <CertificatesPanel />
         <Panel>
           <p className="field-label m-0">Field journal</p>
           <h2 className="mt-2 mb-2 text-2xl">Your journal is empty</h2>
@@ -48,6 +50,7 @@ export function FieldJournal() {
   return (
     <div className="space-y-10">
       <ObserverIdentityPanel />
+      <CertificatesPanel />
 
       <section className="space-y-3">
         <p className="field-label m-0">Signature scale</p>

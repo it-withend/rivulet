@@ -38,6 +38,18 @@ export async function GET(request: Request) {
   const ranked = contributions(rows).sort((a, b) => b.points - a.points);
   const index = ranked.findIndex((r) => r.observerId === observer.id);
   const mine = index >= 0 ? ranked[index] : null;
+  const homeCity = mine?.homeCity ?? null;
+
+  // Certificate eligibility (the "data_steward" tier) is decided by rank
+  // within the observer's home city, not the combined all-cities rank shown
+  // as `rank` above — see src/lib/engagement/certificates.ts.
+  let homeCityRank: number | null = null;
+  if (homeCity) {
+    const cityRows = rows.filter((r) => r.waterbodyCity === homeCity);
+    const cityRanked = contributions(cityRows).sort((a, b) => b.points - a.points);
+    const cityIndex = cityRanked.findIndex((r) => r.observerId === observer.id);
+    homeCityRank = cityIndex >= 0 ? cityIndex + 1 : null;
+  }
 
   return NextResponse.json({
     id: observer.id,
@@ -47,7 +59,8 @@ export async function GET(request: Request) {
     countedObservations: mine?.countedObservations ?? 0,
     streamsCovered: mine?.streamsCovered ?? 0,
     gapsFilled: mine?.gapsFilled ?? 0,
-    homeCity: mine?.homeCity ?? null,
+    homeCity,
     rank: index >= 0 ? index + 1 : null,
+    homeCityRank,
   });
 }

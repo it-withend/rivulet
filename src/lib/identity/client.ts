@@ -1,6 +1,12 @@
 const OBSERVER_KEY = "rivulet.observer.v1";
 
-export type StoredObserver = { id: string; displayName: string; token: string };
+export type StoredObserver = {
+  id: string;
+  displayName: string;
+  token: string;
+  /** Ids of certificates this device has claimed, so the journal can link to them. */
+  certificateIds?: string[];
+};
 
 type KeyValueStore = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
@@ -13,12 +19,15 @@ function browserStorage(): KeyValueStore | null {
 }
 
 function isStoredObserver(value: unknown): value is StoredObserver {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as StoredObserver;
   return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as StoredObserver).id === "string" &&
-    typeof (value as StoredObserver).displayName === "string" &&
-    typeof (value as StoredObserver).token === "string"
+    typeof v.id === "string" &&
+    typeof v.displayName === "string" &&
+    typeof v.token === "string" &&
+    (v.certificateIds === undefined ||
+      (Array.isArray(v.certificateIds) &&
+        v.certificateIds.every((c) => typeof c === "string")))
   );
 }
 
@@ -47,6 +56,19 @@ export function saveObserver(
   } catch {
     // Private browsing or full storage: the identity just won't persist.
   }
+}
+
+/** Records a newly issued certificate id against the stored identity. */
+export function addCertificateId(
+  id: string,
+  store: KeyValueStore | null = browserStorage(),
+): StoredObserver | null {
+  const current = getObserver(store);
+  if (!current) return null;
+  const certificateIds = [...(current.certificateIds ?? []), id];
+  const updated = { ...current, certificateIds };
+  saveObserver(updated, store);
+  return updated;
 }
 
 export function clearObserver(

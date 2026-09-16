@@ -1,6 +1,6 @@
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-rule">
+    <footer className="mt-16 border-t border-rule print:hidden">
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 text-sm text-ink-muted sm:grid-cols-[1fr_1fr] sm:px-6">
         <div>
           <p className="field-label mb-2">Made for</p>

@@ -19,6 +19,7 @@ import { MIN_CONFIDENCE_FOR_CLASS, WFD_BOUNDARIES } from "./wfd";
 import { TRUST_PARAMETERS } from "./trust";
 import { PLAUSIBILITY } from "./plausibility";
 import { CONTRIBUTION_PARAMETERS } from "@/lib/engagement/contribution";
+import { CERTIFICATE_PARAMETERS } from "@/lib/engagement/certificates";
 
 type ParameterValue = number | readonly number[];
 
@@ -98,6 +99,17 @@ const CONTRIBUTION_RATIONALE: Record<keyof typeof CONTRIBUTION_PARAMETERS, strin
     "Extra points for the first observation on a water body that had none in the preceding window, rewarding coverage over repetition.",
   gapDays:
     "A water body counts as a data gap if it had no observation in this many preceding days.",
+};
+
+const CERTIFICATE_RATIONALE: Record<keyof typeof CERTIFICATE_PARAMETERS, string> = {
+  contributorMinObservations:
+    "Validated observations required for the entry-level Contributor certificate.",
+  contributorMinTrust: "Minimum Trust Score required for the Contributor certificate.",
+  dataStewardMinObservations:
+    "Validated observations required for the higher Data Steward certificate.",
+  dataStewardMinTrust: "Minimum Trust Score required for the Data Steward certificate.",
+  dataStewardMaxRank:
+    "Rank an observer must reach or beat in their home city's people leaderboard for the Data Steward certificate.",
 };
 
 const CONFIDENCE_RATIONALE: Record<keyof typeof DATA_CONFIDENCE, string> = {
@@ -263,6 +275,14 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
       value: CONTRIBUTION_PARAMETERS[key],
       kind: "prior",
       rationale: `${CONTRIBUTION_RATIONALE[key]} This is a programme rule, not a scientific estimate, but is declared here for transparency. ${UNCALIBRATED}`,
+    }),
+  ),
+  ...(Object.keys(CERTIFICATE_PARAMETERS) as (keyof typeof CERTIFICATE_PARAMETERS)[]).map(
+    (key): MethodParameter => ({
+      id: `certificate.${key}`,
+      value: CERTIFICATE_PARAMETERS[key],
+      kind: "prior",
+      rationale: `${CERTIFICATE_RATIONALE[key]} This is a programme rule, not a scientific estimate, but is declared here for transparency. ${UNCALIBRATED}`,
     }),
   ),
 ];
