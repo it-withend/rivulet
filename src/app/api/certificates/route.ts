@@ -8,6 +8,7 @@ import { buildCredential } from "@/lib/credentials/open-badge";
 import { signCredential } from "@/lib/credentials/jwt";
 import { issuerPrivateKey } from "@/lib/credentials/keys";
 import { embeddedTrustScore, embeddedCity } from "@/lib/db/embed";
+import { selectAll } from "@/lib/db/select-all";
 
 const TIERS: CertificateTier[] = ["contributor", "data_steward"];
 
@@ -47,11 +48,15 @@ export async function POST(request: Request) {
   const { tier, recipientName } = parsed;
 
   const [{ data: rows, error: rowsError }, { data: self, error: selfError }] = await Promise.all([
-    db
-      .from("observations")
-      .select(
-        "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(trust_score), waterbodies!inner(city)",
-      ),
+    selectAll((from, to) =>
+      db
+        .from("observations")
+        .select(
+          "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(trust_score), waterbodies!inner(city)",
+        )
+        .order("id")
+        .range(from, to),
+    ),
     db.from("observers").select("trust_score, is_synthetic").eq("id", observer.id).maybeSingle(),
   ]);
 
