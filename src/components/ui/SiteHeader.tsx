@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BarChart3, BookOpen, Camera, Map, Trophy } from "lucide-react";
 import { ForelUleRibbon } from "./ForelUleRibbon";
 
 const NAV = [
-  { href: "/map", label: "Map" },
-  { href: "/observe", label: "Record" },
-  { href: "/journal", label: "Journal" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/map", label: "Map", icon: Map },
+  { href: "/city", label: "City report", icon: BarChart3 },
+  { href: "/journal", label: "My journal", icon: BookOpen },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
 ] as const;
 
 export function SiteHeader() {
@@ -49,11 +50,22 @@ export function SiteHeader() {
                         : "border-transparent text-ink-muted hover:border-rule-strong hover:text-ink")
                     }
                   >
+                    <item.icon aria-hidden="true" className="mr-1.5 size-4 shrink-0" />
                     {item.label}
                   </Link>
                 </li>
               );
             })}
+            <li className="flex items-center pl-1">
+              <Link
+                href="/observe"
+                aria-current={pathname?.startsWith("/observe") ? "page" : undefined}
+                className="inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-sm bg-river px-3 text-[0.9375rem] font-medium text-paper no-underline hover:bg-river-deep"
+              >
+                <Camera aria-hidden="true" className="size-4" />
+                Check a stream
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

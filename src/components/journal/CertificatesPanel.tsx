@@ -3,6 +3,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
+import { Award, Info } from "lucide-react";
+import { CERTIFICATE_PARAMETERS } from "@/lib/engagement/certificates";
 import {
   eligibility,
   type CertificateTier,
@@ -14,6 +16,7 @@ type Summary = {
   trust: number;
   countedObservations: number;
   homeCityRank: number | null;
+  heldForReview: number;
 };
 
 const TIER_LABEL: Record<CertificateTier, string> = {
@@ -53,7 +56,26 @@ export function CertificatesPanel() {
       });
   }, []);
 
-  if (!observer || !summary) return null;
+  if (!observer) {
+    return (
+      <Panel>
+        <h2 className="mt-0 mb-2 flex items-center gap-2 text-2xl">
+          <Award aria-hidden="true" className="size-6 text-river" />
+          Earn a volunteer certificate
+        </h2>
+        <p className="m-0 max-w-lg text-sm text-ink-muted">
+          Send {CERTIFICATE_PARAMETERS.contributorMinObservations} reports while
+          standing at streams — at most one per stream per day — and you can
+          claim a signed Contributor certificate for a CV or school portfolio.
+          No account needed.
+        </p>
+        <div className="mt-4">
+          <Button href="/observe">Check a stream</Button>
+        </div>
+      </Panel>
+    );
+  }
+  if (!summary) return null;
 
   const elig: Record<CertificateTier, TierEligibility> = eligibility(
     { countedObservations: summary.countedObservations, trust: summary.trust, isSynthetic: false },
@@ -104,7 +126,27 @@ export function CertificatesPanel() {
   return (
     <Panel>
       <p className="field-label m-0">Recognition</p>
-      <h2 className="mt-2 mb-4 text-2xl">Certificates</h2>
+      <h2 className="mt-2 mb-2 flex items-center gap-2 text-2xl">
+        <Award aria-hidden="true" className="size-6 text-river" />
+        Certificates
+      </h2>
+      <p className="mt-0 mb-4 max-w-lg text-sm text-ink-muted">
+        A signed certificate you can add to a CV or school portfolio. It counts
+        reports made at the stream itself — at most one per stream per day — from
+        people whose reports agree with their neighbours&apos;.
+      </p>
+
+      {summary.heldForReview > 0 && (
+        <p className="mt-0 mb-4 flex gap-2 rounded-sm border border-rule bg-paper p-3 text-sm">
+          <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-river" />
+          <span>
+            {summary.heldForReview === 1 ? "1 of your reports is" : `${summary.heldForReview} of your reports are`}{" "}
+            waiting for review and not counted yet — usually because your
+            phone&apos;s location was far from the stream you picked. Reports sent
+            while standing at the stream count straight away.
+          </span>
+        </p>
+      )}
 
       <div className="space-y-6">
         {TIERS.map((tier) => {
@@ -112,6 +154,30 @@ export function CertificatesPanel() {
           return (
             <div key={tier} className="border-t border-rule pt-4 first:border-t-0 first:pt-0">
               <p className="m-0 text-base font-medium">{TIER_LABEL[tier]}</p>
+              {(() => {
+                const need =
+                  tier === "contributor"
+                    ? CERTIFICATE_PARAMETERS.contributorMinObservations
+                    : CERTIFICATE_PARAMETERS.dataStewardMinObservations;
+                const have = Math.min(summary.countedObservations, need);
+                return (
+                  <div className="mt-2 mb-2">
+                    <div
+                      className="h-2 rounded-full bg-rule"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={need}
+                      aria-valuenow={have}
+                      aria-label={`${TIER_LABEL[tier]}: ${have} of ${need} counted reports`}
+                    >
+                      <div className="h-2 rounded-full bg-river" style={{ width: `${(have / need) * 100}%` }} />
+                    </div>
+                    <p className="num m-0 mt-1 text-xs text-ink-muted">
+                      {have} of {need} counted reports
+                    </p>
+                  </div>
+                );
+              })()}
               {tierEligibility.eligible ? (
                 <>
                   <p className="mt-1 mb-3 text-sm text-ink-muted">

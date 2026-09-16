@@ -1,60 +1,9 @@
-import Link from "next/link";
-import type React from "react";
 import { CityMap, type MapFeature } from "@/components/map/CityMap";
-import { supabaseAnon } from "@/lib/db/client";
-import { embeddedTrustScore } from "@/lib/db/embed";
-import {
-  computeSnapshot,
-  type StoredObservation,
-} from "@/lib/science/snapshot";
-import { selectAll } from "@/lib/db/select-all";
-import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
-import { readOneHealth, type Concern, type ExposureSite } from "@/lib/science/one-health";
-import { CONCERN_COLOUR, CONCERN_LABEL } from "@/lib/ui/one-health-copy";
-import type { SatelliteReading } from "@/lib/science/satellite";
-
-type GeoJsonLineString = {
-  type: string;
-  coordinates: [number, number][];
-};
-
-const CITY_CENTRES: Record<string, [number, number]> = {
-  Coimbra: [-8.4195, 40.2033],
-  Toulouse: [1.4442, 43.6047],
-  Benevento: [14.7826, 41.1299],
-  Gent: [3.7174, 51.0543],
-  Oslo: [10.7522, 59.9139],
-};
-
-const CITIES = Object.keys(CITY_CENTRES);
-const DEFAULT_CITY = "Coimbra";
-
-function CityChip({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={
-        "inline-flex min-h-11 items-center rounded-sm border px-3.5 py-2 " +
-        "font-sans text-[0.9375rem] leading-tight no-underline transition-colors duration-150 " +
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink " +
-        (active
-          ? "border-ink bg-ink text-paper"
-          : "border-rule-strong bg-paper-raised text-ink hover:border-ink")
-      }
-    >
-      {children}
-    </Link>
-  );
-}
+import { loadCityStreams } from "@/lib/city-data";
+import { CITIES, CITY_CENTRES, DEFAULT_CITY } from "@/lib/cities";
+import { LEGEND, MAP_LAYERS, type MapLayer } from "@/lib/ui/map-layers";
+import { Camera, HeartPulse, Leaf, MousePointerClick, Satellite } from "lucide-react";
+import { LinkChip as CityChip } from "@/components/ui/LinkChip";
 
 export default async function MapPage(props: PageProps<"/map">) {
   const searchParams = await props.searchParams;
@@ -64,138 +13,38 @@ export default async function MapPage(props: PageProps<"/map">) {
   const centre = CITY_CENTRES[city];
   const layerParam = searchParams.layer;
   const requestedLayer = Array.isArray(layerParam) ? layerParam[0] : layerParam;
-  const layer =
+  const layer: MapLayer =
     requestedLayer === "health" || requestedLayer === "divergence"
       ? requestedLayer
       : "status";
 
-  const db = supabaseAnon();
+  const { streams, hasSynthetic, failed } = await loadCityStreams(city);
 
-  // One query for the whole city; a query per water body is too slow with
-  // hundreds of OpenStreetMap segments. Only the columns the map needs —
-  // Oslo alone has 2,549 segments.
-  const [
-    { data: waterbodies, error: waterbodiesError },
-    { data: observations, error: observationsError },
-    { data: exposureRows },
-  ] = await Promise.all([
-    selectAll((from, to) =>
-      db
-        .from("waterbodies")
-        .select("id, name, geometry")
-        .eq("city", city)
-        .order("id")
-        .range(from, to),
-    ),
-    // Observations flagged for review stay out of the assessment until a
-    // person has looked at them.
-    selectAll((from, to) =>
-      db
-        .from("observations")
-        .select(
-          "id, waterbody_id, observed_at, observer_id, survey, quality_weight, is_synthetic, observers(trust_score), waterbodies!inner(city)",
-        )
-        .eq("waterbodies.city", city)
-        .not("validation_status", "in", HELD_FOR_REVIEW_FILTER)
-        .order("id")
-        .range(from, to),
-    ),
-    selectAll((from, to) =>
-      db
-        .from("waterbody_exposure")
-        .select("waterbody_id, kind, site_count, nearest_m, nearest_name, waterbodies!inner(city)")
-        .eq("waterbodies.city", city)
-        .order("waterbody_id")
-        .order("kind")
-        .range(from, to),
-    ),
-  ]);
-
-  const exposureByWaterbody = new Map<string, ExposureSite[]>();
-  for (const e of exposureRows) {
-    const list = exposureByWaterbody.get(e.waterbody_id) ?? [];
-    list.push({
-      kind: e.kind,
-      siteCount: e.site_count,
-      nearestM: Number(e.nearest_m),
-      nearestName: e.nearest_name,
-    });
-    exposureByWaterbody.set(e.waterbody_id, list);
-  }
-
-  const { data: satelliteReadings, error: satelliteError } = await db
-    .from("satellite_readings")
-    .select(
-      "id, waterbody_id, acquired_at, scene_id, cloud_cover, usable_pixels, ndci, turbidity, forel_ule_equivalent, hue_angle, waterbodies!inner(city)",
-    )
-    .eq("waterbodies.city", city);
-
-  const byWaterbody = new Map<string, StoredObservation[]>();
-  let hasSynthetic = false;
-
-  if (!observationsError) {
-    for (const o of observations ?? []) {
-      if (o.is_synthetic) hasSynthetic = true;
-      const list = byWaterbody.get(o.waterbody_id) ?? [];
-      list.push({
-        id: o.id,
-        observedAt: o.observed_at,
-        observerId: o.observer_id,
-        survey: o.survey,
-        qualityWeight: Number(o.quality_weight),
-        observerTrust: embeddedTrustScore(o.observers),
-      });
-      byWaterbody.set(o.waterbody_id, list);
-    }
-  }
-
-  const satelliteByWaterbody = new Map<string, SatelliteReading[]>();
-  if (!satelliteError) {
-    for (const r of satelliteReadings ?? []) {
-      const list = satelliteByWaterbody.get(r.waterbody_id) ?? [];
-      list.push({
-        id: r.id,
-        waterbodyId: r.waterbody_id,
-        acquiredAt: r.acquired_at,
-        sceneId: r.scene_id,
-        cloudCover: r.cloud_cover === null ? null : Number(r.cloud_cover),
-        usablePixels: r.usable_pixels,
-        ndci: r.ndci === null ? null : Number(r.ndci),
-        turbidity: r.turbidity === null ? null : Number(r.turbidity),
-        forelUleEquivalent: r.forel_ule_equivalent,
-        hueAngle: r.hue_angle === null ? null : Number(r.hue_angle),
-      });
-      satelliteByWaterbody.set(r.waterbody_id, list);
-    }
-  }
-
-  const features: MapFeature[] = waterbodiesError
+  const features: MapFeature[] = failed
     ? []
-    : (waterbodies ?? []).map((wb) => {
-        const stored = byWaterbody.get(wb.id) ?? [];
-        const snapshot = computeSnapshot(
-          stored,
-          new Date(),
-          satelliteByWaterbody.get(wb.id) ?? [],
-        );
-        return {
-          id: wb.id,
-          name: wb.name,
-          klass: snapshot.assessment.klass,
-          concern: readOneHealth(stored, exposureByWaterbody.get(wb.id) ?? []).overall,
-          diverged: snapshot.divergence?.diverged ?? null,
-          coordinates: (wb.geometry as GeoJsonLineString).coordinates,
-        };
-      });
+    : streams.map((stream) => ({
+        id: stream.id,
+        name: stream.name,
+        klass: stream.snapshot.assessment.klass,
+        concern: stream.oneHealth.overall,
+        diverged: stream.snapshot.divergence?.diverged ?? null,
+        coordinates: stream.coordinates,
+      }));
 
-  const LEGEND: Concern[] = ["none", "watch", "care", "avoid"];
+  const checked = features.filter((f) => f.klass !== null).length;
+  const layerIcon = { status: Leaf, health: HeartPulse, divergence: Satellite } as const;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <p className="field-label m-0">Field map</p>
-      <h1 className="mt-2 mb-5 text-4xl">Urban streams in {city}</h1>
+      <p className="field-label m-0">Map</p>
+      <h1 className="mt-2 mb-2 text-4xl">Streams in {city}</h1>
+      <p className="mt-0 mb-5 max-w-2xl text-ink-muted">
+        {features.length === 0
+          ? "The water network for this city has not been loaded yet."
+          : `${checked} of ${features.length} stream sections have enough reports from neighbours to rate. Every grey dashed line is a stream nobody has checked recently.`}
+      </p>
 
-      <nav aria-label="Cities" className="mb-6 flex flex-wrap gap-2">
+      <nav aria-label="Cities" className="mb-4 flex flex-wrap gap-2">
         {CITIES.map((name) => (
           <CityChip
             key={name}
@@ -207,63 +56,79 @@ export default async function MapPage(props: PageProps<"/map">) {
         ))}
       </nav>
 
-      <nav aria-label="Map layer" className="mb-4 flex flex-wrap gap-2">
-        <CityChip href={`/map?city=${city}`} active={layer === "status"}>
-          Ecological status
-        </CityChip>
-        <CityChip href={`/map?city=${city}&layer=health`} active={layer === "health"}>
-          People &amp; animals
-        </CityChip>
-        <CityChip href={`/map?city=${city}&layer=divergence`} active={layer === "divergence"}>
-          Citizen–satellite divergence
-        </CityChip>
+      <nav aria-label="What the colours show" className="mb-4">
+        <p className="field-label mb-2">What should the colours show?</p>
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(MAP_LAYERS) as MapLayer[]).map((key) => {
+            const Icon = layerIcon[key];
+            return (
+              <CityChip
+                key={key}
+                href={`/map?city=${city}${key === "status" ? "" : `&layer=${key}`}`}
+                active={layer === key}
+              >
+                <Icon aria-hidden="true" className="size-4" />
+                {MAP_LAYERS[key].label}
+              </CityChip>
+            );
+          })}
+        </div>
       </nav>
 
-      <CityMap features={features} centre={centre} layer={layer} />
+      <div className="grid gap-4 lg:grid-cols-[1fr_17rem]">
+        <CityMap features={features} centre={centre} layer={layer} />
 
-      {layer === "health" && (
-        <ul className="m-0 mt-3 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-sm">
-          {LEGEND.map((concern) => (
-            <li key={concern} className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="inline-block h-1 w-6 rounded-full"
-                style={{ backgroundColor: CONCERN_COLOUR[concern] }}
-              />
-              {CONCERN_LABEL[concern]}
-            </li>
-          ))}
-        </ul>
-      )}
+        <aside aria-label="How to read this map" className="space-y-4">
+          <div className="rounded-md border border-rule bg-paper-raised p-4">
+            <p className="m-0 text-sm font-medium">{MAP_LAYERS[layer].question}</p>
+            <ul className="m-0 mt-3 list-none space-y-2 p-0 text-sm">
+              {LEGEND[layer].map((entry) => (
+                <li key={entry.label} className="flex items-center gap-2.5">
+                  <svg aria-hidden="true" width="28" height="10" viewBox="0 0 28 10" className="shrink-0">
+                    <line
+                      x1="2" y1="5" x2="26" y2="5"
+                      stroke={entry.colour}
+                      strokeWidth={entry.dashed ? 3 : 5}
+                      strokeLinecap="round"
+                      strokeDasharray={entry.dashed ? "4 3" : undefined}
+                    />
+                  </svg>
+                  {entry.label}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-      {features.length === 0 && (
-        <p className="mt-3 text-sm text-ink-muted">
-          The water network for this city has not been loaded yet.
-        </p>
-      )}
+          <div className="rounded-md border border-rule bg-paper-raised p-4 text-sm">
+            <p className="field-label m-0">How to use it</p>
+            <ol className="m-0 mt-2 list-none space-y-2 p-0">
+              <li className="flex gap-2">
+                <MousePointerClick aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                Tap any line to see that stream.
+              </li>
+              <li className="flex gap-2">
+                <Camera aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                At the water? Press &ldquo;Check a stream&rdquo; — it takes about two minutes.
+              </li>
+            </ol>
+          </div>
 
-      {hasSynthetic && (
-        <p className="mt-3 text-sm text-ink-muted">
-          Includes synthetic demo observations while the pilot collects real
-          data.
-        </p>
-      )}
+          {hasSynthetic && (
+            <p className="m-0 text-xs text-ink-muted">
+              Coimbra includes demonstration reports while the pilot collects real
+              ones. They are labelled as test data everywhere they are exported.
+            </p>
+          )}
+        </aside>
+      </div>
 
-      {layer === "divergence" ? (
-        <p className="mt-3 text-xs text-ink-muted">
-          Purple marks water bodies where the latest Sentinel-2 pass
-          disagrees with citizen reports beyond the declared threshold; teal
-          marks a current pass that agrees. Dashed grey lines mark water
-          bodies with no usable satellite pass in the last 30 days to compare
-          — cloud cover or too few water pixels, never treated as agreement.
-        </p>
-      ) : (
-        <p className="mt-3 text-xs text-ink-muted">
-          {layer === "health"
-            ? "Concern for people and animals combines warning signs residents reported in the last 30 days with playgrounds, schools, parks and bathing spots nearby. Dashed grey lines have no recent reports — that is unknown, not safe. An indicative prompt, not a public health assessment."
-            : "Dashed grey lines mark water bodies where there is not yet enough data to assign an ecological status."}
-        </p>
-      )}
+      <p className="mt-3 max-w-3xl text-xs text-ink-muted">
+        {layer === "health"
+          ? "Combines warning signs neighbours reported in the last 30 days with playgrounds, schools, parks and bathing spots within 150 m. A prompt to take care, not a public health assessment."
+          : layer === "divergence"
+            ? "Compares the water colour residents photograph with the latest Sentinel-2 pass. Most urban streams are narrower than a satellite pixel, so most lines stay grey — that is honest, not missing data."
+            : "Ratings come from what residents see and smell, weighted by how reliable each report is. They are an early signal, not a laboratory measurement."}
+      </p>
     </div>
   );
 }

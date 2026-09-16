@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/db/client";
 import { contributions, type ContributionRow } from "@/lib/engagement/contribution";
 import { embeddedTrustScore, embeddedCity } from "@/lib/db/embed";
 import { selectAll } from "@/lib/db/select-all";
+import { isHeldForReview } from "@/lib/science/plausibility";
 
 export async function GET(request: Request) {
   const db = supabaseAdmin();
@@ -68,5 +69,10 @@ export async function GET(request: Request) {
     homeCity,
     rank: index >= 0 ? index + 1 : null,
     homeCityRank,
+    // Reports this observer sent that are stored but not counted until a
+    // person reviews them (usually: GPS far from the chosen stream).
+    heldForReview: rows.filter(
+      (r) => r.observerId === observer.id && isHeldForReview(r.validationStatus),
+    ).length,
   });
 }

@@ -1,42 +1,39 @@
 // Pre-fetches Sentinel-2 readings into `satellite_readings` so the live app
-// never calls a third-party API (see Phase 2b plan, Task 20). One scene per
-// calendar month, the least cloudy under 20% cover, read only as small
-// windows around each water body's centroid — never whole scenes.
+// never calls a third-party API. One scene per calendar month, the least
+// cloudy under 20% cover. Each band of each scene is read ONCE as a single
+// city-wide window on a 10 m grid, and every water body is sampled along its
+// whole line from that in memory — reading a window per water body re-downloaded the same
+// COG tiles hundreds of times and took hours.
 //
-// Usage: npx tsx --env-file=.env.local scripts/satellite/ingest.ts <City> [months] [--observed-only]
-//   --observed-only restricts the run to water bodies that already have
-//   citizen observations, for when reading every water body in a city would
-//   blow the ingest time budget (see the report for when this was used).
+// Usage: npx tsx --env-file=.env.local scripts/satellite/ingest.ts <City> [months] [--limit <n>]
 import { fromUrl, type GeoTIFFImage } from "geotiff";
 import { supabaseAdmin } from "../../src/lib/db/client";
+import { selectAll } from "../../src/lib/db/select-all";
 import {
   SATELLITE_PARAMETERS,
   reflectanceToHueAngle,
   hueAngleToForelUle,
 } from "../../src/lib/science/satellite";
-import { lonLatToUtm, utmZoneFromEpsg, readWindow, sampleWindowAt, pixelCentreUtm } from "./geo";
+import { lonLatToUtm, utmZoneFromEpsg } from "./geo";
 
 const STAC_URL = "https://earth-search.aws.element84.com/v1/search";
 const MONTHS_DEFAULT = 6;
 const MAX_CLOUD_COVER = 20;
-const CONCURRENCY = 12;
-const UPSERT_CHUNK = 250;
-// Stays safely under the ~15 minute ingest guidance in the plan; checked
-// before starting each water body, not each scene, so a run always leaves a
-// clean, reportable stopping point.
-const TIME_BUDGET_MS = 12 * 60_000;
-
-function log(message: string) {
-  console.log(`[${new Date().toISOString()}] ${message}`);
-}
+const UPSERT_CHUNK = 500;
+/** Common grid for every band: the visible and NIR bands are native 10 m; rededge1 and SCL (20 m) are repeated to match. */
+const GRID_METRES = 10;
 
 const BAND_KEYS = ["blue", "green", "red", "nir", "rededge1", "scl"] as const;
 type BandKey = (typeof BAND_KEYS)[number];
 
-// SCL (Scene Classification Layer) codes excluded from the water mask:
-// 1 saturated/defective, 3 cloud shadow, 8/9 cloud medium/high probability,
-// 10 thin cirrus, 11 snow/ice.
+// SCL codes excluded from the water mask: 1 saturated/defective,
+// 3 cloud shadow, 8/9 cloud medium/high probability, 10 thin cirrus, 11 snow.
 const BAD_SCL = new Set([1, 3, 8, 9, 10, 11]);
+const SCL_WATER = 6;
+
+function log(message: string) {
+  console.log(`[${new Date().toISOString()}] ${message}`);
+}
 
 type StacItem = {
   id: string;
@@ -102,274 +99,255 @@ function leastCloudyPerMonth(items: StacItem[]): StacItem[] {
   return [...byMonth.values()].sort((a, b) => a.datetime.localeCompare(b.datetime));
 }
 
-type OpenScene = { zone: number; images: Record<BandKey, GeoTIFFImage> };
+/** A band read over the city at GRID_METRES, top-left origin in UTM metres. */
+type CityRaster = {
+  data: ArrayLike<number>;
+  width: number;
+  height: number;
+  west: number;
+  north: number;
+};
 
-async function openScene(item: StacItem): Promise<OpenScene> {
-  const entries = await Promise.all(
-    BAND_KEYS.map(async (key) => {
-      const url = item.assets[key];
-      if (!url) throw new Error(`Scene ${item.id} is missing asset "${key}"`);
-      const tiff = await fromUrl(url);
-      return [key, await tiff.getImage()] as const;
-    }),
-  );
+type UtmBox = { minE: number; minN: number; maxE: number; maxN: number };
+
+async function readCityBand(image: GeoTIFFImage, box: UtmBox): Promise<CityRaster | null> {
+  const [x0, y0, x1, y1] = image.getBoundingBox() as [number, number, number, number];
+  const width = image.getWidth();
+  const height = image.getHeight();
+  const xRes = (x1 - x0) / width;
+  const yRes = (y1 - y0) / height;
+
+  // Snap the window to the common 20 m grid so every band lines up exactly.
+  const minE = Math.max(x0, Math.floor((box.minE - x0) / GRID_METRES) * GRID_METRES + x0);
+  const maxN = Math.min(y1, y1 - Math.floor((y1 - box.maxN) / GRID_METRES) * GRID_METRES);
+  const maxE = Math.min(x1, box.maxE);
+  const minN = Math.max(y0, box.minN);
+  if (maxE <= minE || maxN <= minN) return null; // the scene does not cover the city
+
+  const outWidth = Math.ceil((maxE - minE) / GRID_METRES);
+  const outHeight = Math.ceil((maxN - minN) / GRID_METRES);
+  const col0 = Math.round((minE - x0) / xRes);
+  const row0 = Math.round((y1 - maxN) / yRes);
+  const col1 = Math.min(width, col0 + Math.round((outWidth * GRID_METRES) / xRes));
+  const row1 = Math.min(height, row0 + Math.round((outHeight * GRID_METRES) / yRes));
+
+  const rasters = await image.readRasters({
+    window: [col0, row0, col1, row1],
+    width: outWidth,
+    height: outHeight,
+    resampleMethod: "nearest",
+  });
+
   return {
-    zone: utmZoneFromEpsg(item.epsg),
-    images: Object.fromEntries(entries) as Record<BandKey, GeoTIFFImage>,
+    data: (rasters as unknown as ArrayLike<number>[])[0],
+    width: outWidth,
+    height: outHeight,
+    west: minE,
+    north: maxN,
   };
 }
 
-// A single retry with a short, fixed backoff: enough to ride out one
-// transient blip without multiplying the cost of a scene that is
-// persistently unreachable (observed in practice — retrying such a scene
-// 3x per water body made the whole run too slow to finish in the budget).
-async function withRetries<T>(fn: () => Promise<T>, attempts = 2): Promise<T> {
+async function withRetries<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastError: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error;
-      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
     }
   }
   throw lastError;
 }
 
-async function readOneReading(
+function sampleWaterbody(
+  bands: Record<BandKey, CityRaster>,
   item: StacItem,
-  scene: OpenScene,
-  waterbody: { id: string; lon: number; lat: number },
-): Promise<SatelliteRow> {
-  const size = SATELLITE_PARAMETERS.windowPixels;
-  const { easting, northing } = lonLatToUtm(waterbody.lon, waterbody.lat, scene.zone);
+  waterbody: { id: string; line: { easting: number; northing: number }[] },
+): SatelliteRow {
+  const grid = bands.blue;
+  const half = Math.floor(SATELLITE_PARAMETERS.windowPixels / 2);
 
-  const [blueW, greenW, redW, nirW, rededge1W, sclW] = await Promise.all(
-    BAND_KEYS.map((key) => readWindow(scene.images[key], easting, northing, size)),
-  );
-
-  const usableBlue: number[] = [];
-  const usableGreen: number[] = [];
-  const usableRed: number[] = [];
-  const usableRededge1: number[] = [];
-
-  for (let row = 0; row < size; row++) {
-    for (let col = 0; col < size; col++) {
-      const idx = row * size + col;
-      const blue = Number(blueW.data[idx]);
-      const green = Number(greenW.data[idx]);
-      const red = Number(redW.data[idx]);
-      const nir = Number(nirW.data[idx]);
-      if (green + nir === 0) continue;
-
-      const ndwi = (green - nir) / (green + nir);
-      if (ndwi <= SATELLITE_PARAMETERS.minNdwi) continue;
-
-      const centre = pixelCentreUtm(blueW, col, row);
-      const scl = sampleWindowAt(sclW, centre.easting, centre.northing);
-      if (scl === null || BAD_SCL.has(scl)) continue;
-
-      const rededge1 = sampleWindowAt(rededge1W, centre.easting, centre.northing);
-      if (rededge1 === null) continue;
-
-      usableBlue.push(blue / 10_000);
-      usableGreen.push(green / 10_000);
-      usableRed.push(red / 10_000);
-      usableRededge1.push(rededge1 / 10_000);
+  // Every grid cell within `half` pixels of the stream line, walking each
+  // segment in grid-sized steps so no stretch of the line is skipped.
+  const cells = new Set<number>();
+  const addAround = (easting: number, northing: number) => {
+    const c = Math.floor((easting - grid.west) / GRID_METRES);
+    const r = Math.floor((grid.north - northing) / GRID_METRES);
+    for (let row = r - half; row <= r + half; row++) {
+      for (let col = c - half; col <= c + half; col++) {
+        if (row >= 0 && col >= 0 && row < grid.height && col < grid.width) {
+          cells.add(row * grid.width + col);
+        }
+      }
+    }
+  };
+  for (let k = 0; k < waterbody.line.length; k++) {
+    const a = waterbody.line[k];
+    const bPoint = waterbody.line[k + 1] ?? a;
+    const steps = Math.max(1, Math.ceil(Math.hypot(bPoint.easting - a.easting, bPoint.northing - a.northing) / GRID_METRES));
+    for (let s = 0; s < steps; s++) {
+      addAround(a.easting + ((bPoint.easting - a.easting) * s) / steps, a.northing + ((bPoint.northing - a.northing) * s) / steps);
     }
   }
 
-  const usablePixels = usableBlue.length;
+  const blue: number[] = [];
+  const green: number[] = [];
+  const red: number[] = [];
+  const rededge1: number[] = [];
+
+  {
+    for (const i of cells) {
+      const scl = Number(bands.scl.data[i]);
+      if (BAD_SCL.has(scl)) continue;
+      const g = Number(bands.green.data[i]);
+      const n = Number(bands.nir.data[i]);
+      if (g + n === 0) continue; // no-data
+      // Water if Sen2Cor's scene classification says so (class 6), or if
+      // NDWI does. NDWI alone rejects shallow, turbid rivers whose NIR is
+      // raised by sediment and the river bed.
+      if (scl !== SCL_WATER && (g - n) / (g + n) <= SATELLITE_PARAMETERS.minNdwi) continue;
+      blue.push(Number(bands.blue.data[i]) / 10_000);
+      green.push(g / 10_000);
+      red.push(Number(bands.red.data[i]) / 10_000);
+      rededge1.push(Number(bands.rededge1.data[i]) / 10_000);
+    }
+  }
+
   const base = {
     waterbody_id: waterbody.id,
     acquired_at: item.datetime,
     scene_id: item.id,
     cloud_cover: item.cloudCover,
-    usable_pixels: usablePixels,
+    usable_pixels: blue.length,
   };
 
   // A cloudy or unusable pass is stored as unavailable, never as agreement.
-  if (usablePixels < SATELLITE_PARAMETERS.minUsablePixels) {
+  if (blue.length < SATELLITE_PARAMETERS.minUsablePixels) {
     return { ...base, ndci: null, turbidity: null, forel_ule_equivalent: null, hue_angle: null };
   }
 
   const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
-  const meanBlue = mean(usableBlue);
-  const meanGreen = mean(usableGreen);
-  const meanRed = mean(usableRed);
-  const meanRededge1 = mean(usableRededge1);
+  const meanRed = mean(red);
+  const meanRededge1 = mean(rededge1);
+  const hue = reflectanceToHueAngle(mean(blue), mean(green), meanRed);
 
-  const ndci = (meanRededge1 - meanRed) / (meanRededge1 + meanRed);
-  const turbidity = meanRed;
-  const hue = reflectanceToHueAngle(meanBlue, meanGreen, meanRed);
-  const forelUle = hueAngleToForelUle(hue);
-
-  return { ...base, ndci, turbidity, forel_ule_equivalent: forelUle, hue_angle: hue };
-}
-
-type Database = ReturnType<typeof supabaseAdmin>;
-
-async function upsertRows(db: Database, rows: SatelliteRow[]) {
-  for (let start = 0; start < rows.length; start += UPSERT_CHUNK) {
-    const chunk = rows.slice(start, start + UPSERT_CHUNK);
-    const { error } = await db
-      .from("satellite_readings")
-      .upsert(chunk, { onConflict: "waterbody_id,scene_id" });
-    if (error) throw new Error(`upsert rows ${start}-${start + chunk.length}: ${error.message}`);
-  }
+  return {
+    ...base,
+    ndci: (meanRededge1 - meanRed) / (meanRededge1 + meanRed),
+    turbidity: meanRed,
+    forel_ule_equivalent: hueAngleToForelUle(hue),
+    hue_angle: hue,
+  };
 }
 
 async function main() {
   const args = process.argv.slice(2);
-  const observedOnly = args.includes("--observed-only");
-  const positional = args.filter((a) => !a.startsWith("--"));
+  const limitIndex = args.indexOf("--limit");
+  const limit = limitIndex >= 0 ? Number(args[limitIndex + 1]) : null;
+  const positional = args.filter((a, i) => !a.startsWith("--") && (limitIndex < 0 || i !== limitIndex + 1));
   const [city, monthsArg] = positional;
-  if (!city) {
-    throw new Error("Usage: ingest.ts <City> [months] [--observed-only]");
-  }
+  if (!city) throw new Error("Usage: ingest.ts <City> [months] [--limit <n>]");
   const months = monthsArg ? Number(monthsArg) : MONTHS_DEFAULT;
 
   const db = supabaseAdmin();
+  const startedAt = Date.now();
 
   const { data: bboxRows, error: bboxError } = await db.rpc("city_bbox", { p_city: city });
   if (bboxError) throw new Error(bboxError.message);
-  const bboxRow = bboxRows?.[0] as
-    | { min_lon: number | null; min_lat: number; max_lon: number; max_lat: number }
-    | undefined;
-  if (!bboxRow || bboxRow.min_lon === null) throw new Error(`${city}: no water bodies found`);
-  const bbox = [bboxRow.min_lon, bboxRow.min_lat, bboxRow.max_lon, bboxRow.max_lat];
+  const b = (bboxRows as { min_lon: number | null; min_lat: number; max_lon: number; max_lat: number }[])[0];
+  if (!b || b.min_lon === null) throw new Error(`${city}: no water bodies found`);
 
   const end = new Date();
   const start = new Date(end);
   start.setUTCMonth(start.getUTCMonth() - months);
-
-  const items = await searchStac(bbox, start, end);
-  const scenes = leastCloudyPerMonth(items);
+  const scenes = leastCloudyPerMonth(
+    await searchStac([b.min_lon, b.min_lat, b.max_lon, b.max_lat], start, end),
+  );
   if (scenes.length === 0) {
-    log(`${city}: no scenes under ${MAX_CLOUD_COVER}% cloud cover in the last ${months} months`);
+    log(`${city}: no scenes under ${MAX_CLOUD_COVER}% cloud in the last ${months} months`);
     return;
   }
-  log(
-    `${city}: ${scenes.length} scenes selected (one per month, least cloudy): ` +
-      scenes.map((s) => `${s.id} (${s.cloudCover.toFixed(1)}% cloud)`).join(", "),
+  log(`${city}: ${scenes.length} scenes — ${scenes.map((s) => `${s.datetime.slice(0, 10)} (${s.cloudCover.toFixed(0)}%)`).join(", ")}`);
+
+  const { data: waterbodyRows, error: wbError } = await selectAll((from, to) =>
+    db.from("waterbodies").select("id, geometry").eq("city", city).order("id").range(from, to),
   );
+  if (wbError) throw new Error(String(wbError));
+  const all = waterbodyRows.map((row) => ({
+    id: row.id as string,
+    coordinates: (row.geometry as { coordinates: [number, number][] }).coordinates,
+  }));
+  const waterbodies = limit ? all.slice(0, limit) : all;
 
-  log(`${city}: opening ${scenes.length} scenes' band rasters...`);
-  const openedScenes = await Promise.all(scenes.map((item) => openScene(item)));
+  let written = 0;
+  let unusable = 0;
 
-  const { data: waterbodyRows, error: wbError } = await db
-    .from("waterbodies")
-    .select("id, centroid")
-    .eq("city", city);
-  if (wbError) throw new Error(wbError.message);
-  if (!waterbodyRows || waterbodyRows.length === 0) {
-    throw new Error(`${city}: no water bodies found`);
-  }
-
-  // Paginated: PostgREST caps a single response at 1000 rows, and Coimbra
-  // alone has several thousand observations — reading only the first page
-  // would under-count which water bodies already have observations.
-  const prioritised = new Set<string>();
-  for (let from = 0; ; from += 1000) {
-    const { data: page, error: obsError } = await db
-      .from("observations")
-      .select("waterbody_id, waterbodies!inner(city)")
-      .eq("waterbodies.city", city)
-      .range(from, from + 999);
-    if (obsError) throw new Error(obsError.message);
-    for (const o of page ?? []) prioritised.add(o.waterbody_id as string);
-    if (!page || page.length < 1000) break;
-  }
-
-  const allWaterbodies = waterbodyRows.map((row) => {
-    const geom = row.centroid as { coordinates: [number, number] };
-    return { id: row.id as string, lon: geom.coordinates[0], lat: geom.coordinates[1] };
-  });
-
-  const waterbodies = (
-    observedOnly ? allWaterbodies.filter((wb) => prioritised.has(wb.id)) : allWaterbodies
-  ).sort((a, b) => Number(prioritised.has(b.id)) - Number(prioritised.has(a.id)));
-
-  log(
-    `${city}: ${allWaterbodies.length} water bodies total, ${prioritised.size} with existing ` +
-      `observations. Processing ${waterbodies.length}${observedOnly ? " (--observed-only)" : " (observed ones first)"}.`,
-  );
-
-  const startedAt = Date.now();
-  let processedWaterbodies = 0;
-  let insertedReadings = 0;
-  let unusablePasses = 0;
-  let stoppedEarly = false;
-
-  outer: for (let start2 = 0; start2 < waterbodies.length; start2 += CONCURRENCY) {
-    if (Date.now() - startedAt > TIME_BUDGET_MS) {
-      stoppedEarly = true;
-      break outer;
+  for (const item of scenes) {
+    const zone = utmZoneFromEpsg(item.epsg);
+    const projected = waterbodies.map((w) => ({
+      id: w.id,
+      line: w.coordinates.map(([lon, lat]) => lonLatToUtm(lon, lat, zone)),
+    }));
+    const pad = GRID_METRES * SATELLITE_PARAMETERS.windowPixels;
+    const box: UtmBox = { minE: Infinity, minN: Infinity, maxE: -Infinity, maxN: -Infinity };
+    for (const w of projected) {
+      for (const p of w.line) {
+        box.minE = Math.min(box.minE, p.easting - pad);
+        box.maxE = Math.max(box.maxE, p.easting + pad);
+        box.minN = Math.min(box.minN, p.northing - pad);
+        box.maxN = Math.max(box.maxN, p.northing + pad);
+      }
     }
-    const batch = waterbodies.slice(start2, start2 + CONCURRENCY);
-    const results = await Promise.all(
-      batch.map(async (wb) => {
-        const rows: SatelliteRow[] = [];
-        for (let i = 0; i < scenes.length; i++) {
-          try {
-            rows.push(await withRetries(() => readOneReading(scenes[i], openedScenes[i], wb)));
-          } catch (error) {
-            // A persistent network failure for one water body/scene must
-            // never crash the whole run — record it as an unusable pass
-            // (never as agreement) and keep going.
-            log(
-              `${city}: ${wb.id} / ${scenes[i].id} failed after retries: ` +
-                (error instanceof Error ? error.message : String(error)),
-            );
-            rows.push({
-              waterbody_id: wb.id,
-              acquired_at: scenes[i].datetime,
-              scene_id: scenes[i].id,
-              cloud_cover: scenes[i].cloudCover,
-              usable_pixels: 0,
-              ndci: null,
-              turbidity: null,
-              forel_ule_equivalent: null,
-              hue_angle: null,
-            });
-          }
-        }
-        return rows;
-      }),
-    );
 
-    // Upsert every batch immediately — a run that stops (time budget, or a
-    // crash) always leaves whatever it already computed durably saved,
-    // rather than only writing at the very end.
-    const batchRows = results.flat();
-    await upsertRows(db, batchRows);
-    for (const row of batchRows) {
-      insertedReadings += 1;
-      if (row.forel_ule_equivalent === null) unusablePasses += 1;
+    let rows: SatelliteRow[];
+    try {
+      // Bands are read one after another: six city-wide reads in parallel
+      // open enough concurrent range requests for S3 to drop connections.
+      const rasters: (CityRaster | null)[] = [];
+      for (const key of BAND_KEYS) {
+        rasters.push(
+          await withRetries(async () => {
+            const url = item.assets[key];
+            if (!url) throw new Error(`missing asset ${key}`);
+            const image = await (await fromUrl(url)).getImage();
+            return readCityBand(image, box);
+          }),
+        );
+      }
+      if (rasters.some((r) => r === null)) throw new Error("scene does not cover the city");
+      const bands = Object.fromEntries(BAND_KEYS.map((k, i) => [k, rasters[i]])) as Record<BandKey, CityRaster>;
+      rows = projected.map((w) => sampleWaterbody(bands, item, w));
+    } catch (error) {
+      // An unreadable scene is recorded as unavailable for every water body,
+      // never as agreement.
+      const cause = error instanceof Error && error.cause ? ` (${String(error.cause)})` : "";
+      log(`${city}: ${item.id} unreadable — ${error instanceof Error ? error.message : String(error)}${cause}`);
+      rows = projected.map((w) => ({
+        waterbody_id: w.id,
+        acquired_at: item.datetime,
+        scene_id: item.id,
+        cloud_cover: item.cloudCover,
+        usable_pixels: 0,
+        ndci: null,
+        turbidity: null,
+        forel_ule_equivalent: null,
+        hue_angle: null,
+      }));
     }
-    processedWaterbodies += results.length;
 
-    const elapsed = (Date.now() - startedAt) / 60_000;
-    log(
-      `${city}: ${processedWaterbodies} / ${waterbodies.length} water bodies processed ` +
-        `(${insertedReadings} readings upserted so far, ${elapsed.toFixed(1)} min elapsed)`,
-    );
+    for (let i = 0; i < rows.length; i += UPSERT_CHUNK) {
+      const { error } = await db
+        .from("satellite_readings")
+        .upsert(rows.slice(i, i + UPSERT_CHUNK), { onConflict: "waterbody_id,scene_id" });
+      if (error) throw new Error(`upsert: ${error.message}`);
+    }
+    written += rows.length;
+    unusable += rows.filter((r) => r.forel_ule_equivalent === null).length;
+    log(`${city}: ${item.datetime.slice(0, 10)} done — ${rows.length - rows.filter((r) => r.forel_ule_equivalent === null).length} usable of ${rows.length}`);
   }
 
-  const elapsedMinutes = (Date.now() - startedAt) / 60_000;
-  log(
-    `${city}: done in ${elapsedMinutes.toFixed(1)} min — ${processedWaterbodies} / ` +
-      `${waterbodies.length} water bodies processed, ${insertedReadings} readings upserted ` +
-      `(${unusablePasses} unusable passes), across ${scenes.length} scenes.`,
-  );
-  if (stoppedEarly) {
-    log(
-      `${city}: stopped early on the time budget (${(TIME_BUDGET_MS / 60_000).toFixed(0)} min) — ` +
-        `water bodies with existing observations were processed first; re-run (optionally with ` +
-        `--observed-only) to continue covering the remaining ` +
-        `${waterbodies.length - processedWaterbodies} water bodies.`,
-    );
-  }
+  log(`${city}: ${written} readings (${unusable} unavailable) for ${waterbodies.length} water bodies in ${((Date.now() - startedAt) / 60_000).toFixed(1)} min`);
 }
 
 main().catch((error: unknown) => {

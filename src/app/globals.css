@@ -146,3 +146,55 @@
     );
   }
 }
+
+/* Stream popup on the map: plain status and the two things a resident can do. */
+.maplibregl-popup-content {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper-raised);
+  padding: 0.75rem 0.9rem;
+  box-shadow: none;
+  font-family: var(--font-sans);
+}
+.rivulet-popup-name {
+  margin: 0 1.25rem 0.35rem 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-ink);
+}
+.rivulet-popup-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.7rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+}
+.rivulet-popup-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-rule-strong);
+  flex-shrink: 0;
+}
+.rivulet-popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.rivulet-popup-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--color-ink);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.rivulet-popup-actions a.rivulet-popup-primary {
+  background: var(--color-river);
+  border-color: var(--color-river);
+  color: var(--color-paper);
+}

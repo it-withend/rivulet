@@ -7,8 +7,8 @@ import { OwnRowHighlighter } from "@/components/leaderboard/OwnRowHighlighter";
 import { embeddedTrustScore, embeddedCity, firstOrSelf } from "@/lib/db/embed";
 import { selectAll } from "@/lib/db/select-all";
 import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
+import { CITIES } from "@/lib/cities";
 
-const CITIES = ["Coimbra", "Toulouse", "Benevento", "Gent", "Oslo"];
 const TOP_N = 100;
 const ACTIVE_OBSERVER_WINDOW_DAYS = 30;
 

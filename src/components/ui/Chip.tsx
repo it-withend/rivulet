@@ -4,10 +4,12 @@ type ChipProps = {
   pressed: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  /** A pictogram shown before the label, so a choice can be recognised at a glance. */
+  icon?: React.ReactNode;
 };
 
 /** A toggle for multi-select choices (e.g. visible signs at the stream). */
-export function Chip({ pressed, onClick, children }: ChipProps) {
+export function Chip({ pressed, onClick, children, icon }: ChipProps) {
   return (
     <button
       type="button"
@@ -36,6 +38,11 @@ export function Chip({ pressed, onClick, children }: ChipProps) {
           <rect x="1.75" y="1.75" width="8.5" height="8.5" strokeWidth="1" />
         )}
       </svg>
+      {icon && (
+        <span aria-hidden="true" className="inline-flex shrink-0 [&_svg]:size-4.5">
+          {icon}
+        </span>
+      )}
       {children}
     </button>
   );

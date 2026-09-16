@@ -119,7 +119,14 @@ npx tsx --env-file=.env.local scripts/seed/seed-exposure.ts Coimbra
 
 The last two steps create the synthetic demo observers and compute their trust scores; without
 them the people leaderboard is empty. `seed-exposure.ts` loads the OpenStreetMap places used by the
-One Health reading; run it once per city. To add a city that is not in the bundled seed, run
+One Health reading; run it once per city.
+
+To add a city whose OpenStreetMap name differs from its display name, pass the OSM name third:
+`seed-city.ts Tashkent 4 "Toshkent shahri"` (canals are included, as urban aryks are where residents
+meet water). Sentinel-2 readings are pre-fetched with
+`npx tsx --env-file=.env.local scripts/satellite/ingest.ts Coimbra 6`, which reads each band once
+per scene for the whole city (a few minutes per scene); the live site never calls a satellite API.
+Most urban streams are narrower than a 10 m pixel, so most get an honest "no clear satellite view". To add a city that is not in the bundled seed, run
 `npx tsx --env-file=.env.local scripts/seed/seed-city.ts <City> <admin_level>`.
 
 Signed volunteer certificates also need `RIVULET_ISSUER_PRIVATE_KEY`, an Ed25519 private key as

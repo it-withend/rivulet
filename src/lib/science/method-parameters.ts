@@ -141,9 +141,9 @@ const SATELLITE_RATIONALE: Record<keyof typeof SATELLITE_PARAMETERS, string> = {
   minUsablePixels:
     "Below this many cloud-, shadow- and land-masked water pixels in the sample window, a Sentinel-2 pass is recorded with null indices rather than a reading — never as agreement.",
   minNdwi:
-    "Pixels at or below this NDWI value are classed as land or mixed bank pixels rather than open water and excluded from the mean.",
+    "A pixel counts as open water if its NDWI is above this value or the Sentinel-2 scene classification labels it water (class 6); other pixels are treated as land or mixed bank and excluded from the mean.",
   windowPixels:
-    "Side length in pixels of the square window read around each water body's centroid; water bodies are narrow, so this coarse sample mixes bank and water by construction.",
+    "Width in 10 m pixels of the band sampled along each water body's whole line; urban streams are narrower than a pixel, so most are invisible to Sentinel-2 and are recorded as unavailable rather than guessed.",
   maxAgeDays:
     "A satellite reading older than this many days no longer counts as a current cross-check and is excluded from the snapshot.",
   evidenceWeight:

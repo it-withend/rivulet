@@ -12,8 +12,12 @@ type OverpassWay = {
 const BATCH = 250;
 
 async function main() {
-  const [city, adminLevel] = process.argv.slice(2);
-  if (!city || !adminLevel) throw new Error("Usage: seed-city.ts <City> <admin_level>");
+  // The OSM area name can differ from the display name (Tashkent is
+  // "Toshkent" in OSM), so it is an optional third argument.
+  const [city, adminLevel, osmName = city] = process.argv.slice(2);
+  if (!city || !adminLevel) {
+    throw new Error("Usage: seed-city.ts <City> <admin_level> [OSM area name]");
+  }
 
   const db = supabaseAdmin();
   const { count, error: countError } = await db
@@ -25,8 +29,8 @@ async function main() {
 
   const query = `
     [out:json][timeout:90];
-    area["name"="${city}"]["boundary"="administrative"]["admin_level"="${adminLevel}"]->.a;
-    (way["waterway"~"^(river|stream)$"](area.a););
+    area["name"="${osmName}"]["boundary"="administrative"]["admin_level"="${adminLevel}"]->.a;
+    (way["waterway"~"^(river|stream|canal)$"](area.a););
     out geom;
   `;
   const response = await fetch("https://overpass-api.de/api/interpreter", {
@@ -50,7 +54,8 @@ async function main() {
         id: randomUUID(),
         name: el.tags?.name ?? `Unnamed ${el.tags?.waterway ?? "stream"}`,
         city,
-        kind: el.tags?.waterway === "river" ? "river" : "stream",
+        // The schema has no canal kind; a canal is closest to a river.
+        kind: el.tags?.waterway === "stream" ? "stream" : "river",
         geometry: `SRID=4326;LINESTRING(${coordinates.map((c) => `${c[0]} ${c[1]}`).join(",")})`,
         centroid: `SRID=4326;POINT(${mid[0]} ${mid[1]})`,
       };

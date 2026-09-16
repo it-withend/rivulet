@@ -46,7 +46,7 @@ export function SatellitePanel({
         </p>
       ) : latest!.forelUleEquivalent === null ? (
         <p className="mt-2 mb-0 text-sm text-ink-muted">
-          The most recent Sentinel-2 pass ({new Date(latest!.acquiredAt).toLocaleDateString()})
+          The most recent Sentinel-2 pass ({new Date(latest!.acquiredAt).toLocaleDateString("en-GB")})
           could not be read — cloud cover or too few water pixels. This is
           shown as unavailable, never as agreement.
         </p>
@@ -55,7 +55,7 @@ export function SatellitePanel({
           <p className="mt-2 mb-0 text-sm">
             Sentinel-2,{" "}
             <span className="num">
-              {new Date(latest!.acquiredAt).toLocaleDateString()}
+              {new Date(latest!.acquiredAt).toLocaleDateString("en-GB")}
             </span>{" "}
             (cloud cover{" "}
             <span className="num">{(latest!.cloudCover ?? 0).toFixed(0)}%</span>):

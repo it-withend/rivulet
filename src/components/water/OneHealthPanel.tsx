@@ -1,4 +1,5 @@
 import { Panel } from "@/components/ui/Panel";
+import { Dog, Fish, HeartPulse, Users } from "lucide-react";
 import { ONE_HEALTH_PARAMETERS, type OneHealthReading } from "@/lib/science/one-health";
 import {
   AUDIENCE_LABEL,
@@ -9,6 +10,7 @@ import {
 } from "@/lib/ui/one-health-copy";
 
 const percent = (value: number) => `${Math.round(value * 100)}%`;
+const AUDIENCE_ICON = { people: Users, dogs: Dog, wildlife: Fish } as const;
 
 export function OneHealthPanel({ reading }: { reading: OneHealthReading }) {
   const p = ONE_HEALTH_PARAMETERS;
@@ -18,8 +20,9 @@ export function OneHealthPanel({ reading }: { reading: OneHealthReading }) {
     <section aria-labelledby="one-health-heading" className="space-y-4">
       <header>
         <p className="field-label m-0">One Health</p>
-        <h2 id="one-health-heading" className="mt-2 mb-2 text-2xl">
-          For people and animals nearby
+        <h2 id="one-health-heading" className="mt-2 mb-2 flex items-center gap-2 text-2xl">
+          <HeartPulse aria-hidden="true" className="size-6 text-river" />
+          Is it safe for people and animals nearby?
         </h2>
         <p className="m-0 max-w-xl text-sm text-ink-muted">
           {reading.recentReports === 0
@@ -36,7 +39,13 @@ export function OneHealthPanel({ reading }: { reading: OneHealthReading }) {
         {reading.audiences.map((a) => (
           <li key={a.audience}>
             <Panel className="h-full p-4 sm:p-5">
-              <p className="field-label m-0">{AUDIENCE_LABEL[a.audience]}</p>
+              <p className="field-label m-0 flex items-center gap-1.5">
+                {(() => {
+                  const Icon = AUDIENCE_ICON[a.audience];
+                  return <Icon aria-hidden="true" className="size-4" />;
+                })()}
+                {AUDIENCE_LABEL[a.audience]}
+              </p>
               <p className="mt-2 mb-0 flex items-start gap-2 text-base font-medium">
                 <span
                   aria-hidden="true"

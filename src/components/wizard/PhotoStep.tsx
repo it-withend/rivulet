@@ -6,6 +6,7 @@ import { pixelsToForelUle } from "@/lib/science/forel-ule";
 import { FU_TABLE } from "@/lib/science/forel-ule-table";
 import { Panel } from "@/components/ui/Panel";
 import { ForelUleRibbon } from "@/components/ui/ForelUleRibbon";
+import { Camera, Crosshair, SunDim, Waves } from "lucide-react";
 
 export type ForelUleResult = { index: number; confidence: number };
 
@@ -44,9 +45,20 @@ export function PhotoStep({ onResult }: Props) {
   return (
     <div className="space-y-4">
       <p className="m-0 max-w-xl text-ink-muted">
-        Point the centre of the frame at open water. Avoid the bank, your own
-        shadow and reflections of the sky.
+        We read the water&apos;s colour from the middle of your photo, the way
+        scientists compare water against a colour chart.
       </p>
+      <ul className="m-0 grid list-none gap-2 p-0 text-sm sm:grid-cols-3">
+        <li className="flex items-center gap-2 rounded-sm border border-rule bg-paper-raised p-2.5">
+          <Crosshair aria-hidden="true" className="size-5 shrink-0 text-river" /> Aim the middle at open water
+        </li>
+        <li className="flex items-center gap-2 rounded-sm border border-rule bg-paper-raised p-2.5">
+          <Waves aria-hidden="true" className="size-5 shrink-0 text-river" /> Leave out the bank and plants
+        </li>
+        <li className="flex items-center gap-2 rounded-sm border border-rule bg-paper-raised p-2.5">
+          <SunDim aria-hidden="true" className="size-5 shrink-0 text-river" /> Avoid glare and your shadow
+        </li>
+      </ul>
 
       <label
         className={
@@ -56,6 +68,7 @@ export function PhotoStep({ onResult }: Props) {
           "hover:bg-river-deep focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink"
         }
       >
+        <Camera aria-hidden="true" className="size-5" />
         Take or choose a photo of the water
         <input
           type="file"

@@ -12,6 +12,7 @@ import {
 import { loadJournal } from "@/lib/journal/storage";
 import { ObserverIdentityPanel } from "./ObserverIdentityPanel";
 import { CertificatesPanel } from "./CertificatesPanel";
+import { Droplet, FileText, Sparkles, Waves } from "lucide-react";
 
 export function FieldJournal() {
   const [entries, setEntries] = useState<JournalEntry[] | null>(null);
@@ -46,9 +47,32 @@ export function FieldJournal() {
 
   const colours = colourCollection(entries);
   const badges = evaluateBadges(entries);
+  const impact = [
+    { icon: FileText, value: entries.length, label: entries.length === 1 ? "report sent" : "reports sent" },
+    { icon: Waves, value: new Set(entries.map((e) => e.waterbodyId)).size, label: "streams you checked" },
+    { icon: Sparkles, value: entries.filter((e) => e.wasDataGap).length, label: "first checks where nobody had looked" },
+    { icon: Droplet, value: colours.length, label: "water colours found" },
+  ];
 
   return (
     <div className="space-y-10">
+      <section aria-labelledby="impact-heading">
+        <h2 id="impact-heading" className="mt-0 mb-3 text-2xl">Your impact</h2>
+        <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-4">
+          {impact.map(({ icon: Icon, value, label }) => (
+            <li key={label} className="rounded-md border border-rule bg-paper-raised p-3">
+              <Icon aria-hidden="true" className="size-5 text-river" />
+              <p className="num m-0 mt-1 text-2xl">{value}</p>
+              <p className="m-0 text-xs text-ink-muted">{label}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 mb-0 text-sm text-ink-muted">
+          Each report tells neighbours, dog owners and the city a little more
+          about how their stream is doing.
+        </p>
+      </section>
+
       <ObserverIdentityPanel />
       <CertificatesPanel />
 

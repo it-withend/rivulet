@@ -24,7 +24,7 @@ export function colourForClass(klass: WfdClass | null): string {
 // rather than the map's usual accent-free neutral, so the layer can show
 // that a comparison happened at all.
 export const DIVERGENCE_COLOUR = "#7b3294";
-const AGREEMENT_COLOUR = "#185157";
+export const AGREEMENT_COLOUR = "#185157";
 
 export function colourForDivergence(diverged: boolean | null): string {
   if (diverged === null) return INSUFFICIENT_DATA_COLOUR;
@@ -45,4 +45,13 @@ export const SIMPLE_MESSAGE: Record<WfdClass, string> = {
   moderate: "This water shows signs of stress.",
   poor: "This water is in poor condition.",
   bad: "This water is badly degraded.",
+};
+
+/** Status in words a resident would use; the WFD class name stays in scientific mode. */
+export const PLAIN_CLASS_LABEL: Record<WfdClass, string> = {
+  high: "Very healthy",
+  good: "Healthy",
+  moderate: "Some signs of stress",
+  poor: "Unhealthy",
+  bad: "Very unhealthy",
 };

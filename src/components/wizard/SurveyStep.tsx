@@ -1,56 +1,49 @@
 "use client";
 
+import type React from "react";
+import { Bug, Droplets, Eye, Fish, Sprout, Trash2, Waves, Wind, CloudFog } from "lucide-react";
 import type { SurveyAnswers, TaxonCode } from "@/types/observation";
 import { Chip } from "@/components/ui/Chip";
+import { CLARITIES, FLOWS, LITTER, ODOURS, SIGNS, TAXA } from "./survey-options";
 
 type Props = {
   value: SurveyAnswers;
   onChange: (next: SurveyAnswers) => void;
 };
 
-const TAXA: { code: TaxonCode; label: string }[] = [
-  { code: "mayfly", label: "Mayfly nymph" },
-  { code: "stonefly", label: "Stonefly nymph" },
-  { code: "caddisfly", label: "Caddisfly larva" },
-  { code: "freshwater_shrimp", label: "Freshwater shrimp" },
-  { code: "leech", label: "Leech" },
-  { code: "worm", label: "Sludge worm" },
-  { code: "none_seen", label: "Nothing seen" },
-];
+const SIGN_ICON: Record<(typeof SIGNS)[number][0], React.ReactNode> = {
+  foam: <CloudFog />,
+  deadFish: <Fish />,
+  visibleAlgae: <Sprout />,
+};
 
-const ODOURS = [
-  { value: "none", label: "No smell" },
-  { value: "musty", label: "Earthy or musty" },
-  { value: "sewage", label: "Sewage or rotten eggs" },
-  { value: "chemical", label: "Chemical, like fuel or bleach" },
-] as const;
-
-const CLARITIES = [
-  { value: "clear", label: "Clear, I can see the bottom" },
-  { value: "slightly_turbid", label: "A bit cloudy" },
-  { value: "turbid", label: "Cloudy" },
-  { value: "opaque", label: "Can't see into it at all" },
-] as const;
-
-const FLOWS = [
-  { value: "normal", label: "Flowing" },
-  { value: "high", label: "Fast, after rain" },
-  { value: "low", label: "Barely moving" },
-  { value: "stagnant", label: "Not moving at all" },
-] as const;
-
-const LITTER = [
-  { value: 0, label: "None" },
-  { value: 1, label: "A few pieces" },
-  { value: 2, label: "Quite a lot" },
-  { value: 3, label: "Piles of rubbish" },
-] as const;
-
-const SIGNS = [
-  ["foam", "Foam on the surface"],
-  ["deadFish", "Dead fish"],
-  ["visibleAlgae", "Green algae or scum"],
-] as const;
+function Question({
+  icon,
+  title,
+  hint,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <fieldset className="m-0 border-0 p-0">
+      <legend className="mb-3 flex items-center gap-3 p-0 text-base font-medium">
+        <span
+          aria-hidden="true"
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-river text-paper [&_svg]:size-5"
+        >
+          {icon}
+        </span>
+        {title}
+      </legend>
+      {hint && <p className="mt-0 mb-3 max-w-xl text-sm text-ink-muted">{hint}</p>}
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </fieldset>
+  );
+}
 
 export function SurveyStep({ value, onChange }: Props) {
   function toggleTaxon(code: TaxonCode) {
@@ -65,112 +58,87 @@ export function SurveyStep({ value, onChange }: Props) {
 
   return (
     <div className="space-y-8">
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-3 p-0 text-base font-medium">
-          Does the water smell?
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {ODOURS.map((odour) => (
-            <Chip
-              key={odour.value}
-              pressed={value.odour === odour.value}
-              onClick={() => onChange({ ...value, odour: odour.value })}
-            >
-              {odour.label}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      <p className="m-0 max-w-xl text-sm text-ink-muted">
+        Tap what matches. There are no wrong answers — just tell us what you
+        notice from the bank.
+      </p>
 
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-3 p-0 text-base font-medium">
-          How clear is the water?
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {CLARITIES.map((clarity) => (
-            <Chip
-              key={clarity.value}
-              pressed={value.clarity === clarity.value}
-              onClick={() => onChange({ ...value, clarity: clarity.value })}
-            >
-              {clarity.label}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      <Question icon={<Wind />} title="Does the water smell?">
+        {ODOURS.map((odour) => (
+          <Chip
+            key={odour.value}
+            pressed={value.odour === odour.value}
+            onClick={() => onChange({ ...value, odour: odour.value })}
+          >
+            {odour.label}
+          </Chip>
+        ))}
+      </Question>
 
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-3 p-0 text-base font-medium">
-          Is the water moving?
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {FLOWS.map((flow) => (
-            <Chip
-              key={flow.value}
-              pressed={value.flow === flow.value}
-              onClick={() => onChange({ ...value, flow: flow.value })}
-            >
-              {flow.label}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      <Question icon={<Droplets />} title="How clear is the water?">
+        {CLARITIES.map((clarity) => (
+          <Chip
+            key={clarity.value}
+            pressed={value.clarity === clarity.value}
+            onClick={() => onChange({ ...value, clarity: clarity.value })}
+          >
+            {clarity.label}
+          </Chip>
+        ))}
+      </Question>
 
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-3 p-0 text-base font-medium">
-          Any litter in or beside the water?
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {LITTER.map((level) => (
-            <Chip
-              key={level.value}
-              pressed={value.litter === level.value}
-              onClick={() => onChange({ ...value, litter: level.value })}
-            >
-              {level.label}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      <Question icon={<Waves />} title="Is the water moving?">
+        {FLOWS.map((flow) => (
+          <Chip
+            key={flow.value}
+            pressed={value.flow === flow.value}
+            onClick={() => onChange({ ...value, flow: flow.value })}
+          >
+            {flow.label}
+          </Chip>
+        ))}
+      </Question>
 
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-1 p-0 text-base font-medium">
-          Did you see any of these small creatures?
-        </legend>
-        <p className="mt-0 mb-3 max-w-xl text-sm text-ink-muted">
-          Optional. Lift a stone and look underneath. Some of these animals
-          only live in clean water, so they tell us a lot about it. Skip this
-          if you did not look.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {TAXA.map((taxon) => (
-            <Chip
-              key={taxon.code}
-              pressed={value.indicatorTaxa.includes(taxon.code)}
-              onClick={() => toggleTaxon(taxon.code)}
-            >
-              {taxon.label}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      <Question icon={<Trash2 />} title="Any litter in or beside the water?">
+        {LITTER.map((level) => (
+          <Chip
+            key={level.value}
+            pressed={value.litter === level.value}
+            onClick={() => onChange({ ...value, litter: level.value })}
+          >
+            {level.label}
+          </Chip>
+        ))}
+      </Question>
 
-      <fieldset className="m-0 border-0 p-0">
-        <legend className="mb-3 p-0 text-base font-medium">
-          Anything else you noticed?
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {SIGNS.map(([key, label]) => (
-            <Chip
-              key={key}
-              pressed={value[key]}
-              onClick={() => onChange({ ...value, [key]: !value[key] })}
-            >
-              {label}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      <Question icon={<Eye />} title="Did you notice any of these?" hint="Tap all that apply, or none.">
+        {SIGNS.map(([key, label]) => (
+          <Chip
+            key={key}
+            icon={SIGN_ICON[key]}
+            pressed={value[key]}
+            onClick={() => onChange({ ...value, [key]: !value[key] })}
+          >
+            {label}
+          </Chip>
+        ))}
+      </Question>
+
+      <Question
+        icon={<Bug />}
+        title="Small creatures under stones (optional)"
+        hint="Only if you looked: lift a stone near the edge without stepping in. Some of these animals only live in clean water."
+      >
+        {TAXA.map((taxon) => (
+          <Chip
+            key={taxon.code}
+            pressed={value.indicatorTaxa.includes(taxon.code)}
+            onClick={() => toggleTaxon(taxon.code)}
+          >
+            {taxon.label}
+          </Chip>
+        ))}
+      </Question>
     </div>
   );
 }
