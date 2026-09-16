@@ -99,6 +99,8 @@ const CONTRIBUTION_RATIONALE: Record<keyof typeof CONTRIBUTION_PARAMETERS, strin
     "Extra points for the first observation on a water body that had none in the preceding window, rewarding coverage over repetition.",
   gapDays:
     "A water body counts as a data gap if it had no observation in this many preceding days.",
+  minTrustForPoints:
+    "Below this Trust Score an observer earns no points, so sheer volume of readings that disagree with everyone else cannot buy a place in the ranking.",
 };
 
 const CERTIFICATE_RATIONALE: Record<keyof typeof CERTIFICATE_PARAMETERS, string> = {

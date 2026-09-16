@@ -76,6 +76,19 @@ describe("contributions", () => {
     );
   });
 
+  it("awards no points below the minimum trust, however many observations", () => {
+    const rows = Array.from({ length: 20 }, (_, i) =>
+      row({
+        waterbodyId: `w${i}`,
+        observerTrust: CONTRIBUTION_PARAMETERS.minTrustForPoints - 0.05,
+      }),
+    );
+    const [summary] = contributions(rows);
+    expect(summary.countedObservations).toBe(20);
+    expect(summary.points).toBe(0);
+    expect(summary.underReview).toBe(true);
+  });
+
   it("excludes anonymous observations from the leaderboard", () => {
     const rows = [row({ observerId: null })];
     expect(contributions(rows)).toHaveLength(0);

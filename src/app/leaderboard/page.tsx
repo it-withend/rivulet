@@ -181,7 +181,15 @@ async function PeopleLeaderboard({ city }: { city: string | null }) {
                         </span>
                       )}
                     </td>
-                    <td className="num px-2 py-2 text-right">{r.points}</td>
+                    <td className="num px-2 py-2 text-right">
+                      {r.underReview ? (
+                        <span className="field-label text-ink-muted">
+                          Under review
+                        </span>
+                      ) : (
+                        r.points
+                      )}
+                    </td>
                     <td className="num px-2 py-2 text-right">
                       {r.countedObservations}
                     </td>

@@ -4,6 +4,7 @@ export const CONTRIBUTION_PARAMETERS = {
   basePoints: 10,
   gapBonus: 5,
   gapDays: 30,
+  minTrustForPoints: 0.35,
 } as const;
 
 export type ContributionRow = {
@@ -25,6 +26,8 @@ export type ContributorSummary = {
   gapsFilled: number;
   trust: number;
   homeCity: string | null;
+  /** Trust too low to earn points: the observations stand, the ranking does not. */
+  underReview: boolean;
 };
 
 const COUNTED_STATUSES = new Set(["auto_approved", "human_approved"]);
@@ -102,9 +105,13 @@ export function contributions(
     const trust = row.observerTrust ?? TRUST_PARAMETERS.neutralTrust;
     const multiplier = trustMultiplier(trust);
     const gapFilled = !hadPriorObservationWithinGap(row);
+    // An observer who systematically disagrees with everyone else earns no
+    // points at all, so volume can never outrank trustworthiness.
     const points =
-      Math.round(p.basePoints * row.qualityWeight * multiplier) +
-      (gapFilled ? p.gapBonus : 0);
+      trust < p.minTrustForPoints
+        ? 0
+        : Math.round(p.basePoints * row.qualityWeight * multiplier) +
+          (gapFilled ? p.gapBonus : 0);
 
     entry.points += points;
     entry.countedObservations += 1;
@@ -139,6 +146,7 @@ export function contributions(
       gapsFilled: entry.gapsFilled,
       trust: entry.trust,
       homeCity,
+      underReview: entry.trust < CONTRIBUTION_PARAMETERS.minTrustForPoints,
     };
   });
 }
