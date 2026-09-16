@@ -12,6 +12,8 @@ import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { embeddedTrustScore } from "@/lib/db/embed";
 import { isHeldForReview } from "@/lib/science/plausibility";
+import { readOneHealth, type ExposureSite } from "@/lib/science/one-health";
+import { OneHealthPanel } from "@/components/water/OneHealthPanel";
 
 export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
   const { id } = await props.params;
@@ -35,21 +37,33 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
     .eq("waterbody_id", id)
     .order("observed_at", { ascending: false });
 
+  const { data: exposureRows } = await db
+    .from("waterbody_exposure")
+    .select("kind, site_count, nearest_m, nearest_name")
+    .eq("waterbody_id", id);
+
+  const exposure: ExposureSite[] = (exposureRows ?? []).map((e) => ({
+    kind: e.kind,
+    siteCount: e.site_count,
+    nearestM: Number(e.nearest_m),
+    nearestName: e.nearest_name,
+  }));
+
   const allRows = observationsError ? [] : (observations ?? []);
   const rows = allRows.filter((o) => !isHeldForReview(o.validation_status));
   const heldCount = allRows.length - rows.length;
   const hasSynthetic = rows.some((o) => o.is_synthetic);
 
-  const snapshot = computeSnapshot(
-    rows.map((o) => ({
-      id: o.id,
-      observedAt: o.observed_at,
-      observerId: o.observer_id,
-      survey: o.survey,
-      qualityWeight: Number(o.quality_weight),
-      observerTrust: embeddedTrustScore(o.observers),
-    })),
-  );
+  const stored = rows.map((o) => ({
+    id: o.id,
+    observedAt: o.observed_at,
+    observerId: o.observer_id,
+    survey: o.survey,
+    qualityWeight: Number(o.quality_weight),
+    observerTrust: embeddedTrustScore(o.observers),
+  }));
+  const snapshot = computeSnapshot(stored);
+  const oneHealth = readOneHealth(stored, exposure);
 
   const klass = snapshot.assessment.klass;
 
@@ -131,6 +145,8 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
           </div>
         }
       />
+
+      <OneHealthPanel reading={oneHealth} />
     </div>
   );
 }

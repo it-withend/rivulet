@@ -1,7 +1,8 @@
 export const METHOD_VERSION = {
-  version: "1.2.0",
+  version: "1.3.0",
   publishedAt: "2026-09-16",
   notes: [
+    "1.3.0 — One Health reading: warning signs from the last 30 days of trust-weighted reports (hazard) combined with playgrounds, schools, parks, bathing and fishing spots and allotments from OpenStreetMap within 150 m (exposure), shown for people, dogs and wildlife. No recent reports reads as unknown, never as safe.",
     "1.2.0 — Observations flagged by plausibility checks no longer count towards assessments, trust or exports until a person reviews them. Resident-reported signs (clarity, sewage odour, algae, foam, dead fish, litter) move from OneAquaHealth analyte codes to the Rivulet code system. Flow and litter are now asked in the survey instead of defaulting.",
     "1.1.0 — Observer trust now weights evidence: computeSnapshot multiplies each observation's quality weight by trustMultiplier(observerTrust), shrinking noisy or disagreeing observers' influence towards neutral.",
   ],

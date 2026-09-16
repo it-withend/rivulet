@@ -4,21 +4,28 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { colourForClass } from "@/lib/ui/wfd-colours";
+import { CONCERN_COLOUR } from "@/lib/ui/one-health-copy";
 import type { WfdClass } from "@/lib/science/wfd";
+import type { Concern } from "@/lib/science/one-health";
 
 export type MapFeature = {
   id: string;
   name: string;
   klass: WfdClass | null;
+  /** Concern for people and animals nearby; "unknown" without recent reports. */
+  concern: Concern;
   coordinates: [number, number][];
 };
 
 export function CityMap({
   features,
   centre,
+  layer = "status",
 }: {
   features: MapFeature[];
   centre: [number, number];
+  /** "status" colours by ecological status; "health" by concern for people and animals. */
+  layer?: "status" | "health";
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
@@ -77,8 +84,12 @@ export function CityMap({
               properties: {
                 id: f.id,
                 name: f.name,
-                colour: colourForClass(f.klass),
-                hasClass: f.klass !== null,
+                colour:
+                  layer === "health"
+                    ? CONCERN_COLOUR[f.concern]
+                    : colourForClass(f.klass),
+                hasClass:
+                  layer === "health" ? f.concern !== "unknown" : f.klass !== null,
               },
               geometry: { type: "LineString", coordinates: f.coordinates },
             })),
@@ -126,7 +137,7 @@ export function CityMap({
       cancelled = true;
       map?.remove();
     };
-  }, [features, centre]);
+  }, [features, centre, layer]);
 
   return (
     <div className="relative h-[70vh] w-full">

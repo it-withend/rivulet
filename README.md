@@ -50,6 +50,15 @@ Methods draw on:
   fish, litter) use a separate Rivulet code system. The export has not been run through the
   guide's validator.
 
+**One Health: people and animals nearby.** Each stream also gets an indicative concern level for
+people, dogs and wildlife (`src/lib/science/one-health.ts`). Hazard is the trust-weighted share of
+reports from the last 30 days showing a warning sign — sewage smell, algae or scum, chemical smell
+or foam, dead fish, heavy litter. Exposure is what OpenStreetMap places within 150 m of the
+stream: playgrounds, schools, kindergartens, parks, dog parks, bathing and fishing spots, picnic
+sites and allotments. A hazard near a place people or dogs use raises the concern; no recent
+reports reads as unknown, never as safe. It is a prompt to take care, not a public health or
+bathing-water assessment.
+
 Observations that fail plausibility checks (imprecise GPS, far from the stream, too many in an
 hour) are stored but held out of assessments, trust scores and exports until a person reviews
 them.
@@ -105,10 +114,12 @@ npx tsx scripts/seed/fetch-waterbodies.ts
 npx tsx --env-file=.env.local scripts/seed/seed.ts
 npx tsx --env-file=.env.local scripts/seed/seed-observers.ts
 npx tsx --env-file=.env.local scripts/recompute-trust.ts
+npx tsx --env-file=.env.local scripts/seed/seed-exposure.ts Coimbra
 ```
 
 The last two steps create the synthetic demo observers and compute their trust scores; without
-them the people leaderboard is empty. To add a city that is not in the bundled seed, run
+them the people leaderboard is empty. `seed-exposure.ts` loads the OpenStreetMap places used by the
+One Health reading; run it once per city. To add a city that is not in the bundled seed, run
 `npx tsx --env-file=.env.local scripts/seed/seed-city.ts <City> <admin_level>`.
 
 Signed volunteer certificates also need `RIVULET_ISSUER_PRIVATE_KEY`, an Ed25519 private key as

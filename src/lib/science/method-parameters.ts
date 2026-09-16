@@ -18,6 +18,7 @@ import { CREDIBLE_MASS, DATA_CONFIDENCE, UNIFORM_PRIOR } from "./bayes";
 import { MIN_CONFIDENCE_FOR_CLASS, WFD_BOUNDARIES } from "./wfd";
 import { TRUST_PARAMETERS } from "./trust";
 import { PLAUSIBILITY } from "./plausibility";
+import { ONE_HEALTH_PARAMETERS } from "./one-health";
 import { CONTRIBUTION_PARAMETERS } from "@/lib/engagement/contribution";
 import { CERTIFICATE_PARAMETERS } from "@/lib/engagement/certificates";
 
@@ -118,6 +119,21 @@ const CERTIFICATE_RATIONALE: Record<keyof typeof CERTIFICATE_PARAMETERS, string>
   dataStewardMinTrust: "Minimum Trust Score required for the Data Steward certificate.",
   dataStewardMaxRank:
     "Rank an observer must reach or beat in their home city's people leaderboard for the Data Steward certificate.",
+};
+
+const ONE_HEALTH_RATIONALE: Record<keyof typeof ONE_HEALTH_PARAMETERS, string> = {
+  windowDays:
+    "Only observations from this many recent days count as current hazard signs; older reports say little about the water today, and no recent report is shown as unknown, never as safe.",
+  exposureRadiusM:
+    "Playgrounds, schools, parks, bathing and fishing spots and allotments within this distance of a stream count as bringing people or dogs close to it.",
+  possibleShare:
+    "A sign (sewage smell, algae or scum, chemical smell or foam, dead fish, heavy litter) counts as a possible hazard when at least this trust- and quality-weighted share of recent reports mention it.",
+  likelyShare:
+    "A sign counts as a likely hazard when at least this weighted share of recent reports mention it.",
+  likelyMinObservers:
+    "A likely hazard also needs this many different observers, so one person cannot raise a stream to the highest concern alone.",
+  heavyLitterMin:
+    "Litter at or above this value on the 0–3 survey scale counts as an injury hazard for children, dogs and wildlife.",
 };
 
 const CONFIDENCE_RATIONALE: Record<keyof typeof DATA_CONFIDENCE, string> = {
@@ -291,6 +307,14 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
       value: CERTIFICATE_PARAMETERS[key],
       kind: "prior",
       rationale: `${CERTIFICATE_RATIONALE[key]} This is a programme rule, not a scientific estimate, but is declared here for transparency. ${UNCALIBRATED}`,
+    }),
+  ),
+  ...(Object.keys(ONE_HEALTH_PARAMETERS) as (keyof typeof ONE_HEALTH_PARAMETERS)[]).map(
+    (key): MethodParameter => ({
+      id: `oneHealth.${key}`,
+      value: ONE_HEALTH_PARAMETERS[key],
+      kind: "prior",
+      rationale: `${ONE_HEALTH_RATIONALE[key]} An indicative screening rule, not a public health or bathing-water assessment. ${UNCALIBRATED}`,
     }),
   ),
 ];

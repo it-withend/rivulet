@@ -9,6 +9,8 @@ import {
 } from "@/lib/science/snapshot";
 import { selectAll } from "@/lib/db/select-all";
 import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
+import { readOneHealth, type Concern, type ExposureSite } from "@/lib/science/one-health";
+import { CONCERN_COLOUR, CONCERN_LABEL } from "@/lib/ui/one-health-copy";
 
 type GeoJsonLineString = {
   type: string;
@@ -59,6 +61,7 @@ export default async function MapPage(props: PageProps<"/map">) {
   const requested = Array.isArray(cityParam) ? cityParam[0] : cityParam;
   const city = requested && CITY_CENTRES[requested] ? requested : DEFAULT_CITY;
   const centre = CITY_CENTRES[city];
+  const layer = searchParams.layer === "health" ? "health" : "status";
 
   const db = supabaseAnon();
 
@@ -68,6 +71,7 @@ export default async function MapPage(props: PageProps<"/map">) {
   const [
     { data: waterbodies, error: waterbodiesError },
     { data: observations, error: observationsError },
+    { data: exposureRows },
   ] = await Promise.all([
     selectAll((from, to) =>
       db
@@ -90,7 +94,28 @@ export default async function MapPage(props: PageProps<"/map">) {
         .order("id")
         .range(from, to),
     ),
+    selectAll((from, to) =>
+      db
+        .from("waterbody_exposure")
+        .select("waterbody_id, kind, site_count, nearest_m, nearest_name, waterbodies!inner(city)")
+        .eq("waterbodies.city", city)
+        .order("waterbody_id")
+        .order("kind")
+        .range(from, to),
+    ),
   ]);
+
+  const exposureByWaterbody = new Map<string, ExposureSite[]>();
+  for (const e of exposureRows) {
+    const list = exposureByWaterbody.get(e.waterbody_id) ?? [];
+    list.push({
+      kind: e.kind,
+      siteCount: e.site_count,
+      nearestM: Number(e.nearest_m),
+      nearestName: e.nearest_name,
+    });
+    exposureByWaterbody.set(e.waterbody_id, list);
+  }
 
   const byWaterbody = new Map<string, StoredObservation[]>();
   let hasSynthetic = false;
@@ -113,12 +138,18 @@ export default async function MapPage(props: PageProps<"/map">) {
 
   const features: MapFeature[] = waterbodiesError
     ? []
-    : (waterbodies ?? []).map((wb) => ({
-        id: wb.id,
-        name: wb.name,
-        klass: computeSnapshot(byWaterbody.get(wb.id) ?? []).assessment.klass,
-        coordinates: (wb.geometry as GeoJsonLineString).coordinates,
-      }));
+    : (waterbodies ?? []).map((wb) => {
+        const stored = byWaterbody.get(wb.id) ?? [];
+        return {
+          id: wb.id,
+          name: wb.name,
+          klass: computeSnapshot(stored).assessment.klass,
+          concern: readOneHealth(stored, exposureByWaterbody.get(wb.id) ?? []).overall,
+          coordinates: (wb.geometry as GeoJsonLineString).coordinates,
+        };
+      });
+
+  const LEGEND: Concern[] = ["none", "watch", "care", "avoid"];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -129,7 +160,7 @@ export default async function MapPage(props: PageProps<"/map">) {
         {CITIES.map((name) => (
           <CityChip
             key={name}
-            href={`/map?city=${name}`}
+            href={`/map?city=${name}${layer === "health" ? "&layer=health" : ""}`}
             active={name === city}
           >
             {name}
@@ -137,7 +168,31 @@ export default async function MapPage(props: PageProps<"/map">) {
         ))}
       </nav>
 
-      <CityMap features={features} centre={centre} />
+      <nav aria-label="Map layer" className="mb-4 flex flex-wrap gap-2">
+        <CityChip href={`/map?city=${city}`} active={layer === "status"}>
+          Ecological status
+        </CityChip>
+        <CityChip href={`/map?city=${city}&layer=health`} active={layer === "health"}>
+          People &amp; animals
+        </CityChip>
+      </nav>
+
+      <CityMap features={features} centre={centre} layer={layer} />
+
+      {layer === "health" && (
+        <ul className="m-0 mt-3 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-sm">
+          {LEGEND.map((concern) => (
+            <li key={concern} className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="inline-block h-1 w-6 rounded-full"
+                style={{ backgroundColor: CONCERN_COLOUR[concern] }}
+              />
+              {CONCERN_LABEL[concern]}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {features.length === 0 && (
         <p className="mt-3 text-sm text-ink-muted">
@@ -153,8 +208,9 @@ export default async function MapPage(props: PageProps<"/map">) {
       )}
 
       <p className="mt-3 text-xs text-ink-muted">
-        Dashed grey lines mark water bodies where there is not yet enough data
-        to assign an ecological status.
+        {layer === "health"
+          ? "Concern for people and animals combines warning signs residents reported in the last 30 days with playgrounds, schools, parks and bathing spots nearby. Dashed grey lines have no recent reports — that is unknown, not safe. An indicative prompt, not a public health assessment."
+          : "Dashed grey lines mark water bodies where there is not yet enough data to assign an ecological status."}
       </p>
     </div>
   );
