@@ -69,6 +69,7 @@ export function ObservationWizard({
   const [step, setStep] = useState(0);
   const [survey, setSurvey] = useState<SurveyAnswers>(EMPTY);
   const [fu, setFu] = useState<ForelUleResult | null>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [result, setResult] = useState<ObservationResultProps | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +111,7 @@ export function ObservationWizard({
           forelUleIndex: fu?.index ?? null,
           forelUleConfidence: fu?.confidence ?? null,
           survey: { ...survey, forelUle: fu?.index ?? null },
+          ...(thumbnail ? { photoThumbnail: thumbnail } : {}),
         }),
       });
 
@@ -229,8 +231,9 @@ export function ObservationWizard({
               skip it.
             </Tip>
             <Tip icon={<EyeOff />}>
-              <strong>Your photo stays on your phone.</strong> Only the water
-              colour we read from it is sent.
+              <strong>Your full photo never leaves your phone.</strong> Only
+              the water colour we read from it, and a small thumbnail used
+              once to check it&apos;s really water, are sent.
             </Tip>
             <Tip icon={<MapPin />}>
               <strong>We ask for your location once, when you send,</strong> to
@@ -240,7 +243,7 @@ export function ObservationWizard({
           </ul>
         </Panel>
       )}
-      {step === 1 && <PhotoStep onResult={setFu} />}
+      {step === 1 && <PhotoStep onResult={setFu} onThumbnail={setThumbnail} />}
       {step === 2 && <SurveyStep value={survey} onChange={setSurvey} />}
       {step === 3 && (
         <div className="space-y-4">

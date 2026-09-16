@@ -230,7 +230,9 @@ export default async function CityReportPage(props: PageProps<"/city">) {
         <p className="m-0 flex items-center gap-1.5">
           <Download aria-hidden="true" className="size-4" />
           Researchers and city systems can take the data as FHIR from the{" "}
-          <Link href="/open-data">open data page</Link>.
+          <Link href="/open-data" className="text-ink underline underline-offset-2 hover:text-river">
+            open data page
+          </Link>.
         </p>
       </footer>
     </div>

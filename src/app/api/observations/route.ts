@@ -5,6 +5,7 @@ import { observationWeight } from "@/lib/science/weighting";
 import { computeSnapshot, type StoredObservation } from "@/lib/science/snapshot";
 import { assessmentDelta } from "@/lib/science/delta";
 import { isHeldForReview, plausibilityStatus, PLAUSIBILITY } from "@/lib/science/plausibility";
+import { photoCheck } from "@/lib/moderation/photo-check";
 import { embeddedTrustScore } from "@/lib/db/embed";
 import { observerFromRequest } from "@/lib/identity/token";
 import { recomputeTrust } from "@/lib/trust/recompute";
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
     ageHours: Math.max(0, ageHours),
   });
 
-  let validationStatus = plausibilityStatus({
+  let { status: validationStatus, reason: flagReason } = plausibilityStatus({
     gpsAccuracyM: payload.gpsAccuracyM,
     recentByObserver,
   });
@@ -103,10 +104,25 @@ export async function POST(request: Request) {
   // The point is never rejected for being far from the claimed water body —
   // only flagged for human review, same as any other plausibility signal.
   if (
+    validationStatus === "auto_approved" &&
     distanceFromWaterbodyM !== null &&
     distanceFromWaterbodyM > PLAUSIBILITY.maxDistanceFromWaterbodyM
   ) {
     validationStatus = "flagged";
+    flagReason = "distance_from_waterbody";
+  }
+
+  // A cheap "does this look like water?" check on the photo, never a
+  // rejection: a clear "no" only flags the observation for a person to
+  // look at, the same as any other plausibility signal. Skipped entirely
+  // (never flags) when GROQ_API_KEY is unset, the call errors, times out,
+  // or the answer is uncertain — see photoCheck's own doc comment.
+  if (validationStatus === "auto_approved" && payload.photoThumbnail) {
+    const result = await photoCheck(payload.photoThumbnail);
+    if (result && !result.isWater && result.confidence !== "low") {
+      validationStatus = "flagged";
+      flagReason = "ai_not_water";
+    }
   }
 
   const { data, error } = await db
@@ -123,6 +139,8 @@ export async function POST(request: Request) {
       indicators: toIndicators(payload.survey),
       quality_weight: weight,
       validation_status: validationStatus,
+      flag_reason: flagReason,
+      // photoThumbnail is used above, transiently, and is never persisted.
     })
     .select("id")
     .single();

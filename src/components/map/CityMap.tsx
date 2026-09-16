@@ -200,12 +200,14 @@ export function CityMap({
           if (!feature) return;
           popup.setLngLat(event.lngLat).setDOMContent(popupContent(feature, layer)).addTo(instance);
         });
-        instance.on("mouseenter", "waterbody-hit", () => {
-          instance.getCanvas().style.cursor = "pointer";
-        });
-        instance.on("mouseleave", "waterbody-hit", () => {
-          instance.getCanvas().style.cursor = "";
-        });
+
+        // Deliberately no per-feature "mouseenter"/"mouseleave" cursor hint:
+        // that re-runs a hit test on every mousemove across the whole map,
+        // and with thousands of thin OpenStreetMap segments (Oslo alone has
+        // 2,549) that queues up enough work that a click can feel like it
+        // takes seconds to register. The whole map is one big tap target —
+        // see the ".maplibregl-canvas-container" rule in globals.css for the
+        // static pointer cursor that gives the same affordance for free.
       });
     });
 

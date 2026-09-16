@@ -10,11 +10,30 @@ import { Camera, Crosshair, SunDim, Waves } from "lucide-react";
 
 export type ForelUleResult = { index: number; confidence: number };
 
+const THUMBNAIL_MAX_PX = 160;
+
+/** A small downscaled JPEG for the optional "is this really water?" check — never full-resolution. */
+function makeThumbnail(bitmap: ImageBitmap): string {
+  const scale = Math.min(1, THUMBNAIL_MAX_PX / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const context = canvas.getContext("2d")!;
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.5);
+}
+
 type Props = {
   onResult: (result: ForelUleResult | null) => void;
+  /**
+   * Called with a small thumbnail once a photo is chosen, whether or not a
+   * colour reading could be extracted from it — an unreadable photo is
+   * exactly the kind of image the water check most needs to see.
+   */
+  onThumbnail?: (dataUrl: string | null) => void;
 };
 
-export function PhotoStep({ onResult }: Props) {
+export function PhotoStep({ onResult, onThumbnail }: Props) {
   const [preview, setPreview] = useState<string | null>(null);
   const [fu, setFu] = useState<ForelUleResult | null>(null);
   const [tooUnclear, setTooUnclear] = useState(false);
@@ -38,6 +57,7 @@ export function PhotoStep({ onResult }: Props) {
     setTooUnclear(result === null);
     setFu(result);
     onResult(result);
+    onThumbnail?.(makeThumbnail(bitmap));
   }
 
   const entry = fu ? FU_TABLE.find((e) => e.index === fu.index) : null;
@@ -110,6 +130,13 @@ export function PhotoStep({ onResult }: Props) {
           </p>
         </Panel>
       )}
+
+      <p className="m-0 text-xs text-ink-muted">
+        Your full photo never leaves your phone. Only the colour we find, and
+        a small, low-resolution thumbnail we use once to check it&apos;s really a
+        photo of water, are sent — the thumbnail is never stored or shown to
+        anyone.
+      </p>
     </div>
   );
 }

@@ -198,3 +198,9 @@
   border-color: var(--color-river);
   color: var(--color-paper);
 }
+
+/* The whole map is clickable (see CityMap.tsx), so it always shows a
+   pointer cursor rather than the library's default pan "grab" hand. */
+.maplibregl-canvas-container.maplibregl-interactive {
+  cursor: pointer !important;
+}

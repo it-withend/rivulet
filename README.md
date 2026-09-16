@@ -60,8 +60,22 @@ reports reads as unknown, never as safe. It is a prompt to take care, not a publ
 bathing-water assessment.
 
 Observations that fail plausibility checks (imprecise GPS, far from the stream, too many in an
-hour) are stored but held out of assessments, trust scores and exports until a person reviews
-them.
+hour, or — if configured — a photo an AI check does not recognise as water) are stored but held
+out of assessments, trust scores and exports until a person reviews them.
+
+**Human review.** `/moderate` lists everything currently held for review, with the reason, and lets
+a moderator approve (`human_approved`, counted exactly like `auto_approved`) or reject
+(`rejected`, permanently excluded) an observation; either action recomputes trust for every
+observer on that water body. There are no moderator accounts — set `RIVULET_MODERATOR_TOKEN` to a
+shared passphrase; the page is unusable until that is configured. This is deliberately minimal:
+right for a two-person team reviewing a pilot, not a production moderation system.
+
+**Optional photo check.** If `GROQ_API_KEY` is set, a small (~160px, never stored) thumbnail of
+each submitted photo is sent once to a Groq vision model asking "does this look like water?". A
+confident "no" — a meme, a selfie, a screenshot — flags the observation for review instead of
+silently entering the model; a missing key, a timeout, or an uncertain answer all mean the check
+is skipped, never that the observation is flagged. The full-resolution photo is never uploaded,
+matching the on-device colour reading.
 
 Full citations are in `src/lib/science/method-version.ts`.
 

@@ -39,6 +39,11 @@ export const observationSchema = z
     forelUleIndex: z.number().int().min(1).max(21).nullable(),
     forelUleConfidence: z.number().min(0).max(1).nullable(),
     survey: surveySchema,
+    // A small downscaled JPEG data URI, used once for an automatic "is this
+    // really water?" check (see src/lib/moderation/photo-check.ts) and never
+    // stored. The size cap keeps a client from smuggling a full-resolution
+    // photo through this field.
+    photoThumbnail: z.string().startsWith("data:image/").max(60_000).optional(),
   })
   .superRefine((value, ctx) => {
     // `observedAt` is client-supplied and otherwise unverifiable — bound it

@@ -14,6 +14,16 @@ export type PlausibilityInput = {
 
 export type ValidationStatus = "auto_approved" | "flagged";
 
+/** Why an observation was held back; shown to moderators, never to the public. */
+export type FlagReason = "gps_accuracy" | "rate_limit" | "distance_from_waterbody" | "ai_not_water";
+
+export const FLAG_REASON_LABEL: Record<FlagReason, string> = {
+  gps_accuracy: "GPS accuracy was worse than the plausibility limit",
+  rate_limit: "More than the hourly limit of reports from this device",
+  distance_from_waterbody: "Reported position was far from this stream's mapped path",
+  ai_not_water: "Automatic photo check did not recognise this as a photo of water",
+};
+
 /**
  * Statuses kept out of assessments, trust and exports until a person reviews
  * them. A flagged observation is stored, never discarded, but it does not
@@ -33,13 +43,15 @@ export function isHeldForReview(status: string | null | undefined): boolean {
  * review instead of ever blocking submission. Both thresholds are priors —
  * see METHOD_PARAMETERS.
  */
-export function plausibilityStatus(input: PlausibilityInput): ValidationStatus {
+export function plausibilityStatus(
+  input: PlausibilityInput,
+): { status: ValidationStatus; reason: FlagReason | null } {
   const p = PLAUSIBILITY;
   if (input.gpsAccuracyM === null || input.gpsAccuracyM > p.maxGpsAccuracyM) {
-    return "flagged";
+    return { status: "flagged", reason: "gps_accuracy" };
   }
   if (input.recentByObserver > p.maxPerHour) {
-    return "flagged";
+    return { status: "flagged", reason: "rate_limit" };
   }
-  return "auto_approved";
+  return { status: "auto_approved", reason: null };
 }
