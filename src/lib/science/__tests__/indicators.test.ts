@@ -40,10 +40,12 @@ describe("toIndicators", () => {
     expect(codes).not.toContain("pH");
   });
 
-  it("maps sewage odour to a coliform proxy", () => {
-    const coliform = toIndicators(polluted).find((i) => i.code === "coliforms");
-    expect(coliform).toBeDefined();
-    expect(coliform!.value).toBeGreaterThan(0);
+  it("keeps visual signs off OneAquaHealth analyte codes", () => {
+    const codes = toIndicators(polluted).map((i) => i.code);
+    expect(codes).toContain("sewage-odour");
+    for (const borrowed of ["coliforms", "macrophytes", "LandUse", "tss"]) {
+      expect(codes).not.toContain(borrowed);
+    }
   });
 
   it("maps observed taxa to a macroinvertebrate indicator", () => {

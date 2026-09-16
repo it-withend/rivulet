@@ -44,6 +44,16 @@ export const RIVULET_CODES = {
     "WFD ecological status class — no OAH code for the classified outcome",
   "data-confidence":
     "Rivulet data confidence (0-1) — no OAH code for evidence strength",
+  "visual-clarity":
+    "Visual clarity reported by a resident (0 clear to 3 opaque) — not a suspended-solids measurement, so not OAH tss",
+  "sewage-odour":
+    "Sewage odour reported by a resident — a possible sign of faecal contamination, not a coliform count",
+  "visible-algae":
+    "Green algae or surface scum seen — not a macrophyte survey",
+  "surface-foam": "Foam on the water surface seen by a resident",
+  "dead-fish": "Dead fish seen by a resident",
+  "visible-litter":
+    "Visible litter on the margins (0 none to 3 a lot) — not a land-use classification",
 } as const;
 
 export type OahCode = (typeof OAH_CODES)[number];

@@ -28,9 +28,9 @@ function contourPaths(): string[] {
 }
 
 const SCIENCE_POINTS = [
-  "Forel–Ule water colour scale, derived via the WACODI chain",
-  "EU Water Framework Directive 2000/60/EC ecological status classes",
-  "BMWP macroinvertebrate family sensitivity scores",
+  "Forel–Ule water colour scale, estimated on the phone with a simplified WACODI-style colour conversion (no camera calibration)",
+  "Five indicative status classes named after the EU Water Framework Directive — not an official WFD assessment",
+  "Macroinvertebrate sensitivity set on the BMWP 1–10 family scale — a simplified proxy, not the BMWP protocol",
   "Beta–Bernoulli conjugate updating with 90% credible intervals",
   "HL7 Europe OneAquaHealth FHIR Implementation Guide",
   "Copernicus Sentinel-2 satellite imagery as an independent, coarse cross-check (uncalibrated proxy, not the published hue-angle calibration)",
@@ -47,7 +47,7 @@ const STEPS = [
   },
   {
     title: "The city gets an answer.",
-    body: "Results are expressed as EU Water Framework Directive status classes and exported through the OneAquaHealth FHIR standard.",
+    body: "Results are shown as indicative status classes with an honest range, and exported as FHIR shaped on the OneAquaHealth implementation guide.",
   },
 ];
 
@@ -150,10 +150,12 @@ export default function Home() {
           <p className="field-label m-0">Standards</p>
           <h2 className="mt-2 mb-4 text-3xl">Open by construction</h2>
           <p className="m-0 max-w-xl text-ink-muted">
-            Every assessment is exportable as FHIR conforming to the
-            consortium&rsquo;s own implementation guide, so this data can flow
-            into the systems that already exist rather than sitting in another
-            silo.
+            Every assessment is exportable as FHIR declaring the
+            consortium&rsquo;s own implementation guide profiles, so this data
+            can flow into the systems that already exist rather than sitting in
+            another silo. Signs residents report travel under a separate,
+            clearly labelled Rivulet code system rather than borrowing
+            laboratory codes.
           </p>
           <Button variant="secondary" href="/open-data" className="mt-5">
             See the open data

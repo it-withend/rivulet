@@ -13,6 +13,7 @@ import { SatellitePanel } from "@/components/water/SatellitePanel";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { embeddedTrustScore } from "@/lib/db/embed";
+import { isHeldForReview } from "@/lib/science/plausibility";
 
 export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
   const { id } = await props.params;
@@ -31,12 +32,14 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
   const { data: observations, error: observationsError } = await db
     .from("observations")
     .select(
-      "id, observed_at, observer_id, survey, quality_weight, is_synthetic, observers(trust_score)",
+      "id, observed_at, observer_id, survey, quality_weight, is_synthetic, validation_status, observers(trust_score)",
     )
     .eq("waterbody_id", id)
     .order("observed_at", { ascending: false });
 
-  const rows = observationsError ? [] : (observations ?? []);
+  const allRows = observationsError ? [] : (observations ?? []);
+  const rows = allRows.filter((o) => !isHeldForReview(o.validation_status));
+  const heldCount = allRows.length - rows.length;
   const hasSynthetic = rows.some((o) => o.is_synthetic);
 
   const { data: satelliteRows, error: satelliteError } = await db
@@ -89,6 +92,13 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
           <p className="mt-2 mb-0 text-sm text-ink-muted">
             Includes synthetic demo observations while the pilot collects
             real data.
+          </p>
+        )}
+        {heldCount > 0 && (
+          <p className="mt-2 mb-0 text-sm text-ink-muted">
+            {heldCount === 1
+              ? "1 observation is waiting for a person to review it and is not counted yet."
+              : `${heldCount} observations are waiting for a person to review them and are not counted yet.`}
           </p>
         )}
       </header>

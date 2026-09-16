@@ -10,6 +10,7 @@ export type ObservationResultProps = {
   waterbodyName: string;
   forelUle: number | null;
   delta: AssessmentDelta;
+  heldForReview: boolean;
   newBadges: Badge[];
 };
 
@@ -20,6 +21,7 @@ export function ObservationResult({
   waterbodyName,
   forelUle,
   delta,
+  heldForReview,
   newBadges,
 }: ObservationResultProps) {
   return (
@@ -37,6 +39,16 @@ export function ObservationResult({
             colour collection.
           </p>
         </div>
+      )}
+
+      {heldForReview && (
+        <Panel>
+          <p className="m-0 text-sm">
+            Thank you — we saved it. Your location was far from this stream or
+            not precise enough, so a person will check it before it counts
+            towards the stream&apos;s assessment.
+          </p>
+        </Panel>
       )}
 
       <Panel>

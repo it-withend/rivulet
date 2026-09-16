@@ -68,17 +68,32 @@ export default async function MapPage(props: PageProps<"/map">) {
   // One query for the whole city; a query per water body is too slow with
   // hundreds of OpenStreetMap segments. Only the columns the map needs —
   // Oslo alone has 2,549 segments.
-  const { data: waterbodies, error: waterbodiesError } = await db
-    .from("waterbodies")
-    .select("id, name, geometry")
-    .eq("city", city);
-
-  const { data: observations, error: observationsError } = await db
-    .from("observations")
-    .select(
-      "id, waterbody_id, observed_at, observer_id, survey, quality_weight, is_synthetic, observers(trust_score), waterbodies!inner(city)",
-    )
-    .eq("waterbodies.city", city);
+  const [
+    { data: waterbodies, error: waterbodiesError },
+    { data: observations, error: observationsError },
+  ] = await Promise.all([
+    selectAll((from, to) =>
+      db
+        .from("waterbodies")
+        .select("id, name, geometry")
+        .eq("city", city)
+        .order("id")
+        .range(from, to),
+    ),
+    // Observations flagged for review stay out of the assessment until a
+    // person has looked at them.
+    selectAll((from, to) =>
+      db
+        .from("observations")
+        .select(
+          "id, waterbody_id, observed_at, observer_id, survey, quality_weight, is_synthetic, observers(trust_score), waterbodies!inner(city)",
+        )
+        .eq("waterbodies.city", city)
+        .not("validation_status", "in", HELD_FOR_REVIEW_FILTER)
+        .order("id")
+        .range(from, to),
+    ),
+  ]);
 
   const { data: satelliteReadings, error: satelliteError } = await db
     .from("satellite_readings")

@@ -2,6 +2,7 @@ export const METHOD_VERSION = {
   version: "1.2.0",
   publishedAt: "2026-09-16",
   notes: [
+    "1.2.0 — Observations flagged by plausibility checks no longer count towards assessments, trust or exports until a person reviews them. Resident-reported signs (clarity, sewage odour, algae, foam, dead fish, litter) move from OneAquaHealth analyte codes to the Rivulet code system. Flow and litter are now asked in the survey instead of defaulting.",
     "1.1.0 — Observer trust now weights evidence: computeSnapshot multiplies each observation's quality weight by trustMultiplier(observerTrust), shrinking noisy or disagreeing observers' influence towards neutral.",
     "1.2.0 — Sentinel-2 satellite readings enter computeSnapshot as an independent, coarse cross-check at a fixed evidence weight. The reflectance-to-hue-angle conversion uses CIE 1931 colour-matching weights at each band's centre wavelength and is NOT the published van der Woerd & Wernand Sentinel-2 hue-angle calibration (see satellite.hue-angle-calibration). When the citizen and satellite Forel-Ule readings diverge beyond the declared threshold, every contributing weight for that water body is halved: the posterior widens and data confidence cannot rise because of the diverging pass.",
   ],

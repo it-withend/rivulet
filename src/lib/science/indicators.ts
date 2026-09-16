@@ -3,7 +3,7 @@ import type { SurveyAnswers, TaxonCode } from "@/types/observation";
 export type Indicator = { code: string; value: number; source: string };
 
 const BMWP_SOURCE =
-  "Family sensitivity after the Biological Monitoring Working Party (BMWP) score system";
+  "Rivulet structured survey: sum of sensitivity values for recognisable groups, set on the BMWP 1-10 family scale; a simplified proxy, not a BMWP protocol score";
 const SURVEY_SOURCE = "Rivulet structured survey, derived proxy";
 
 export const BMWP_MAX_SCORE = 10;
@@ -18,7 +18,7 @@ export const TAXON_SENSITIVITY: Record<TaxonCode, number> = {
   none_seen: 0,
 };
 
-const CLARITY_TSS: Record<SurveyAnswers["clarity"], number> = {
+const CLARITY_ORDINAL: Record<SurveyAnswers["clarity"], number> = {
   clear: 0,
   slightly_turbid: 1,
   turbid: 2,
@@ -76,25 +76,44 @@ export function toIndicators(answers: SurveyAnswers): Indicator[] {
     });
   }
 
+  // Visual signs a resident reports are not laboratory measurements, so they
+  // never borrow an OneAquaHealth analyte code (tss, coliforms, macrophytes,
+  // LandUse). They travel under the separate Rivulet code system instead.
   indicators.push({
-    code: "tss",
-    value: CLARITY_TSS[answers.clarity],
-    source: `${SURVEY_SOURCE}: visual clarity ordinal, not a gravimetric measurement`,
+    code: "visual-clarity",
+    value: CLARITY_ORDINAL[answers.clarity],
+    source: `${SURVEY_SOURCE}: visual clarity, 0 clear to 3 opaque`,
   });
 
   if (answers.odour === "sewage") {
     indicators.push({
-      code: "coliforms",
+      code: "sewage-odour",
       value: 1,
-      source: `${SURVEY_SOURCE}: sewage odour as a faecal contamination proxy`,
+      source: `${SURVEY_SOURCE}: sewage odour reported; a possible sign of faecal contamination, not a coliform count`,
     });
   }
 
   if (answers.visibleAlgae) {
     indicators.push({
-      code: "macrophytes",
+      code: "visible-algae",
       value: 1,
-      source: `${SURVEY_SOURCE}: visible algal growth`,
+      source: `${SURVEY_SOURCE}: green algae or surface scum seen`,
+    });
+  }
+
+  if (answers.foam) {
+    indicators.push({
+      code: "surface-foam",
+      value: 1,
+      source: `${SURVEY_SOURCE}: foam on the surface`,
+    });
+  }
+
+  if (answers.deadFish) {
+    indicators.push({
+      code: "dead-fish",
+      value: 1,
+      source: `${SURVEY_SOURCE}: dead fish seen`,
     });
   }
 
@@ -110,14 +129,14 @@ export function toIndicators(answers: SurveyAnswers): Indicator[] {
 
   indicators.push({
     code: "hydrology",
-    value: answers.flow === "stagnant" ? 0 : answers.flow === "low" ? 1 : 2,
-    source: `${SURVEY_SOURCE}: observed flow state`,
+    value: answers.flow === "stagnant" ? 0 : answers.flow === "low" ? 1 : answers.flow === "high" ? 3 : 2,
+    source: `${SURVEY_SOURCE}: flow state as seen by the resident, 0 still to 3 fast`,
   });
 
   indicators.push({
-    code: "LandUse",
+    code: "visible-litter",
     value: answers.litter,
-    source: `${SURVEY_SOURCE}: visible litter on the margins`,
+    source: `${SURVEY_SOURCE}: visible litter, 0 none to 3 a lot`,
   });
 
   return indicators;

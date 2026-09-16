@@ -21,7 +21,11 @@ export default function OpenDataPage() {
         <h2 className="text-2xl">FHIR export</h2>
         <p className="m-0 max-w-xl">
           Observations are served as a FHIR <code>Bundle</code> whose resources
-          declare the OneAquaHealth Implementation Guide profiles.
+          declare the OneAquaHealth Implementation Guide profiles for
+          indicators and locations. The export has not yet been run through
+          the guide&rsquo;s validator, and the guide&rsquo;s health-measure
+          profiles are not used. Observations waiting for human review are
+          left out.
         </p>
         <Panel tone="ink">
           <p className="num m-0 text-sm">
@@ -50,11 +54,15 @@ export default function OpenDataPage() {
       <section className="space-y-3">
         <h2 className="text-2xl">Code systems</h2>
         <p className="m-0 max-w-xl">
-          Indicators use the OneAquaHealth code system wherever a code exists.
-          Concepts the guide does not yet cover — the Forel–Ule index, the
-          classified WFD outcome, and our data confidence measure — use a
-          clearly separated Rivulet extension system so the boundary between
-          adopted and derived vocabulary stays auditable.
+          Real measurements — pH, dissolved oxygen, water temperature,
+          nitrate — use the OneAquaHealth code system, as do the
+          macroinvertebrate and flow observations. What a resident sees but
+          cannot measure — clarity, a sewage smell, algae, foam, dead fish,
+          litter — is never passed off as a laboratory analyte such as
+          coliforms or suspended solids. It uses a clearly separated Rivulet
+          code system, together with the Forel–Ule index, the indicative
+          status class and our data confidence measure, so the boundary
+          between adopted and derived vocabulary stays auditable.
         </p>
       </section>
     </div>

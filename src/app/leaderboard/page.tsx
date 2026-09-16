@@ -5,6 +5,8 @@ import { contributions, type ContributionRow } from "@/lib/engagement/contributi
 import { computeSnapshot, type StoredObservation } from "@/lib/science/snapshot";
 import { OwnRowHighlighter } from "@/components/leaderboard/OwnRowHighlighter";
 import { embeddedTrustScore, embeddedCity, firstOrSelf } from "@/lib/db/embed";
+import { selectAll } from "@/lib/db/select-all";
+import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
 
 const CITIES = ["Coimbra", "Toulouse", "Benevento", "Gent", "Oslo"];
 const TOP_N = 100;
@@ -67,17 +69,16 @@ function CityChip({
 async function PeopleLeaderboard({ city }: { city: string | null }) {
   const db = supabaseAnon();
 
-  let query = db
-    .from("observations")
-    .select(
-      "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(display_name, trust_score, is_synthetic), waterbodies!inner(city)",
-    );
-
-  if (city) {
-    query = query.eq("waterbodies.city", city);
-  }
-
-  const { data, error } = await query;
+  const { data, error } = await selectAll((from, to) => {
+    const query = db
+      .from("observations")
+      .select(
+        "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(display_name, trust_score, is_synthetic), waterbodies!inner(city)",
+      );
+    return (city ? query.eq("waterbodies.city", city) : query)
+      .order("id")
+      .range(from, to);
+  });
   const rows = error ? [] : (data ?? []);
 
   const observerInfo = new Map<string, ObserverInfo>();
@@ -221,17 +222,25 @@ async function PeopleLeaderboard({ city }: { city: string | null }) {
 async function CitiesLeaderboard() {
   const db = supabaseAnon();
 
-  const { data: waterbodies, error: waterbodiesError } = await db
-    .from("waterbodies")
-    .select("id, city")
-    .in("city", CITIES);
-
-  const { data: observations, error: observationsError } = await db
-    .from("observations")
-    .select(
-      "id, waterbody_id, observed_at, observer_id, survey, quality_weight, observers(trust_score), waterbodies!inner(city)",
-    )
-    .in("waterbodies.city", CITIES);
+  const [
+    { data: waterbodies, error: waterbodiesError },
+    { data: observations, error: observationsError },
+  ] = await Promise.all([
+    selectAll((from, to) =>
+      db.from("waterbodies").select("id, city").in("city", CITIES).order("id").range(from, to),
+    ),
+    selectAll((from, to) =>
+      db
+        .from("observations")
+        .select(
+          "id, waterbody_id, observed_at, observer_id, survey, quality_weight, observers(trust_score), waterbodies!inner(city)",
+        )
+        .in("waterbodies.city", CITIES)
+        .not("validation_status", "in", HELD_FOR_REVIEW_FILTER)
+        .order("id")
+        .range(from, to),
+    ),
+  ]);
 
   const waterbodyRows = waterbodiesError ? [] : (waterbodies ?? []);
   const observationRows = observationsError ? [] : (observations ?? []);

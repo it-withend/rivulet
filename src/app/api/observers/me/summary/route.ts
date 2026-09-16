@@ -3,6 +3,7 @@ import { observerFromRequest } from "@/lib/identity/token";
 import { supabaseAdmin } from "@/lib/db/client";
 import { contributions, type ContributionRow } from "@/lib/engagement/contribution";
 import { embeddedTrustScore, embeddedCity } from "@/lib/db/embed";
+import { selectAll } from "@/lib/db/select-all";
 
 export async function GET(request: Request) {
   const db = supabaseAdmin();
@@ -12,11 +13,15 @@ export async function GET(request: Request) {
   }
 
   const [{ data, error }, { data: self }] = await Promise.all([
-    db
-      .from("observations")
-      .select(
-        "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(trust_score), waterbodies!inner(city)",
-      ),
+    selectAll((from, to) =>
+      db
+        .from("observations")
+        .select(
+          "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(trust_score), waterbodies!inner(city)",
+        )
+        .order("id")
+        .range(from, to),
+    ),
     db.from("observers").select("trust_score").eq("id", observer.id).maybeSingle(),
   ]);
 

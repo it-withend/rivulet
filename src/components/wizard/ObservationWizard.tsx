@@ -81,6 +81,7 @@ export function ObservationWizard({ waterbodyId }: { waterbodyId: string }) {
       const body = (await response.json()) as {
         id: string;
         waterbodyName: string;
+        heldForReview: boolean;
         delta: AssessmentDelta;
       };
 
@@ -104,6 +105,7 @@ export function ObservationWizard({ waterbodyId }: { waterbodyId: string }) {
         waterbodyName: body.waterbodyName,
         forelUle: entry.forelUle,
         delta: body.delta,
+        heldForReview: body.heldForReview,
         newBadges: evaluateBadges(after).filter((b) => unlocked.includes(b.code)),
       });
     } catch {
