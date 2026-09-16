@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { colourForClass } from "@/lib/ui/wfd-colours";
@@ -21,12 +21,14 @@ export function CityMap({
   centre: [number, number];
 }) {
   const container = useRef<HTMLDivElement>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!container.current) return;
 
     let map: MapLibreMap | undefined;
     let cancelled = false;
+    setLoaded(false);
 
     // MapLibre reads `window` as soon as its module runs, so it is imported
     // dynamically here rather than at module scope. That keeps it out of the
@@ -64,6 +66,7 @@ export function CityMap({
       );
 
       instance.on("load", () => {
+        if (!cancelled) setLoaded(true);
         instance.addSource("waterbodies", {
           type: "geojson",
           data: {
@@ -126,11 +129,21 @@ export function CityMap({
   }, [features, centre]);
 
   return (
-    <div
-      ref={container}
-      role="application"
-      aria-label="Map of urban streams"
-      className="h-[70vh] w-full rounded-md border border-rule"
-    />
+    <div className="relative h-[70vh] w-full">
+      <div
+        ref={container}
+        role="application"
+        aria-label="Map of urban streams"
+        className="h-full w-full rounded-md border border-rule"
+      />
+      {!loaded && (
+        <div
+          aria-live="polite"
+          className="absolute inset-0 flex items-center justify-center rounded-md border border-rule bg-paper-raised"
+        >
+          <p className="field-label m-0">Loading map…</p>
+        </div>
+      )}
+    </div>
   );
 }

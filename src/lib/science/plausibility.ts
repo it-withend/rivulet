@@ -1,6 +1,9 @@
 export const PLAUSIBILITY = {
   maxGpsAccuracyM: 250,
   maxPerHour: 5,
+  maxFutureMinutes: 5,
+  maxPastDays: 30,
+  maxDistanceFromWaterbodyM: 200,
 } as const;
 
 export type PlausibilityInput = {

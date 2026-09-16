@@ -30,11 +30,9 @@ export default async function CertificatePage(
 
   if (error || !certificate) notFound();
 
-  const status: "verified" | "invalid" | "revoked" = certificate.revoked_at
+  const status: "verified" | "invalid" | "unavailable" | "revoked" = certificate.revoked_at
     ? "revoked"
-    : verifyCredential(certificate.jwt).valid
-      ? "verified"
-      : "invalid";
+    : verifyCredential(certificate.jwt).status;
 
   const credential = certificate.credential as CredentialShape;
   const evidence = credential.evidence?.[0]?.description ?? null;
@@ -81,10 +79,19 @@ export default async function CertificatePage(
             <dd className="m-0 mt-0.5">
               {status === "verified" && "Signature verified"}
               {status === "invalid" && "Signature invalid"}
+              {status === "unavailable" && "Cannot verify right now"}
               {status === "revoked" && "Revoked"}
             </dd>
           </div>
         </dl>
+
+        {status === "unavailable" && (
+          <p className="mt-4 mb-0 max-w-xl text-sm text-ink-muted">
+            Cannot verify right now: the issuer key is not configured on this
+            deployment. This says nothing about whether the certificate is
+            genuine — try again later or on the primary deployment.
+          </p>
+        )}
 
         <div className="mt-6 border-t border-rule pt-4 text-sm text-ink-muted print:hidden">
           <p className="m-0">

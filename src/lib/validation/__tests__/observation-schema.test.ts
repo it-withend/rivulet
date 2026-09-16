@@ -58,4 +58,38 @@ describe("observationSchema", () => {
       }).success,
     ).toBe(false);
   });
+
+  describe("observedAt server-time window", () => {
+    it("accepts a timestamp a few minutes in the future (clock skew)", () => {
+      const observedAt = new Date(Date.now() + 2 * 60_000).toISOString();
+      expect(
+        observationSchema.safeParse({ ...valid, observedAt }).success,
+      ).toBe(true);
+    });
+
+    it("rejects a timestamp more than 5 minutes in the future", () => {
+      const observedAt = new Date(Date.now() + 6 * 60_000).toISOString();
+      expect(
+        observationSchema.safeParse({ ...valid, observedAt }).success,
+      ).toBe(false);
+    });
+
+    it("rejects a timestamp more than 30 days in the past", () => {
+      const observedAt = new Date(
+        Date.now() - 31 * 24 * 3_600_000,
+      ).toISOString();
+      expect(
+        observationSchema.safeParse({ ...valid, observedAt }).success,
+      ).toBe(false);
+    });
+
+    it("accepts a timestamp within the 30-day past window", () => {
+      const observedAt = new Date(
+        Date.now() - 29 * 24 * 3_600_000,
+      ).toISOString();
+      expect(
+        observationSchema.safeParse({ ...valid, observedAt }).success,
+      ).toBe(true);
+    });
+  });
 });

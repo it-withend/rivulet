@@ -1,5 +1,6 @@
 import { ObservationWizard } from "@/components/wizard/ObservationWizard";
 import { PhotoPreview } from "@/components/wizard/PhotoPreview";
+import { FindMyStream } from "@/components/observe/FindMyStream";
 
 export default async function ObservePage(props: PageProps<"/observe">) {
   const searchParams = await props.searchParams;
@@ -18,10 +19,12 @@ export default async function ObservePage(props: PageProps<"/observe">) {
           only the colour class it produces.
         </p>
         <PhotoPreview />
-        <p className="mt-6 mb-0 max-w-md text-sm text-ink-muted">
-          To send a full observation, open it from a stream&apos;s page on
-          the map.
-        </p>
+
+        <div className="mt-10 border-t border-rule pt-8">
+          <p className="field-label m-0">Send a full observation</p>
+          <h2 className="mt-2 mb-3 text-2xl">Which stream are you at?</h2>
+          <FindMyStream />
+        </div>
       </div>
     );
   }

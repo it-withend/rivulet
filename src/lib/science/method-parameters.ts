@@ -91,6 +91,12 @@ const PLAUSIBILITY_RATIONALE: Record<keyof typeof PLAUSIBILITY, string> = {
     "GPS accuracy worse than this many metres (or missing) flags the observation for human review instead of auto-approving it.",
   maxPerHour:
     "More than this many observations by the same observer in the previous hour flags the batch for human review as a basic anti-spam check.",
+  maxFutureMinutes:
+    "A claimed observation time more than this many minutes ahead of the server clock is rejected outright as an implausible payload.",
+  maxPastDays:
+    "A claimed observation time more than this many days behind the server clock is rejected outright as an implausible payload.",
+  maxDistanceFromWaterbodyM:
+    "A submitted GPS point more than this many metres from the claimed water body's geometry flags the observation for human review instead of auto-approving it, but never blocks submission.",
 };
 
 const CONTRIBUTION_RATIONALE: Record<keyof typeof CONTRIBUTION_PARAMETERS, string> = {

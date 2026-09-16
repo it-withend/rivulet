@@ -23,8 +23,8 @@ describe("signCredential / verifyCredential", () => {
     expect(jwt).not.toBeNull();
 
     const result = verifyCredential(jwt!);
-    expect(result.valid).toBe(true);
-    expect(result.credential).toEqual(credential);
+    expect(result.status).toBe("verified");
+    expect(result.status === "verified" && result.credential).toEqual(credential);
   });
 
   it("rejects a credential whose payload was tampered with after signing", () => {
@@ -38,7 +38,24 @@ describe("signCredential / verifyCredential", () => {
     const tampered = `${header}.${tamperedPayload}.${signature}`;
 
     const result = verifyCredential(tampered);
-    expect(result.valid).toBe(false);
-    expect(result.credential).toBeNull();
+    expect(result.status).toBe("invalid");
+  });
+
+  it("reports 'unavailable' rather than 'invalid' when the issuer key is unconfigured", () => {
+    // A legitimately-signed credential from *this* run, but verified after
+    // the deployment's issuer key has gone missing (e.g. a preview build
+    // without the env var). Must never be shown as a tampered/forged
+    // signature — that's a different, much worse claim.
+    const jwt = signCredential({ hello: "world", tier: "contributor" });
+    expect(jwt).not.toBeNull();
+
+    const original = process.env.RIVULET_ISSUER_PRIVATE_KEY;
+    delete process.env.RIVULET_ISSUER_PRIVATE_KEY;
+    try {
+      const result = verifyCredential(jwt!);
+      expect(result.status).toBe("unavailable");
+    } finally {
+      process.env.RIVULET_ISSUER_PRIVATE_KEY = original;
+    }
   });
 });

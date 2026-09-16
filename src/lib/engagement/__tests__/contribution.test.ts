@@ -6,6 +6,7 @@ function row(overrides: Partial<ContributionRow>): ContributionRow {
     observerId: "observer-1",
     waterbodyId: "w1",
     observedAt: "2026-09-01T10:00:00.000Z",
+    createdAt: "2026-09-01T10:00:00.000Z",
     qualityWeight: 1,
     observerTrust: 0.5,
     validationStatus: "auto_approved",
@@ -17,8 +18,8 @@ function row(overrides: Partial<ContributionRow>): ContributionRow {
 describe("contributions", () => {
   it("caps counted observations at one per observer per water body per UTC day", () => {
     const rows = [
-      row({ observedAt: "2026-09-01T08:00:00.000Z" }),
-      row({ observedAt: "2026-09-01T20:00:00.000Z" }),
+      row({ createdAt: "2026-09-01T08:00:00.000Z" }),
+      row({ createdAt: "2026-09-01T20:00:00.000Z" }),
     ];
     const [summary] = contributions(rows);
     expect(summary.countedObservations).toBe(1);
@@ -26,11 +27,29 @@ describe("contributions", () => {
 
   it("counts a second day separately", () => {
     const rows = [
-      row({ observedAt: "2026-09-01T08:00:00.000Z" }),
-      row({ observedAt: "2026-09-02T08:00:00.000Z" }),
+      row({ createdAt: "2026-09-01T08:00:00.000Z" }),
+      row({ createdAt: "2026-09-02T08:00:00.000Z" }),
     ];
     const [summary] = contributions(rows);
     expect(summary.countedObservations).toBe(2);
+  });
+
+  it("keys the daily cap on the server's created_at, not the client-supplied observed_at", () => {
+    // A script could fabricate wildly different `observedAt` values (spread
+    // across many days) while flooding the endpoint within the same real
+    // hour. The cap must still bucket by the server-assigned `createdAt`.
+    const rows = [
+      row({
+        observedAt: "2020-01-01T00:00:00.000Z",
+        createdAt: "2026-09-01T08:00:00.000Z",
+      }),
+      row({
+        observedAt: "2031-01-01T00:00:00.000Z",
+        createdAt: "2026-09-01T20:00:00.000Z",
+      }),
+    ];
+    const [summary] = contributions(rows);
+    expect(summary.countedObservations).toBe(1);
   });
 
   it("excludes flagged and pending observations", () => {

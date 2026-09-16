@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     db
       .from("observations")
       .select(
-        "id, waterbody_id, observed_at, observer_id, quality_weight, validation_status, is_synthetic, observers(trust_score), waterbodies!inner(city)",
+        "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(trust_score), waterbodies!inner(city)",
       ),
     db.from("observers").select("trust_score").eq("id", observer.id).maybeSingle(),
   ]);
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     observerId: o.observer_id,
     waterbodyId: o.waterbody_id,
     observedAt: o.observed_at,
+    createdAt: o.created_at,
     qualityWeight: Number(o.quality_weight),
     observerTrust: embeddedTrustScore(o.observers) ?? null,
     validationStatus: o.validation_status,

@@ -4,7 +4,7 @@ import { toIndicators } from "@/lib/science/indicators";
 import { observationWeight } from "@/lib/science/weighting";
 import { computeSnapshot, type StoredObservation } from "@/lib/science/snapshot";
 import { assessmentDelta } from "@/lib/science/delta";
-import { plausibilityStatus } from "@/lib/science/plausibility";
+import { plausibilityStatus, PLAUSIBILITY } from "@/lib/science/plausibility";
 import { observerFromRequest } from "@/lib/identity/token";
 import { recomputeTrust } from "@/lib/trust/recompute";
 import { supabaseAdmin } from "@/lib/db/client";
@@ -36,21 +36,46 @@ export async function POST(request: Request) {
   // stored anonymously either way.
   const observer = await observerFromRequest(db, request);
 
-  const [{ data: waterbody }, { data: existing }, recentByObserver] = await Promise.all([
-    db.from("waterbodies").select("name").eq("id", payload.waterbodyId).maybeSingle(),
-    db
-      .from("observations")
-      .select("id, observed_at, observer_id, survey, quality_weight")
-      .eq("waterbody_id", payload.waterbodyId),
-    observer
-      ? db
-          .from("observations")
-          .select("id", { count: "exact", head: true })
-          .eq("observer_id", observer.id)
-          .gte("observed_at", new Date(Date.now() - 3_600_000).toISOString())
-          .then(({ count }) => count ?? 0)
-      : Promise.resolve(0),
-  ]);
+  const [{ data: waterbody }, { data: existing }, recentByObserver, distanceFromWaterbodyM] =
+    await Promise.all([
+      db.from("waterbodies").select("name").eq("id", payload.waterbodyId).maybeSingle(),
+      db
+        .from("observations")
+        .select("id, observed_at, observer_id, survey, quality_weight")
+        .eq("waterbody_id", payload.waterbodyId),
+      observer
+        ? db
+            .from("observations")
+            .select("id", { count: "exact", head: true })
+            .eq("observer_id", observer.id)
+            // Keyed on the server's `created_at`, never the client-supplied
+            // `observed_at` — otherwise a fabricated timestamp lets a flood
+            // of submissions dodge this hourly cap entirely.
+            .gte("created_at", new Date(Date.now() - 3_600_000).toISOString())
+            .then(({ count }) => count ?? 0)
+        : Promise.resolve(0),
+      // Distance from the submitted point to the claimed water body's own
+      // geometry. Never blocks submission — only ever raises validation_status
+      // to "flagged" below. A failed RPC call falls through to null and the
+      // existing plausibility logic decides the status alone.
+      (async (): Promise<number | null> => {
+        try {
+          const { data, error } = await db.rpc("waterbody_distance_m", {
+            p_waterbody: payload.waterbodyId,
+            p_lon: payload.longitude,
+            p_lat: payload.latitude,
+          });
+          if (error) {
+            console.error("waterbody_distance_m failed:", error);
+            return null;
+          }
+          return typeof data === "number" ? data : null;
+        } catch (rpcError) {
+          console.error("waterbody_distance_m threw:", rpcError);
+          return null;
+        }
+      })(),
+    ]);
 
   if (!waterbody) {
     return NextResponse.json({ error: "unknown_waterbody" }, { status: 404 });
@@ -67,10 +92,19 @@ export async function POST(request: Request) {
     ageHours: Math.max(0, ageHours),
   });
 
-  const validationStatus = plausibilityStatus({
+  let validationStatus = plausibilityStatus({
     gpsAccuracyM: payload.gpsAccuracyM,
     recentByObserver,
   });
+
+  // The point is never rejected for being far from the claimed water body —
+  // only flagged for human review, same as any other plausibility signal.
+  if (
+    distanceFromWaterbodyM !== null &&
+    distanceFromWaterbodyM > PLAUSIBILITY.maxDistanceFromWaterbodyM
+  ) {
+    validationStatus = "flagged";
+  }
 
   const { data, error } = await db
     .from("observations")

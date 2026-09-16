@@ -11,6 +11,8 @@ export type ContributionRow = {
   observerId: string | null;
   waterbodyId: string;
   observedAt: string;
+  /** Server-assigned insertion time — never client-supplied, unlike `observedAt`. */
+  createdAt: string;
   qualityWeight: number;
   observerTrust: number | null;
   validationStatus: string;
@@ -32,8 +34,8 @@ export type ContributorSummary = {
 
 const COUNTED_STATUSES = new Set(["auto_approved", "human_approved"]);
 
-function utcDayKey(observedAt: string): string {
-  return observedAt.slice(0, 10);
+function utcDayKey(isoTimestamp: string): string {
+  return isoTimestamp.slice(0, 10);
 }
 
 /**
@@ -54,14 +56,17 @@ export function contributions(
   );
 
   // Anti-gaming: one counted observation per observer per water body per UTC
-  // day — the earliest one that day.
+  // day — the earliest one that day. Keyed on `createdAt` (the server's
+  // insertion clock), never on the client-supplied `observedAt`, so a script
+  // spreading fabricated `observedAt` values across many days cannot dodge
+  // this cap.
   const sortedByTime = [...eligible].sort(
-    (a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime(),
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
   const seenDayKeys = new Set<string>();
   const counted: ContributionRow[] = [];
   for (const o of sortedByTime) {
-    const key = `${o.observerId}::${o.waterbodyId}::${utcDayKey(o.observedAt)}`;
+    const key = `${o.observerId}::${o.waterbodyId}::${utcDayKey(o.createdAt)}`;
     if (seenDayKeys.has(key)) continue;
     seenDayKeys.add(key);
     counted.push(o);

@@ -24,30 +24,41 @@ export function signCredential(credential: unknown): string | null {
   return `${signingInput}.${signature.toString("base64url")}`;
 }
 
+/**
+ * Three distinct outcomes, never collapsed into one another:
+ * - "verified": the signature matches the issuer's public key.
+ * - "invalid": the JWS is malformed or the signature does not match — a
+ *   genuine sign of tampering or forgery.
+ * - "unavailable": the issuer key is missing or misconfigured on this
+ *   deployment, so verification could not be attempted at all. This must
+ *   never be presented as if it were "invalid" — it says nothing about
+ *   whether the credential is genuine.
+ */
 export type VerifyResult =
-  | { valid: true; credential: unknown }
-  | { valid: false; credential: null };
+  | { status: "verified"; credential: unknown }
+  | { status: "invalid" }
+  | { status: "unavailable" };
 
 /** Verifies a compact JWS against the issuer's public key. Never throws. */
 export function verifyCredential(jwt: string): VerifyResult {
   const parts = jwt.split(".");
-  if (parts.length !== 3) return { valid: false, credential: null };
+  if (parts.length !== 3) return { status: "invalid" };
   const [headerB64, payloadB64, signatureB64] = parts;
 
   const key = issuerPublicKey();
-  if (!key) return { valid: false, credential: null };
+  if (!key) return { status: "unavailable" };
 
   try {
     const signingInput = `${headerB64}.${payloadB64}`;
     const signature = Buffer.from(signatureB64, "base64url");
     const ok = verify(null, Buffer.from(signingInput, "utf8"), key, signature);
-    if (!ok) return { valid: false, credential: null };
+    if (!ok) return { status: "invalid" };
 
     const credential: unknown = JSON.parse(
       Buffer.from(payloadB64, "base64url").toString("utf8"),
     );
-    return { valid: true, credential };
+    return { status: "verified", credential };
   } catch {
-    return { valid: false, credential: null };
+    return { status: "invalid" };
   }
 }

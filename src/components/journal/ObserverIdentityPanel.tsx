@@ -33,6 +33,9 @@ export function ObserverIdentityPanel() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     const current = getObserver();
@@ -97,18 +100,54 @@ export function ObserverIdentityPanel() {
     }
   }
 
+  async function downloadData() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const response = await fetch("/api/observers/me/export", {
+        headers: { authorization: `Bearer ${observer!.token}` },
+      });
+      if (!response.ok) {
+        setExportError("Could not export your data. Please try again.");
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "rivulet-my-data.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError("Could not export your data. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   async function deleteData() {
     setDeleting(true);
+    setDeleteError(null);
     try {
-      await fetch("/api/observers/me", {
+      const response = await fetch("/api/observers/me", {
         method: "DELETE",
         headers: { authorization: `Bearer ${observer!.token}` },
       });
-    } catch {
-      // Best-effort: the device should forget the identity either way.
-    } finally {
+      if (!response.ok) {
+        setDeleteError(
+          "Nothing was deleted. The server could not process the request — please try again.",
+        );
+        return;
+      }
       clearObserver();
       setDeleted(true);
+    } catch {
+      setDeleteError(
+        "Nothing was deleted. We could not reach the server — please try again.",
+      );
+    } finally {
       setDeleting(false);
     }
   }
@@ -158,33 +197,49 @@ export function ObserverIdentityPanel() {
       </form>
       {error && <p className="mt-2 mb-0 text-sm text-ink-muted">{error}</p>}
 
-      <div className="mt-6 border-t border-rule pt-4">
-        {confirmingDelete ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="m-0 text-sm">
-              Delete your identity? This cannot be undone.
-            </p>
-            <Button variant="secondary" onClick={deleteData} disabled={deleting}>
-              {deleting ? "Deleting…" : "Yes, delete"}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setConfirmingDelete(false)}
-              disabled={deleting}
-            >
-              Cancel
-            </Button>
-          </div>
-        ) : (
+      <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-rule pt-4">
+        <Button variant="secondary" onClick={downloadData} disabled={exporting}>
+          {exporting ? "Preparing…" : "Download my data"}
+        </Button>
+        {!confirmingDelete && (
           <Button variant="secondary" onClick={() => setConfirmingDelete(true)}>
             Delete my data
           </Button>
         )}
-        <p className="mt-2 mb-0 text-xs text-ink-muted">
-          Removes your pseudonymous identity from Rivulet. Your past
-          observations keep their data but are no longer linked to you.
-        </p>
       </div>
+      {exportError && (
+        <p className="mt-2 mb-0 text-sm text-ink-muted">{exportError}</p>
+      )}
+      <p className="mt-2 mb-0 text-xs text-ink-muted">
+        Download gives you a copy of your profile, observations and
+        certificates as JSON. Delete removes your pseudonymous identity from
+        Rivulet — your past observations keep their data but are no longer
+        linked to you.
+      </p>
+
+      {confirmingDelete && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-dashed border-rule pt-4">
+          <p className="m-0 text-sm">
+            Delete your identity? This cannot be undone.
+          </p>
+          <Button variant="secondary" onClick={deleteData} disabled={deleting}>
+            {deleting ? "Deleting…" : "Yes, delete"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setConfirmingDelete(false);
+              setDeleteError(null);
+            }}
+            disabled={deleting}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
+      {deleteError && (
+        <p className="mt-2 mb-0 text-sm text-ink-muted">{deleteError}</p>
+      )}
     </Panel>
   );
 }
