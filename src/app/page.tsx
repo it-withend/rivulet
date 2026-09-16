@@ -32,7 +32,8 @@ const SCIENCE_POINTS = [
   "Five indicative status classes named after the EU Water Framework Directive — not an official WFD assessment",
   "Macroinvertebrate sensitivity set on the BMWP 1–10 family scale — a simplified proxy, not the BMWP protocol",
   "Beta–Bernoulli conjugate updating with 90% credible intervals",
-  "FHIR resources declaring HL7 Europe OneAquaHealth profiles — not yet validated against the guide",
+  "HL7 Europe OneAquaHealth FHIR Implementation Guide",
+  "Copernicus Sentinel-2 satellite imagery as an independent, coarse cross-check (uncalibrated proxy, not the published hue-angle calibration)",
 ];
 
 const STEPS = [

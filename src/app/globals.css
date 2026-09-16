@@ -32,6 +32,10 @@
   --color-wfd-bad: #d7191c;
   --color-insufficient: #9e9e9e;
 
+  /* Citizen-satellite divergence: deliberately not a WFD colour, so it can
+     never be mistaken for an ecological status class. */
+  --color-divergence: #7b3294;
+
   --radius-sm: 3px;
   --radius-md: 6px;
 }

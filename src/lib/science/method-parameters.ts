@@ -20,6 +20,7 @@ import { TRUST_PARAMETERS } from "./trust";
 import { PLAUSIBILITY } from "./plausibility";
 import { CONTRIBUTION_PARAMETERS } from "@/lib/engagement/contribution";
 import { CERTIFICATE_PARAMETERS } from "@/lib/engagement/certificates";
+import { SATELLITE_BAND_CMF, SATELLITE_PARAMETERS } from "./satellite";
 
 type ParameterValue = number | readonly number[];
 
@@ -118,6 +119,21 @@ const CERTIFICATE_RATIONALE: Record<keyof typeof CERTIFICATE_PARAMETERS, string>
   dataStewardMinTrust: "Minimum Trust Score required for the Data Steward certificate.",
   dataStewardMaxRank:
     "Rank an observer must reach or beat in their home city's people leaderboard for the Data Steward certificate.",
+};
+
+const SATELLITE_RATIONALE: Record<keyof typeof SATELLITE_PARAMETERS, string> = {
+  minUsablePixels:
+    "Below this many cloud-, shadow- and land-masked water pixels in the sample window, a Sentinel-2 pass is recorded with null indices rather than a reading — never as agreement.",
+  minNdwi:
+    "Pixels at or below this NDWI value are classed as land or mixed bank pixels rather than open water and excluded from the mean.",
+  windowPixels:
+    "Side length in pixels of the square window read around each water body's centroid; water bodies are narrow, so this coarse sample mixes bank and water by construction.",
+  maxAgeDays:
+    "A satellite reading older than this many days no longer counts as a current cross-check and is excluded from the snapshot.",
+  evidenceWeight:
+    "Weight a satellite reading carries in the Bayesian model relative to a full-weight citizen observation, reflecting its coarser spatial resolution and unvalidated calibration.",
+  divergenceThresholdFu:
+    "Absolute Forel-Ule class distance between the citizen and satellite readings above which they are treated as diverging rather than agreeing.",
 };
 
 const CONFIDENCE_RATIONALE: Record<keyof typeof DATA_CONFIDENCE, string> = {
@@ -293,4 +309,35 @@ export const METHOD_PARAMETERS: MethodParameter[] = [
       rationale: `${CERTIFICATE_RATIONALE[key]} This is a programme rule, not a scientific estimate, but is declared here for transparency. ${UNCALIBRATED}`,
     }),
   ),
+  ...(Object.keys(SATELLITE_PARAMETERS) as (keyof typeof SATELLITE_PARAMETERS)[]).map(
+    (key): MethodParameter => ({
+      id: `satellite.${key}`,
+      value: SATELLITE_PARAMETERS[key],
+      kind: "prior",
+      rationale: `${SATELLITE_RATIONALE[key]} ${UNCALIBRATED}`,
+    }),
+  ),
+  {
+    id: "satellite.cie-band-centre-cmf",
+    value: [
+      SATELLITE_BAND_CMF.blue.x,
+      SATELLITE_BAND_CMF.blue.y,
+      SATELLITE_BAND_CMF.blue.z,
+      SATELLITE_BAND_CMF.green.x,
+      SATELLITE_BAND_CMF.green.y,
+      SATELLITE_BAND_CMF.green.z,
+      SATELLITE_BAND_CMF.red.x,
+      SATELLITE_BAND_CMF.red.y,
+      SATELLITE_BAND_CMF.red.z,
+    ],
+    kind: "standard",
+    source:
+      "CIE 1931 2° standard observer colour-matching functions (CIE 15:2004), read at the 5nm-tabulated wavelength nearest each Sentinel-2 L2A band's centre wavelength (blue B02 ≈492nm, green B03 ≈560nm, red B04 ≈665nm)",
+  },
+  {
+    id: "satellite.hue-angle-calibration",
+    value: 0,
+    kind: "prior",
+    rationale: `The Sentinel-2 hue-angle conversion (reflectance -> CIE XYZ via band-centre colour-matching weights -> hue angle) is a placeholder approximation, NOT the published van der Woerd & Wernand (2015, 2018) Sentinel-2 hue-angle calibration and its delta-correction, which Rivulet intends to adopt once implemented. Treat satellite Forel-Ule equivalents as a coarse, uncalibrated cross-check rather than a validated measurement. ${UNCALIBRATED}`,
+  },
 ];

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { supabaseAnon } from "@/lib/db/client";
-import { computeSnapshot } from "@/lib/science/snapshot";
+import { computeSnapshot, weightedCitizenForelUle } from "@/lib/science/snapshot";
+import type { SatelliteReading } from "@/lib/science/satellite";
 import {
   colourForClass,
   CLASS_LABEL,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/ui/wfd-colours";
 import { ScoreDisclosure } from "@/components/water/ScoreDisclosure";
 import { DisplayModeToggle } from "@/components/water/DisplayModeToggle";
+import { SatellitePanel } from "@/components/water/SatellitePanel";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { embeddedTrustScore } from "@/lib/db/embed";
@@ -40,18 +42,46 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
   const heldCount = allRows.length - rows.length;
   const hasSynthetic = rows.some((o) => o.is_synthetic);
 
-  const snapshot = computeSnapshot(
-    rows.map((o) => ({
-      id: o.id,
-      observedAt: o.observed_at,
-      observerId: o.observer_id,
-      survey: o.survey,
-      qualityWeight: Number(o.quality_weight),
-      observerTrust: embeddedTrustScore(o.observers),
-    })),
-  );
+  const { data: satelliteRows, error: satelliteError } = await db
+    .from("satellite_readings")
+    .select(
+      "id, acquired_at, scene_id, cloud_cover, usable_pixels, ndci, turbidity, forel_ule_equivalent, hue_angle",
+    )
+    .eq("waterbody_id", id)
+    .order("acquired_at", { ascending: false });
+
+  const satelliteReadings: SatelliteReading[] = satelliteError
+    ? []
+    : (satelliteRows ?? []).map((r) => ({
+        id: r.id,
+        waterbodyId: id,
+        acquiredAt: r.acquired_at,
+        sceneId: r.scene_id,
+        cloudCover: r.cloud_cover === null ? null : Number(r.cloud_cover),
+        usablePixels: r.usable_pixels,
+        ndci: r.ndci === null ? null : Number(r.ndci),
+        turbidity: r.turbidity === null ? null : Number(r.turbidity),
+        forelUleEquivalent: r.forel_ule_equivalent,
+        hueAngle: r.hue_angle === null ? null : Number(r.hue_angle),
+      }));
+
+  const observationInputs = rows.map((o) => ({
+    id: o.id,
+    observedAt: o.observed_at,
+    observerId: o.observer_id,
+    survey: o.survey,
+    qualityWeight: Number(o.quality_weight),
+    observerTrust: embeddedTrustScore(o.observers),
+  }));
+
+  const now = new Date();
+  const snapshot = computeSnapshot(observationInputs, now, satelliteReadings);
 
   const klass = snapshot.assessment.klass;
+  const citizenFu = weightedCitizenForelUle(observationInputs);
+  // Most recent pass regardless of usability — the panel itself reports a
+  // cloudy/unusable or stale pass as unavailable, never as agreement.
+  const latestSatellite = satelliteReadings[0] ?? null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-10 sm:px-6">
@@ -75,33 +105,42 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
 
       <DisplayModeToggle
         simple={
-          <Panel>
-            <div className="flex items-center gap-4">
-              <span
-                aria-hidden="true"
-                className={
-                  "size-14 shrink-0 rounded-full border border-rule " +
-                  (klass ? "" : "hatch-insufficient")
-                }
-                style={
-                  klass ? { backgroundColor: colourForClass(klass) } : undefined
-                }
-              />
-              <div>
-                <p className="m-0 text-xl font-medium">
-                  {klass ? CLASS_LABEL[klass] : "Not enough data yet"}
-                </p>
-                <p className="mt-1 mb-0 text-sm text-ink-muted">
-                  {klass
-                    ? SIMPLE_MESSAGE[klass]
-                    : "Nobody has reported enough about this water body for us to assess it. You could be the first."}
-                </p>
+          <div className="space-y-4">
+            <Panel>
+              <div className="flex items-center gap-4">
+                <span
+                  aria-hidden="true"
+                  className={
+                    "size-14 shrink-0 rounded-full border border-rule " +
+                    (klass ? "" : "hatch-insufficient")
+                  }
+                  style={
+                    klass ? { backgroundColor: colourForClass(klass) } : undefined
+                  }
+                />
+                <div>
+                  <p className="m-0 text-xl font-medium">
+                    {klass ? CLASS_LABEL[klass] : "Not enough data yet"}
+                  </p>
+                  <p className="mt-1 mb-0 text-sm text-ink-muted">
+                    {klass
+                      ? SIMPLE_MESSAGE[klass]
+                      : "Nobody has reported enough about this water body for us to assess it. You could be the first."}
+                  </p>
+                </div>
               </div>
-            </div>
-            <Button href={`/observe?waterbody=${waterbody.id}`} className="mt-5">
-              Record an observation
-            </Button>
-          </Panel>
+              <Button href={`/observe?waterbody=${waterbody.id}`} className="mt-5">
+                Record an observation
+              </Button>
+            </Panel>
+            <SatellitePanel
+              latest={latestSatellite}
+              citizenFu={citizenFu}
+              divergence={snapshot.divergence}
+              scientific={false}
+              now={now}
+            />
+          </div>
         }
         scientific={
           <div className="space-y-4">
@@ -126,7 +165,21 @@ export default async function WaterBodyPage(props: PageProps<"/water/[id]">) {
               <p className="num mt-1 mb-0 text-sm text-ink-muted">
                 Data confidence {(snapshot.confidence * 100).toFixed(0)}%
               </p>
+              {snapshot.divergence?.diverged && (
+                <p className="mt-1 mb-0 text-sm text-ink-muted">
+                  Widened: a diverging satellite pass halves the effective
+                  weight of evidence for this water body rather than
+                  sharpening the estimate.
+                </p>
+              )}
             </Panel>
+            <SatellitePanel
+              latest={latestSatellite}
+              citizenFu={citizenFu}
+              divergence={snapshot.divergence}
+              scientific
+              now={now}
+            />
             <ScoreDisclosure snapshot={snapshot} />
           </div>
         }
