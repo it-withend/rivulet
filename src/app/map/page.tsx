@@ -11,6 +11,7 @@ import { selectAll } from "@/lib/db/select-all";
 import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
 import { readOneHealth, type Concern, type ExposureSite } from "@/lib/science/one-health";
 import { CONCERN_COLOUR, CONCERN_LABEL } from "@/lib/ui/one-health-copy";
+import type { SatelliteReading } from "@/lib/science/satellite";
 
 type GeoJsonLineString = {
   type: string;
@@ -61,7 +62,12 @@ export default async function MapPage(props: PageProps<"/map">) {
   const requested = Array.isArray(cityParam) ? cityParam[0] : cityParam;
   const city = requested && CITY_CENTRES[requested] ? requested : DEFAULT_CITY;
   const centre = CITY_CENTRES[city];
-  const layer = searchParams.layer === "health" ? "health" : "status";
+  const layerParam = searchParams.layer;
+  const requestedLayer = Array.isArray(layerParam) ? layerParam[0] : layerParam;
+  const layer =
+    requestedLayer === "health" || requestedLayer === "divergence"
+      ? requestedLayer
+      : "status";
 
   const db = supabaseAnon();
 
@@ -117,6 +123,13 @@ export default async function MapPage(props: PageProps<"/map">) {
     exposureByWaterbody.set(e.waterbody_id, list);
   }
 
+  const { data: satelliteReadings, error: satelliteError } = await db
+    .from("satellite_readings")
+    .select(
+      "id, waterbody_id, acquired_at, scene_id, cloud_cover, usable_pixels, ndci, turbidity, forel_ule_equivalent, hue_angle, waterbodies!inner(city)",
+    )
+    .eq("waterbodies.city", city);
+
   const byWaterbody = new Map<string, StoredObservation[]>();
   let hasSynthetic = false;
 
@@ -136,15 +149,41 @@ export default async function MapPage(props: PageProps<"/map">) {
     }
   }
 
+  const satelliteByWaterbody = new Map<string, SatelliteReading[]>();
+  if (!satelliteError) {
+    for (const r of satelliteReadings ?? []) {
+      const list = satelliteByWaterbody.get(r.waterbody_id) ?? [];
+      list.push({
+        id: r.id,
+        waterbodyId: r.waterbody_id,
+        acquiredAt: r.acquired_at,
+        sceneId: r.scene_id,
+        cloudCover: r.cloud_cover === null ? null : Number(r.cloud_cover),
+        usablePixels: r.usable_pixels,
+        ndci: r.ndci === null ? null : Number(r.ndci),
+        turbidity: r.turbidity === null ? null : Number(r.turbidity),
+        forelUleEquivalent: r.forel_ule_equivalent,
+        hueAngle: r.hue_angle === null ? null : Number(r.hue_angle),
+      });
+      satelliteByWaterbody.set(r.waterbody_id, list);
+    }
+  }
+
   const features: MapFeature[] = waterbodiesError
     ? []
     : (waterbodies ?? []).map((wb) => {
         const stored = byWaterbody.get(wb.id) ?? [];
+        const snapshot = computeSnapshot(
+          stored,
+          new Date(),
+          satelliteByWaterbody.get(wb.id) ?? [],
+        );
         return {
           id: wb.id,
           name: wb.name,
-          klass: computeSnapshot(stored).assessment.klass,
+          klass: snapshot.assessment.klass,
           concern: readOneHealth(stored, exposureByWaterbody.get(wb.id) ?? []).overall,
+          diverged: snapshot.divergence?.diverged ?? null,
           coordinates: (wb.geometry as GeoJsonLineString).coordinates,
         };
       });
@@ -160,7 +199,7 @@ export default async function MapPage(props: PageProps<"/map">) {
         {CITIES.map((name) => (
           <CityChip
             key={name}
-            href={`/map?city=${name}${layer === "health" ? "&layer=health" : ""}`}
+            href={`/map?city=${name}${layer === "status" ? "" : `&layer=${layer}`}`}
             active={name === city}
           >
             {name}
@@ -174,6 +213,9 @@ export default async function MapPage(props: PageProps<"/map">) {
         </CityChip>
         <CityChip href={`/map?city=${city}&layer=health`} active={layer === "health"}>
           People &amp; animals
+        </CityChip>
+        <CityChip href={`/map?city=${city}&layer=divergence`} active={layer === "divergence"}>
+          Citizen–satellite divergence
         </CityChip>
       </nav>
 
@@ -207,11 +249,21 @@ export default async function MapPage(props: PageProps<"/map">) {
         </p>
       )}
 
-      <p className="mt-3 text-xs text-ink-muted">
-        {layer === "health"
-          ? "Concern for people and animals combines warning signs residents reported in the last 30 days with playgrounds, schools, parks and bathing spots nearby. Dashed grey lines have no recent reports — that is unknown, not safe. An indicative prompt, not a public health assessment."
-          : "Dashed grey lines mark water bodies where there is not yet enough data to assign an ecological status."}
-      </p>
+      {layer === "divergence" ? (
+        <p className="mt-3 text-xs text-ink-muted">
+          Purple marks water bodies where the latest Sentinel-2 pass
+          disagrees with citizen reports beyond the declared threshold; teal
+          marks a current pass that agrees. Dashed grey lines mark water
+          bodies with no usable satellite pass in the last 30 days to compare
+          — cloud cover or too few water pixels, never treated as agreement.
+        </p>
+      ) : (
+        <p className="mt-3 text-xs text-ink-muted">
+          {layer === "health"
+            ? "Concern for people and animals combines warning signs residents reported in the last 30 days with playgrounds, schools, parks and bathing spots nearby. Dashed grey lines have no recent reports — that is unknown, not safe. An indicative prompt, not a public health assessment."
+            : "Dashed grey lines mark water bodies where there is not yet enough data to assign an ecological status."}
+        </p>
+      )}
     </div>
   );
 }

@@ -18,6 +18,19 @@ export function colourForClass(klass: WfdClass | null): string {
   return klass === null ? INSUFFICIENT_DATA_COLOUR : PALETTE[klass];
 }
 
+// Citizen-satellite divergence colours for the map layer toggle. Deliberately
+// not a WFD colour (see PALETTE above) so divergence can never be confused
+// with an ecological status class. River teal marks "checked, no divergence"
+// rather than the map's usual accent-free neutral, so the layer can show
+// that a comparison happened at all.
+export const DIVERGENCE_COLOUR = "#7b3294";
+const AGREEMENT_COLOUR = "#185157";
+
+export function colourForDivergence(diverged: boolean | null): string {
+  if (diverged === null) return INSUFFICIENT_DATA_COLOUR;
+  return diverged ? DIVERGENCE_COLOUR : AGREEMENT_COLOUR;
+}
+
 export const CLASS_LABEL: Record<WfdClass, string> = {
   high: "High",
   good: "Good",

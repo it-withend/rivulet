@@ -12,7 +12,7 @@ export const CONCERN_COLOUR: Record<Concern, string> = {
   none: "#4a8fb5",
   watch: "#e3b53c",
   care: "#dd7a34",
-  avoid: "#8e2c6b",
+  avoid: "#a1283b",
 };
 
 export const CONCERN_LABEL: Record<Concern, string> = {

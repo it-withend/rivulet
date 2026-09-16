@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { colourForClass } from "@/lib/ui/wfd-colours";
+import { colourForClass, colourForDivergence } from "@/lib/ui/wfd-colours";
 import { CONCERN_COLOUR } from "@/lib/ui/one-health-copy";
 import type { WfdClass } from "@/lib/science/wfd";
 import type { Concern } from "@/lib/science/one-health";
@@ -14,6 +14,8 @@ export type MapFeature = {
   klass: WfdClass | null;
   /** Concern for people and animals nearby; "unknown" without recent reports. */
   concern: Concern;
+  /** Current citizen-satellite divergence; null when there is no usable satellite pass to compare. */
+  diverged: boolean | null;
   coordinates: [number, number][];
 };
 
@@ -24,8 +26,8 @@ export function CityMap({
 }: {
   features: MapFeature[];
   centre: [number, number];
-  /** "status" colours by ecological status; "health" by concern for people and animals. */
-  layer?: "status" | "health";
+  /** "status" colours by ecological status; "health" by concern for people and animals; "divergence" by citizen-satellite agreement. */
+  layer?: "status" | "health" | "divergence";
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
@@ -87,22 +89,30 @@ export function CityMap({
                 colour:
                   layer === "health"
                     ? CONCERN_COLOUR[f.concern]
-                    : colourForClass(f.klass),
-                hasClass:
-                  layer === "health" ? f.concern !== "unknown" : f.klass !== null,
+                    : layer === "divergence"
+                      ? colourForDivergence(f.diverged)
+                      : colourForClass(f.klass),
+                hasSignal:
+                  layer === "health"
+                    ? f.concern !== "unknown"
+                    : layer === "divergence"
+                      ? f.diverged !== null
+                      : f.klass !== null,
               },
               geometry: { type: "LineString", coordinates: f.coordinates },
             })),
           },
         });
 
-        // line-dasharray does not accept data-driven expressions, so assessed
-        // and unassessed water bodies are drawn as two filtered layers.
+        // line-dasharray does not accept data-driven expressions, so water
+        // bodies with and without a usable signal (a WFD class, or — in the
+        // divergence layer — a current satellite pass) are drawn as two
+        // filtered layers.
         instance.addLayer({
           id: "waterbody-assessed",
           type: "line",
           source: "waterbodies",
-          filter: ["==", ["get", "hasClass"], true],
+          filter: ["==", ["get", "hasSignal"], true],
           paint: { "line-color": ["get", "colour"], "line-width": 4 },
         });
 
@@ -110,7 +120,7 @@ export function CityMap({
           id: "waterbody-unassessed",
           type: "line",
           source: "waterbodies",
-          filter: ["==", ["get", "hasClass"], false],
+          filter: ["==", ["get", "hasSignal"], false],
           paint: {
             "line-color": ["get", "colour"],
             "line-width": 3,
@@ -118,15 +128,15 @@ export function CityMap({
           },
         });
 
-        for (const layer of ["waterbody-assessed", "waterbody-unassessed"]) {
-          instance.on("click", layer, (event) => {
+        for (const layerId of ["waterbody-assessed", "waterbody-unassessed"]) {
+          instance.on("click", layerId, (event) => {
             const id = event.features?.[0]?.properties?.id;
             if (id) window.location.href = `/water/${id}`;
           });
-          instance.on("mouseenter", layer, () => {
+          instance.on("mouseenter", layerId, () => {
             instance.getCanvas().style.cursor = "pointer";
           });
-          instance.on("mouseleave", layer, () => {
+          instance.on("mouseleave", layerId, () => {
             instance.getCanvas().style.cursor = "";
           });
         }

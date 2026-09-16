@@ -42,6 +42,16 @@ export default function OpenDataPage() {
       </section>
 
       <section className="space-y-3">
+        <h2 className="text-2xl">Satellite cross-check</h2>
+        <p className="m-0 max-w-xl">
+          Satellite readings are derived from Copernicus Sentinel-2 data
+          (Contains modified Copernicus Sentinel data 2026), processed by
+          Rivulet as an independent, coarse cross-check against citizen
+          reports — never a replacement for them.
+        </p>
+      </section>
+
+      <section className="space-y-3">
         <h2 className="text-2xl">Code systems</h2>
         <p className="m-0 max-w-xl">
           Real measurements — pH, dissolved oxygen, water temperature,
