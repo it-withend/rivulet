@@ -3,22 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { colourForClass } from "@/lib/ui/wfd-colours";
+import { colourForClass, colourForDivergence } from "@/lib/ui/wfd-colours";
 import type { WfdClass } from "@/lib/science/wfd";
 
 export type MapFeature = {
   id: string;
   name: string;
   klass: WfdClass | null;
+  /** Current citizen-satellite divergence; null when there is no usable satellite pass to compare. */
+  diverged: boolean | null;
   coordinates: [number, number][];
 };
 
 export function CityMap({
   features,
   centre,
+  layer = "status",
 }: {
   features: MapFeature[];
   centre: [number, number];
+  /** "status" colours by WFD class; "divergence" colours by citizen-satellite agreement. */
+  layer?: "status" | "divergence";
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
@@ -77,21 +82,26 @@ export function CityMap({
               properties: {
                 id: f.id,
                 name: f.name,
-                colour: colourForClass(f.klass),
-                hasClass: f.klass !== null,
+                colour:
+                  layer === "divergence"
+                    ? colourForDivergence(f.diverged)
+                    : colourForClass(f.klass),
+                hasSignal: layer === "divergence" ? f.diverged !== null : f.klass !== null,
               },
               geometry: { type: "LineString", coordinates: f.coordinates },
             })),
           },
         });
 
-        // line-dasharray does not accept data-driven expressions, so assessed
-        // and unassessed water bodies are drawn as two filtered layers.
+        // line-dasharray does not accept data-driven expressions, so water
+        // bodies with and without a usable signal (a WFD class, or — in the
+        // divergence layer — a current satellite pass) are drawn as two
+        // filtered layers.
         instance.addLayer({
           id: "waterbody-assessed",
           type: "line",
           source: "waterbodies",
-          filter: ["==", ["get", "hasClass"], true],
+          filter: ["==", ["get", "hasSignal"], true],
           paint: { "line-color": ["get", "colour"], "line-width": 4 },
         });
 
@@ -99,7 +109,7 @@ export function CityMap({
           id: "waterbody-unassessed",
           type: "line",
           source: "waterbodies",
-          filter: ["==", ["get", "hasClass"], false],
+          filter: ["==", ["get", "hasSignal"], false],
           paint: {
             "line-color": ["get", "colour"],
             "line-width": 3,
@@ -107,15 +117,15 @@ export function CityMap({
           },
         });
 
-        for (const layer of ["waterbody-assessed", "waterbody-unassessed"]) {
-          instance.on("click", layer, (event) => {
+        for (const layerId of ["waterbody-assessed", "waterbody-unassessed"]) {
+          instance.on("click", layerId, (event) => {
             const id = event.features?.[0]?.properties?.id;
             if (id) window.location.href = `/water/${id}`;
           });
-          instance.on("mouseenter", layer, () => {
+          instance.on("mouseenter", layerId, () => {
             instance.getCanvas().style.cursor = "pointer";
           });
-          instance.on("mouseleave", layer, () => {
+          instance.on("mouseleave", layerId, () => {
             instance.getCanvas().style.cursor = "";
           });
         }
@@ -126,7 +136,7 @@ export function CityMap({
       cancelled = true;
       map?.remove();
     };
-  }, [features, centre]);
+  }, [features, centre, layer]);
 
   return (
     <div className="relative h-[70vh] w-full">

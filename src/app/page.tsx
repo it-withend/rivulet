@@ -33,6 +33,7 @@ const SCIENCE_POINTS = [
   "BMWP macroinvertebrate family sensitivity scores",
   "Beta–Bernoulli conjugate updating with 90% credible intervals",
   "HL7 Europe OneAquaHealth FHIR Implementation Guide",
+  "Copernicus Sentinel-2 satellite imagery as an independent, coarse cross-check (uncalibrated proxy, not the published hue-angle calibration)",
 ];
 
 const STEPS = [
