@@ -1,0 +1,67 @@
+name: Validate FHIR
+
+on:
+  pull_request:
+    paths:
+      - "src/lib/fhir/**"
+      - "src/app/api/fhir/**"
+      - "src/lib/science/indicators.ts"
+      - "validation/**"
+      - ".github/workflows/validate-fhir.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/lib/fhir/**"
+      - "src/app/api/fhir/**"
+      - "src/lib/science/indicators.ts"
+      - "validation/**"
+      - ".github/workflows/validate-fhir.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write # only to publish the validation report branch
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # The built IG and FHIR packages depend only on build-ig.sh (pinned IG commit and SUSHI version).
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.fhir/packages
+            validation/.work/oah
+          key: fhir-ig-${{ hashFiles('validation/build-ig.sh') }}
+      - uses: actions/cache@v6
+        with:
+          path: validation/.work/validator_cli-*.jar
+          key: fhir-validator-${{ hashFiles('validation/validate.sh') }}
+
+      - run: npm ci --ignore-scripts
+      - run: bash validation/build-ig.sh
+      - run: npx tsx validation/generate-samples.ts
+      - run: bash validation/validate.sh
+
+      # Publish the full log and the exact resources checked, so the result is inspectable.
+      - name: Publish validation report
+        if: always() && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p /tmp/report
+          cp validation/.work/validation.log /tmp/report/ 2>/dev/null || true
+          cp validation/samples/generated/*.json /tmp/report/ 2>/dev/null || true
+          cd /tmp/report
+          git init -q
+          git checkout -q -b fhir-validation-report
+          git add .
+          git -c user.name=github-actions -c user.email=actions@users.noreply.github.com commit -qm "FHIR validation report for ${GITHUB_SHA}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" fhir-validation-report

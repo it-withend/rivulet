@@ -1,19 +1,97 @@
+<div align="center">
+
 # Rivulet
 
-**Live prototype:** https://rivulet-xi.vercel.app
+**A resident notices a stream. Rivulet tells the city how much to trust it, and where to look next.**
 
-**Track: 2 — Data-to-Insight.** Rivulet turns what residents notice at an urban stream into a
-trust-weighted, uncertainty-aware picture of that stream's health that a city, a researcher or a
-neighbour can act on.
+A trust and quality layer for citizen observations of urban freshwater: photo and a few plain questions
+in, an uncertainty-aware stream status, a One Health reading and a FHIR export out.
 
-Rivulet is a trust and quality layer for citizen observations of urban freshwater, built for the
-IEEE OneAquaHealth Global Hackathon 2026. It turns citizen stream observations into
-uncertainty-aware indicative status classes named after the EU Water Framework Directive, and
-exports them as FHIR resources that declare the OneAquaHealth HL7 FHIR Implementation Guide
-profiles.
+[![CI](https://github.com/it-withend/rivulet/actions/workflows/ci.yml/badge.svg)](https://github.com/it-withend/rivulet/actions/workflows/ci.yml)
+[![Validate FHIR](https://github.com/it-withend/rivulet/actions/workflows/validate-fhir.yml/badge.svg)](https://github.com/it-withend/rivulet/actions/workflows/validate-fhir.yml)
+[![FHIR R4](https://img.shields.io/badge/FHIR-R4%20(4.0.1)-orange)](https://hl7.org/fhir/R4/)
+[![OneAquaHealth IG](https://img.shields.io/badge/profiles-OneAquaHealth%20IG-0aa)](https://github.com/hl7-eu/oah)
+[![Live](https://img.shields.io/badge/live-rivulet--xi.vercel.app-185157)](https://rivulet-xi.vercel.app)
 
-See `docs/superpowers/specs/2026-09-15-rivulet-design.md` for the design specification and
-`docs/superpowers/plans/2026-09-15-rivulet-phase1.md` for the Phase 1 implementation plan.
+[**Live app**](https://rivulet-xi.vercel.app) · [City report](https://rivulet-xi.vercel.app/city) · [Map](https://rivulet-xi.vercel.app/map) · [FHIR export](https://rivulet-xi.vercel.app/open-data) · [Validation report](https://github.com/it-withend/rivulet/tree/fhir-validation-report) · [Design spec](docs/superpowers/specs/2026-09-15-rivulet-design.md)
+
+Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-ieee-hackathon.devpost.com/) — **Track 2, Data-to-Insight** (also touches Track 5 gamification and Track 7 standards).
+
+</div>
+
+---
+
+## The problem
+
+- Small urban streams and canals are rarely monitored, and residents who would gladly help have no way to make their reports comparable.
+- A citizen report is only useful if someone can say how far to trust it: where it was made, when, by whom, and whether it agrees with others.
+- Cities cannot tell where a check is needed first, so effort goes where it is loudest, not where it matters.
+
+## What it does
+
+| Step | What happens | Where it shows up |
+|---|---|---|
+| 1. Report | A resident picks a stream, photographs the water and answers a few plain questions — about two minutes, no account | `/observe`; water colour is read on the phone (Forel–Ule) |
+| 2. Check | GPS accuracy, distance from the stream, rate limits and an optional AI "is this water?" photo check; anything doubtful is held for a person | `/moderate`, `flag_reason` |
+| 3. Trust | Each observer earns a trust score from agreement with other observers, which weights their reports | `observers.trust_score` |
+| 4. Estimate | A Bayesian model combines the weighted reports into a WFD-named status class with a 90% credible interval; too little data reads "insufficient data" | Stream page, map |
+| 5. Interpret | A One Health reading combines warning signs with nearby playgrounds, schools, parks and dog areas; a Sentinel-2 cross-check adds a coarse second opinion | Stream page, map layers, `/city` |
+| 6. Share | Volunteers get a signed, verifiable certificate; researchers get the data as FHIR | `/certificates/<id>`, `/api/fhir/Observation` |
+
+## Screenshots
+
+| Home | City report | Stream page |
+|---|---|---|
+| ![Rivulet home page with the Forel-Ule colour ribbon](docs/screenshots/home.webp) | ![City report: where to take care and where a visit helps most](docs/screenshots/city.webp) | ![A stream page: status, One Health reading and history](docs/screenshots/water.webp) |
+
+| Report (phone) | Certificate |
+|---|---|
+| ![The two-minute report form on a phone](docs/screenshots/observe-mobile.webp) | ![A signed volunteer certificate](docs/screenshots/certificate.webp) |
+
+> Screenshots show the live prototype. Coimbra's reports are synthetic demonstration data; see "What Rivulet does not claim".
+
+## Highlights
+
+| | |
+|---|---|
+| 🔎 **Uncertainty first** | Every status carries a 90% credible interval; missing evidence is "insufficient data", never good news |
+| 🤝 **Trust, not just counts** | Observers are weighted by peer agreement; doubtful reports wait for human review and never enter the model unchecked |
+| 🐕 **One Health** | Warning signs are read against the places people and dogs actually use, not in isolation |
+| 🛰️ **Satellite cross-check** | Sentinel-2 hue against the resident's photo colour; divergence widens uncertainty instead of overruling |
+| 🗺️ **A report a city can act on** | `/city` names where to take care and where a visit would help most |
+| 🏅 **Recognition that verifies** | Open Badges 3.0 certificates, signed with Ed25519, downloadable as PDF, and honest about having no institutional endorsement |
+| 📤 **FHIR export** | Locations and observations declare the OneAquaHealth IG profiles, with a validation job in CI |
+| 🔒 **Privacy by design** | Pseudonymous observer, colour read on the device, only a tiny thumbnail ever leaves it, and only for the optional photo check |
+
+## How a report becomes a status
+
+```mermaid
+flowchart LR
+    A[Resident report<br/>photo + survey] --> B{Plausibility checks<br/>GPS, distance, rate,<br/>optional AI photo check}
+    B -- all pass --> C[Auto-approved]
+    B -- any doubt --> D[Held for review]
+    D --> E{Moderator}
+    E -- approve --> C
+    E -- reject --> X[Excluded for good]
+    C --> F[Trust weight<br/>peer agreement]
+    F --> G[Bayesian estimate<br/>90% credible interval]
+    G --> H[Status class or<br/>insufficient data]
+    H --> I[Map, stream page,<br/>city report, FHIR]
+```
+
+## How it fits together
+
+```mermaid
+flowchart TB
+    U[Resident or city browser] -->|HTTPS| V[Next.js app on Vercel<br/>pages + route handlers]
+    V --> S[(Supabase<br/>Postgres + PostGIS, RLS)]
+    V -.optional.-> Q[Groq vision<br/>is this water?]
+    O[OpenStreetMap / Overpass] -->|seed scripts| S
+    E[Sentinel-2] -->|pre-fetched by script| S
+    V --> F[FHIR Bundle<br/>OAH IG profiles]
+    F --> R[Researchers and city systems]
+    G[GitHub Actions] -->|builds IG, runs HL7 validator| F
+```
 
 ## Positioning
 

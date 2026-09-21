@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAnon } from "@/lib/db/client";
 import { computeSnapshot } from "@/lib/science/snapshot";
-import {
-  toLocationOah,
-  toObservationIndicators,
-  type FhirObservation,
-} from "@/lib/fhir/observation";
-import { buildBundle, type FhirResource } from "./bundle";
+import { buildWaterbodyResources } from "@/lib/fhir/export";
+import { buildBundle } from "./bundle";
 import { embeddedTrustScore } from "@/lib/db/embed";
-import { toIndicators } from "@/lib/science/indicators";
 import { HELD_FOR_REVIEW_FILTER } from "@/lib/science/plausibility";
 
 export async function GET(request: Request) {
@@ -60,57 +55,9 @@ export async function GET(request: Request) {
   }
 
   const observations = rows ?? [];
-  const resources: FhirResource[] = [];
 
   const [lon, lat] = (waterbody.centroid as { coordinates: [number, number] })
     .coordinates;
-  resources.push(
-    toLocationOah({
-      id: waterbody.id,
-      name: waterbody.name,
-      city: waterbody.city,
-      centroidLon: lon,
-      centroidLat: lat,
-    }),
-  );
-
-  let anySynthetic = false;
-
-  for (const row of observations) {
-    if (row.is_synthetic) anySynthetic = true;
-
-    // Derived from the survey at export time rather than the stored
-    // `indicators` column, so older rows follow the current code mapping.
-    for (const indicator of toIndicators(row.survey)) {
-      resources.push(
-        toObservationIndicators({
-          id: `${row.id}-${indicator.code}`,
-          waterbodyId: waterbody.id,
-          effectiveDateTime: row.observed_at,
-          performerDisplay: row.observer_id
-            ? `Observer ${row.observer_id}`
-            : "Anonymous citizen scientist",
-          code: indicator.code,
-          value: { kind: "quantity", value: indicator.value, unit: "1" },
-          synthetic: row.is_synthetic,
-        }) as FhirObservation,
-      );
-    }
-
-    if (row.survey?.forelUle != null) {
-      resources.push(
-        toObservationIndicators({
-          id: `${row.id}-fu`,
-          waterbodyId: waterbody.id,
-          effectiveDateTime: row.observed_at,
-          performerDisplay: "Anonymous citizen scientist",
-          code: "forel-ule-index",
-          value: { kind: "quantity", value: row.survey.forelUle, unit: "FU" },
-          synthetic: row.is_synthetic,
-        }) as FhirObservation,
-      );
-    }
-  }
 
   const snapshot = computeSnapshot(
     observations.map((o) => ({
@@ -123,23 +70,19 @@ export async function GET(request: Request) {
     })),
   );
 
-  if (snapshot.assessment.klass) {
-    resources.push(
-      toObservationIndicators({
-        id: `${waterbody.id}-wfd`,
-        waterbodyId: waterbody.id,
-        effectiveDateTime: new Date().toISOString(),
-        performerDisplay: `Rivulet method ${snapshot.methodVersion}`,
-        code: "wfd-ecological-status",
-        value: {
-          kind: "code",
-          code: snapshot.assessment.klass,
-          display: snapshot.assessment.klass,
-        },
-        synthetic: anySynthetic,
-      }) as FhirObservation,
-    );
-  }
+  const resources = buildWaterbodyResources({
+    waterbody: {
+      id: waterbody.id,
+      name: waterbody.name,
+      city: waterbody.city,
+      centroidLon: lon,
+      centroidLat: lat,
+    },
+    rows: observations,
+    wfdClass: snapshot.assessment.klass,
+    methodVersion: snapshot.methodVersion,
+    exportedAt: new Date().toISOString(),
+  });
 
   return NextResponse.json(buildBundle(resources), {
     headers: { "content-type": "application/fhir+json" },
