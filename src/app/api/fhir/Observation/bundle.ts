@@ -8,7 +8,7 @@ export type FhirBundle = {
   type: "searchset";
   total: number;
   link?: { relation: "self"; url: string }[];
-  entry: { fullUrl: string; resource: FhirResource; search: { mode: "match" } }[];
+  entry: { fullUrl: string; resource: FhirResource; search: { mode: "match" | "include" } }[];
 };
 
 /** `selfUrl` is the request that produced the bundle, as a searchset should declare. */
@@ -23,7 +23,8 @@ export function buildBundle(resources: FhirResource[], selfUrl?: string): FhirBu
     entry: resources.map((resource) => ({
       fullUrl: `${FHIR_BASE}/${resource.resourceType}/${resource.id}`,
       resource,
-      search: { mode: "match" as const },
+      // The search is for Observations; the Location they point at rides along as an include.
+      search: { mode: resource.resourceType === "Observation" ? ("match" as const) : ("include" as const) },
     })),
   };
 }
