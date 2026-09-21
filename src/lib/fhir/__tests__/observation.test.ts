@@ -18,6 +18,16 @@ describe("toLocationOah", () => {
     expect(loc.position!.longitude).toBeCloseTo(-8.42, 5);
     expect(loc.position!.latitude).toBeCloseTo(40.22, 5);
   });
+
+  it("carries the elements LocationOah makes mandatory", () => {
+    const loc = toLocationOah(waterbody);
+    expect(loc.meta.profile[0]).toBe(
+      "http://hl7.eu/fhir/ig/oah/StructureDefinition/location-oah",
+    );
+    expect(loc.identifier[0].value).toBe("wb-1");
+    expect(loc.mode).toBe("instance");
+    expect(loc.name).toBe("Ribeira de Coselhas");
+  });
 });
 
 describe("toObservationIndicators", () => {
@@ -43,7 +53,9 @@ describe("toObservationIndicators", () => {
       code: "pH",
       value: { kind: "quantity", value: 7.4, unit: "pH" },
     });
-    expect(fhir.meta!.profile![0]).toContain("ObservationIndicatorsOah");
+    expect(fhir.meta!.profile![0]).toBe(
+      "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah",
+    );
   });
 
   it("uses the OAH code system for OAH indicators", () => {

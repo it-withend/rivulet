@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Camera,
   Download,
+  ExternalLink,
   MapPin,
   SearchCheck,
   Sparkles,
@@ -245,6 +246,25 @@ export default async function CityReportPage(props: PageProps<"/city">) {
           <Link href="/open-data" className="text-ink underline underline-offset-2 hover:text-river">
             open data page
           </Link>.
+        </p>
+        <p className="m-0 flex items-start gap-1.5">
+          <ExternalLink aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Want to go further? The OneAquaHealth project runs the{" "}
+            <a href="https://apps.oneaquahealth.eu/resmap/" target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-2 hover:text-river">
+              Resilience Map
+            </a>{" "}
+            (Benevento, Coimbra, Ghent, Oslo, Toulouse), the{" "}
+            <a href="https://www.oneaquahealth.eu/citizen-science-project/" target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-2 hover:text-river">
+              Citizen Science project
+            </a>{" "}
+            and a{" "}
+            <a href="https://www.oneaquahealth.eu/2026/05/12/oneaquahealth-catalogue-of-measures/" target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-2 hover:text-river">
+              Catalogue of Measures
+            </a>{" "}
+            for restoring urban streams. Rivulet is an independent prototype and is
+            not affiliated with or endorsed by the project.
+          </span>
         </p>
       </footer>
     </div>

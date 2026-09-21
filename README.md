@@ -47,8 +47,8 @@ Methods draw on:
 - FHIR resources declaring the HL7 Europe OneAquaHealth Implementation Guide profiles for
   indicators and locations. Real measurements (pH, dissolved oxygen, temperature, nitrate) use the
   guide's codes; signs a resident sees but cannot measure (clarity, sewage smell, algae, foam, dead
-  fish, litter) use a separate Rivulet code system. The export has not been run through the
-  guide's validator.
+  fish, litter) use a separate Rivulet code system, served at `/fhir/CodeSystem/rivulet-derived`.
+  See "Relationship to OneAquaHealth" below for exactly what was and was not checked.
 
 **One Health: people and animals nearby.** Each stream also gets an indicative concern level for
 people, dogs and wildlife (`src/lib/science/one-health.ts`). Hazard is the trust-weighted share of
@@ -92,6 +92,71 @@ Full citations are in `src/lib/science/method-version.ts`.
 laboratory measurement. Citizen observations are spatially biased toward accessible banks. Below a
 minimum data confidence, Rivulet reports "insufficient data" rather than guessing — missing
 evidence is never presented as good news.
+
+## Relationship to OneAquaHealth
+
+Rivulet is an independent prototype. It is not affiliated with, endorsed by, or connected to the
+OneAquaHealth consortium's systems. What it does use, and what it does not:
+
+**Used — the OAH-FHIR Implementation Guide** (`hl7-eu/oah`, FHIR 4.0.1, canonical
+`http://hl7.eu/fhir/ig/oah`). `/api/fhir/Observation?waterbody=<id>` returns a Bundle whose
+Locations declare `…/StructureDefinition/location-oah` and whose Observations declare
+`…/StructureDefinition/observation-indicators-oah`. Where the guide's code system
+(`temporarySystem-oah-eu`) has a code for something Rivulet reports (pH, dissolved oxygen, water
+temperature, nitrate, …) that code is used; where it has none (water colour, resident-reported
+signs, the classified outcome) Rivulet's own code system is used and served at its canonical URL.
+
+**Checked against the guide's FSH source (2026-09-21), not with the official validator.** The
+profiles' mandatory elements were compared with the export by hand: `Location.identifier`,
+`name`, `mode = instance` and `position` (lon/lat both present); `Observation.status = final`,
+`code`, `subject` → `LocationOah`, `effective[x]`, `performer`, and `value[x]` limited to
+`CodeableConcept` or `Quantity`. That review found and fixed two real defects: profile canonicals
+used the profile *name* instead of its *id*, and `Location` lacked `identifier` and `mode`. The
+official HL7 validator (needs Java 11+) has **not** been run, so full conformance is unconfirmed.
+Known remaining gaps: resident-scored values use the unit `1` or `FU` without a UCUM system;
+`performer` carries a display string, not a reference to a resource; the guide binds `code` to
+its indicator value set as *preferred*, so Rivulet's own codes are permitted but a validator may
+warn. The guide's `foam` concept is defined as "Foam/colour/smell" (three signs in one), so
+Rivulet keeps its narrower `surface-foam` code rather than stretching the guide's meaning.
+
+**Not used — OneAquaHealth's applications.** The CitizenScience App, Community, city dashboards
+and Resilience Map are login-gated, and no public API or open-data endpoint for them was found in
+the project's public material (checked 2026-09-21). Rivulet therefore neither reads from nor
+writes to them; the FHIR export is the interoperability path. The Resilience Map covers the same
+five pilot cities (Benevento, Coimbra, Ghent, Oslo, Toulouse) and can export CSV, which would be
+a natural cross-check for a later phase. The city report links out to the Resilience Map, the
+Citizen Science project and the Catalogue of Measures.
+
+**Complement, not overlap.** OneAquaHealth's app guides a fuller stream assessment (clarity and
+flow, vegetation, wildlife, signs of pollution or alteration, land use, erosion) with photos and
+video. Rivulet covers the two-minute case: water colour and visible warning signs, and adds what
+citizen data needs before it can be trusted — plausibility checks, observer trust, uncertainty
+and human review. Rivulet does not assess flow, vegetation, wildlife, erosion or
+macroinvertebrates from field sampling.
+
+## What Rivulet does not claim
+
+- **Not a laboratory, regulatory or public-health assessment.** Nothing here states that water is
+  safe or unsafe to touch or drink; the One Health reading is a prompt to take care.
+- **Not an official Water Framework Directive classification.** The five class names come from
+  Annex V of Directive 2000/60/EC, but the class limits are equal-width priors, not calibrated
+  ecological quality ratio boundaries.
+- **Colour is a proxy.** Forel–Ule is estimated from a phone photo without per-camera calibration
+  and says nothing about chemical composition.
+- **The trust score is peer agreement, not truth.** Observers who agree with each other can all be
+  wrong. The model needs validating against independent measurements before it is relied on.
+- **The satellite check is coarse and uncalibrated.** Most urban streams are narrower than a
+  Sentinel-2 pixel; most stay "no clear satellite view".
+- **Not full FHIR IG conformance.** See above: hand-checked, official validator not run.
+- **No institutional endorsement.** Certificates and the site are not endorsed by the EU, IEEE or
+  the OneAquaHealth consortium.
+- **Demonstration data is synthetic.** Coimbra's seeded observations are flagged
+  `is_synthetic = true` and tagged `HTEST` in FHIR; they show the product working, not the real
+  state of any stream.
+- **The photo check is a screening aid.** A small thumbnail goes to a third-party model; a
+  confident "not water" only sends the report to a human, and a missing key or timeout skips it.
+- **No traction claimed.** The pilot has few real reports; the counters on the home page show
+  real and synthetic data separately.
 
 ## Synthetic demonstration data
 

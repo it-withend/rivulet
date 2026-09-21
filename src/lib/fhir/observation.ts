@@ -2,6 +2,7 @@ import {
   OAH_PROFILE_INDICATORS,
   OAH_PROFILE_LOCATION,
   RIVULET_CODES,
+  RIVULET_WATERBODY_ID_SYSTEM,
   systemFor,
 } from "./codes";
 
@@ -17,7 +18,9 @@ export type FhirLocation = {
   resourceType: "Location";
   id: string;
   meta: { profile: string[] };
+  identifier: { system: string; value: string }[];
   name: string;
+  mode: "instance";
   position?: { longitude: number; latitude: number };
   address: { city: string };
 };
@@ -56,7 +59,10 @@ export function toLocationOah(waterbody: WaterbodyRecord): FhirLocation {
     resourceType: "Location",
     id: waterbody.id,
     meta: { profile: [OAH_PROFILE_LOCATION] },
+    // LocationOah requires identifier (1..) and mode = instance.
+    identifier: [{ system: RIVULET_WATERBODY_ID_SYSTEM, value: waterbody.id }],
     name: waterbody.name,
+    mode: "instance",
     position: {
       longitude: waterbody.centroidLon,
       latitude: waterbody.centroidLat,
