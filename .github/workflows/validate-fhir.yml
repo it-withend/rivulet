@@ -5,7 +5,9 @@ on:
     paths:
       - "src/lib/fhir/**"
       - "src/app/api/fhir/**"
+      - "src/app/fhir/**"
       - "src/lib/science/indicators.ts"
+      - "src/lib/science/one-health.ts"
       - "validation/**"
       - ".github/workflows/validate-fhir.yml"
   push:
@@ -13,7 +15,9 @@ on:
     paths:
       - "src/lib/fhir/**"
       - "src/app/api/fhir/**"
+      - "src/app/fhir/**"
       - "src/lib/science/indicators.ts"
+      - "src/lib/science/one-health.ts"
       - "validation/**"
       - ".github/workflows/validate-fhir.yml"
   workflow_dispatch:

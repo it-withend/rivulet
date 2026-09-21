@@ -3,9 +3,11 @@
 // Run from the repository root: npx tsx validation/generate-samples.ts
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildBundle } from "../src/app/api/fhir/Observation/bundle";
+import { buildBundle } from "../src/lib/fhir/bundle";
+import { buildCapabilityStatement } from "../src/lib/fhir/capability";
 import { buildRivuletCodeSystem } from "../src/lib/fhir/code-system";
 import { buildWaterbodyResources } from "../src/lib/fhir/export";
+import { readOneHealth, type ExposureSite } from "../src/lib/science/one-health";
 import type { SurveyAnswers } from "../src/types/observation";
 
 const out = join(__dirname, "samples", "generated");
@@ -48,18 +50,53 @@ const plainSurvey: SurveyAnswers = {
   measurements: {},
 };
 
+const rows = [
+  { id: "obs-rich", observed_at: "2026-09-15T10:00:00Z", observer_id: "obs-a1", is_synthetic: false, survey: richSurvey },
+  { id: "obs-plain", observed_at: "2026-09-16T08:30:00Z", observer_id: null, is_synthetic: false, survey: plainSurvey },
+  { id: "obs-demo", observed_at: "2026-09-17T09:00:00Z", observer_id: "obs-a2", is_synthetic: true, survey: richSurvey },
+];
+
+// The One Health reading the API would compute: recent warning signs near a playground.
+const exposure: ExposureSite[] = [{ kind: "playground", siteCount: 1, nearestM: 80, nearestName: "Parque Verde" }];
+const exportedAt = "2026-09-21T12:00:00Z";
+const oneHealth = readOneHealth(
+  rows.map((r) => ({
+    id: r.id,
+    observedAt: r.observed_at,
+    observerId: r.observer_id,
+    survey: r.survey,
+    qualityWeight: 1,
+    observerTrust: 0.6,
+  })),
+  exposure,
+  new Date(exportedAt),
+);
+
 const resources = buildWaterbodyResources({
   waterbody,
-  rows: [
-    { id: "obs-rich", observed_at: "2026-09-15T10:00:00Z", observer_id: "obs-a1", is_synthetic: false, survey: richSurvey },
-    { id: "obs-plain", observed_at: "2026-09-16T08:30:00Z", observer_id: null, is_synthetic: false, survey: plainSurvey },
-    { id: "obs-demo", observed_at: "2026-09-17T09:00:00Z", observer_id: "obs-a2", is_synthetic: true, survey: richSurvey },
-  ],
+  rows,
   wfdClass: "moderate",
+  oneHealth,
   methodVersion: "1.4.0",
-  exportedAt: "2026-09-21T12:00:00Z",
+  exportedAt,
 });
+const self = `https://rivulet-xi.vercel.app/api/fhir/Observation?waterbody=${waterbody.id}`;
+const write = (name: string, body: unknown) => writeFileSync(join(out, name), JSON.stringify(body, null, 2));
 
-writeFileSync(join(out, "Bundle-export.json"), JSON.stringify(buildBundle(resources, `https://rivulet-xi.vercel.app/api/fhir/Observation?waterbody=${waterbody.id}`), null, 2));
-writeFileSync(join(out, "CodeSystem-rivulet-derived.json"), JSON.stringify(buildRivuletCodeSystem(), null, 2));
-console.log(`Wrote ${resources.length} resources and the Rivulet CodeSystem to ${out}`);
+write("Bundle-export.json", buildBundle(resources, self));
+// The shapes the read-only /fhir endpoint serves.
+write(
+  "Bundle-location-search.json",
+  buildBundle(resources.filter((r) => r.resourceType === "Location"), "https://rivulet-xi.vercel.app/fhir/Location?city=Coimbra", "Location"),
+);
+write(
+  "Bundle-detectedissue-search.json",
+  buildBundle(
+    resources.filter((r) => r.resourceType === "DetectedIssue" || r.resourceType === "Location"),
+    `https://rivulet-xi.vercel.app/fhir/DetectedIssue?implicated=Location/${waterbody.id}`,
+    "DetectedIssue",
+  ),
+);
+write("CapabilityStatement-metadata.json", buildCapabilityStatement());
+write("CodeSystem-rivulet-derived.json", buildRivuletCodeSystem());
+console.log(`Wrote ${resources.length} resources (${oneHealth.overall} One Health concern) and supporting samples to ${out}`);

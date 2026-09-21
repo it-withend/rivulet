@@ -5,6 +5,7 @@ import {
   RIVULET_STATUS_CLASSES,
   RIVULET_WATERBODY_ID_SYSTEM,
   systemFor,
+  UCUM,
 } from "./codes";
 
 export type WaterbodyRecord = {
@@ -37,12 +38,13 @@ export type FhirObservation = {
   subject: { reference: string };
   effectiveDateTime: string;
   performer: { display: string }[];
-  valueQuantity?: { value: number; unit: string };
+  valueQuantity?: { value: number; unit: string; system?: string; code?: string };
   valueCodeableConcept?: { coding: FhirCoding[] };
 };
 
 export type IndicatorValue =
-  | { kind: "quantity"; value: number; unit: string }
+  /** `ucum` is the UCUM code for `unit`; when given, the quantity is coded, not just labelled. */
+  | { kind: "quantity"; value: number; unit: string; ucum?: string }
   | { kind: "code"; code: string; display: string };
 
 export type IndicatorObservationInput = {
@@ -106,6 +108,7 @@ export function toObservationIndicators(
     observation.valueQuantity = {
       value: input.value.value,
       unit: input.value.unit,
+      ...(input.value.ucum ? { system: UCUM, code: input.value.ucum } : {}),
     };
   } else {
     observation.valueCodeableConcept = {

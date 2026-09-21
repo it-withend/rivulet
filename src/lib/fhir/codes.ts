@@ -83,7 +83,14 @@ export const RIVULET_CODES = {
     display: "Visible litter",
     definition: "Visible litter on the margins (0 none to 3 a lot) — not a land-use classification",
   },
+  "one-health-concern": {
+    display: "One Health concern",
+    definition:
+      "Indicative concern for people, dogs and wildlife near a stream, from recent resident-reported warning signs and nearby places people use — a prompt to take care, not a public-health assessment",
+  },
 } as const;
+
+export const UCUM = "http://unitsofmeasure.org";
 
 // Values of `wfd-ecological-status`, in the same code system.
 export const RIVULET_STATUS_CLASSES = {
