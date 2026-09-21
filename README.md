@@ -224,15 +224,16 @@ mapping code (`validation/generate-samples.ts` calls the same functions the API 
 `validator_cli` 6.10.4 against FHIR 4.0.1 plus the guide and Rivulet's own CodeSystem. The workflow
 publishes the full log and the exact resources it checked to the
 [`fhir-validation-report`](https://github.com/it-withend/rivulet/tree/fhir-validation-report) branch.
-**Current result: 0 errors, 32 warnings**, all one best-practice recommendation (`dom-6`: resources
-should carry a narrative). The job found and fixed real defects — profile canonicals built from the
+**Current result: 0 errors** across five checked files (a sample export, the endpoint's
+search bundles, its CapabilityStatement and its CodeSystem). The warnings are of two kinds:
+resources without a narrative (`dom-6`, a best-practice recommendation) and UCUM codes the offline
+validator cannot look up. The job found and fixed real defects — profile canonicals built from the
 profile *name* instead of its *id*, `Location` missing the mandatory `identifier` and `mode`, and
 code displays that disagreed with Rivulet's CodeSystem.
 
-What this does and does not show. It covers a bundle built from three representative reports (31
-resources), not every row in the live database. It runs offline (`-tx n/a`), so external
-terminologies (UCUM units, SNOMED) are not checked. Known gaps: resident-scored values use the unit
-`1` or `FU` without a UCUM system; `performer` is a display string, not a reference; the guide binds
+What this does and does not show. It covers a bundle built from three representative reports (35
+resources) and the endpoint's own responses, not every row in the live database. It runs offline (`-tx n/a`), so external
+terminologies (UCUM units, SNOMED) are not checked. Known gaps: `performer` is a display string, not a reference; the guide binds
 `code` to its indicator value set as *preferred*, so Rivulet's own codes are permitted. The guide's
 `foam` concept is "Foam/colour/smell" (three signs in one), so Rivulet keeps its narrower
 `surface-foam` code rather than stretching the guide's meaning.

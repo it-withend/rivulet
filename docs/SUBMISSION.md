@@ -44,7 +44,7 @@ indicative, not laboratory or public-health assessments.
 
 - **The OAH-FHIR Implementation Guide.** Locations and observations declare `location-oah` and `observation-indicators-oah`;
   measured values use the guide's codes with UCUM units. A workflow builds the guide from source and runs the official HL7
-  validator over Rivulet's own output on every change: **0 errors** (32 best-practice warnings about narrative). Report:
+  validator over Rivulet's own output on every change: **0 errors** (warnings only about missing narrative and offline UCUM lookup). Report:
   the `fhir-validation-report` branch.
 - **A complement, not a copy.** Rivulet does not replace the CitizenScience App or the city dashboards; it adds the trust
   and uncertainty layer they can consume through FHIR. Their applications are login-gated with no public API we could find,

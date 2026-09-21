@@ -129,8 +129,8 @@ export default function OpenDataPage() {
         <p className="m-0 max-w-2xl">
           On every change, a workflow builds the OneAquaHealth guide from source and runs the official HL7 validator over
           Rivulet&rsquo;s own output: a sample export, the endpoint&rsquo;s search results, its CapabilityStatement and its
-          CodeSystem. The current result is <strong>0 errors</strong>; the warnings are one best-practice recommendation
-          (resources should carry a narrative).
+          CodeSystem. The current result is <strong>0 errors</strong>; the warnings are a best-practice recommendation (resources
+          should carry a narrative) and UCUM codes an offline validator cannot look up.
         </p>
         <Panel tone="ink">
           <p className="m-0 text-sm">

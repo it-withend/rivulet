@@ -141,7 +141,7 @@ export function buildWaterbodyResources(input: WaterbodyExportInput): FhirExport
           effectiveDateTime: row.observed_at,
           performerDisplay: "Anonymous citizen scientist",
           code: "forel-ule-index",
-          value: { kind: "quantity", value: row.survey.forelUle, unit: "FU", ucum: "{FU}" },
+          value: { kind: "quantity", value: row.survey.forelUle, unit: "Forel-Ule class", ucum: "1" },
           synthetic: row.is_synthetic,
         }),
       );
