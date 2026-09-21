@@ -12,8 +12,9 @@ in, an uncertainty-aware stream status, a One Health reading and a FHIR export o
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4%20(4.0.1)-orange)](https://hl7.org/fhir/R4/)
 [![OneAquaHealth IG](https://img.shields.io/badge/profiles-OneAquaHealth%20IG-0aa)](https://github.com/hl7-eu/oah)
 [![Live](https://img.shields.io/badge/live-rivulet--xi.vercel.app-185157)](https://rivulet-xi.vercel.app)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-[**Live app**](https://rivulet-xi.vercel.app) · [City report](https://rivulet-xi.vercel.app/city) · [Map](https://rivulet-xi.vercel.app/map) · [FHIR export](https://rivulet-xi.vercel.app/open-data) · [Validation report](https://github.com/it-withend/rivulet/tree/fhir-validation-report) · [Design spec](docs/superpowers/specs/2026-09-15-rivulet-design.md)
+[**Live app**](https://rivulet-xi.vercel.app) · [City report](https://rivulet-xi.vercel.app/city) · [Map](https://rivulet-xi.vercel.app/map) · [FHIR export](https://rivulet-xi.vercel.app/open-data) · [Method](https://rivulet-xi.vercel.app/method) · [Validation report](https://github.com/it-withend/rivulet/tree/fhir-validation-report) · [Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Science](docs/SCIENCE.md) · [Submission text](docs/SUBMISSION.md)
 
 Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-ieee-hackathon.devpost.com/) — **Track 2, Data-to-Insight** (also touches Track 5 gamification and Track 7 standards).
 
@@ -50,6 +51,17 @@ Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-i
 
 > Screenshots show the live prototype. Coimbra's reports are synthetic demonstration data; see "What Rivulet does not claim".
 
+## Documentation
+
+| | |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layers, data model, security and privacy, performance |
+| [docs/SCIENCE.md](docs/SCIENCE.md) | The science engine, its basis, and how the survey relates to the OneAquaHealth field protocols |
+| [docs/API.md](docs/API.md) | Every endpoint, including the read-only FHIR API |
+| [docs/SUBMISSION.md](docs/SUBMISSION.md) | Devpost text, track statement, limitations and the pilot plan |
+| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | The 3–5 minute video, second by second |
+| [/method](https://rivulet-xi.vercel.app/method) | The method as a live page, every constant included |
+
 ## Highlights
 
 | | |
@@ -60,7 +72,9 @@ Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-i
 | 🛰️ **Satellite cross-check** | Sentinel-2 hue against the resident's photo colour; divergence widens uncertainty instead of overruling |
 | 🗺️ **A report a city can act on** | `/city` names where to take care and where a visit would help most |
 | 🏅 **Recognition that verifies** | Open Badges 3.0 certificates, signed with Ed25519, downloadable as PDF, and honest about having no institutional endorsement |
-| 📤 **FHIR export** | Locations and observations declare the OneAquaHealth IG profiles, checked by the HL7 validator in CI (0 errors) |
+| 🧪 **A declared method** | Every constant is a cited standard or a labelled, uncalibrated prior, published live on [/method](https://rivulet-xi.vercel.app/method) and generated from the code's own registry |
+| 📴 **Works with a poor connection** | Installable PWA; a report written without signal is kept on the phone and sent, with its true time, when the connection returns |
+| 📤 **FHIR export** | A read-only FHIR R4 endpoint (`/fhir`) whose Locations, Observations, Provenance and DetectedIssues follow the OneAquaHealth IG, checked by the HL7 validator in CI (0 errors) |
 | 🔒 **Privacy by design** | Pseudonymous observer, colour read on the device, only a tiny thumbnail ever leaves it, and only for the optional photo check |
 
 ## How a report becomes a status
@@ -101,6 +115,23 @@ Guide. Rivulet is deliberately the complement to that stack, not a replacement f
 data collection already exists, so Rivulet builds the quality and trust layer that turns resident
 observations into estimates with measurable uncertainty, expressed in WFD classes and encoded in
 the consortium's own FHIR Implementation Guide.
+
+## The science engine
+
+Rivulet's contribution is the layer that decides how far a citizen observation can be trusted and what it adds up to,
+with the uncertainty attached. Seven stages, all in `src/lib/science/` with tests beside them:
+
+1. **Colour**: the photo is reduced on the phone to a Forel–Ule class (WACODI-style conversion).
+2. **Evidence**: signs and recognisable animal groups add declared amounts of evidence.
+3. **Plausibility**: GPS, distance from the stream, rate limits and an optional AI photo check; doubtful reports are held for a person.
+4. **Trust**: leave-one-out peer agreement, shrunk toward neutral, weights each observer's evidence.
+5. **Estimate**: a Beta–Bernoulli posterior gives a mean, a 90% credible interval and a data-confidence figure; below a minimum confidence the answer is "insufficient data".
+6. **One Health**: recent warning signs read against nearby playgrounds, schools, parks and dog areas.
+7. **Satellite cross-check**: a Sentinel-2 hue angle; divergence halves the weights, so the estimate widens instead of being overruled.
+
+No learned model decides a status, and no constant is unlabelled: each is a cited standard or a declared prior with a
+rationale. The registry is rendered live at [/method](https://rivulet-xi.vercel.app/method); the full description, a
+diagram and the relation to the OneAquaHealth field protocols are in [docs/SCIENCE.md](docs/SCIENCE.md).
 
 ## Scientific basis
 
@@ -177,9 +208,12 @@ Rivulet is an independent prototype. It is not affiliated with, endorsed by, or 
 OneAquaHealth consortium's systems. What it does use, and what it does not:
 
 **Used — the OAH-FHIR Implementation Guide** (`hl7-eu/oah`, FHIR 4.0.1, canonical
-`http://hl7.eu/fhir/ig/oah`). `/api/fhir/Observation?waterbody=<id>` returns a Bundle whose
-Locations declare `…/StructureDefinition/location-oah` and whose Observations declare
-`…/StructureDefinition/observation-indicators-oah`. Where the guide's code system
+`http://hl7.eu/fhir/ig/oah`). Rivulet serves a read-only FHIR endpoint at `/fhir` (with a
+`CapabilityStatement` at `/fhir/metadata`; see [docs/API.md](docs/API.md)) and a one-stream export at
+`/api/fhir/Observation?waterbody=<id>`. Locations declare `…/StructureDefinition/location-oah` and
+Observations declare `…/StructureDefinition/observation-indicators-oah`; each report also gets a
+`Provenance` (author and assembling app), and a One Health warning becomes a `DetectedIssue`
+evidenced by the reports behind it. Where the guide's code system
 (`temporarySystem-oah-eu`) has a code for something Rivulet reports (pH, dissolved oxygen, water
 temperature, nitrate, …) that code is used; where it has none (water colour, resident-reported
 signs, the classified outcome) Rivulet's own code system is used and served at its canonical URL.
@@ -344,3 +378,10 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 Next.js (App Router) with TypeScript, Tailwind CSS, ESLint, and Vitest (with Testing Library and
 jsdom) for testing. The `@/*` import alias resolves to `src/`.
+
+## Licence and attribution
+
+Code: [Apache License 2.0](LICENSE) (see [NOTICE](NOTICE)). Stream geometry and nearby places: © OpenStreetMap
+contributors, [Open Database Licence](https://www.openstreetmap.org/copyright). Satellite cross-check: contains modified
+Copernicus Sentinel data 2026. Standards: HL7 FHIR R4 and the OneAquaHealth Implementation Guide by HL7 Europe. Rivulet is
+an independent prototype and is not endorsed by the OneAquaHealth consortium, the EU or IEEE.
