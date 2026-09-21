@@ -93,13 +93,13 @@ export function BadgeGrid({ badges }: { badges: Badge[] }) {
                   )}
 
                   {stats && tier && (
-                    <p className={"m-0 mt-2 flex items-center gap-1.5 text-xs " + (badge.earned ? "text-paper/80" : "")}>
+                    <p className={"m-0 mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs " + (badge.earned ? "text-paper/80" : "")}>
                       <span
                         aria-hidden="true"
-                        className="inline-block size-2.5 rounded-full"
+                        className="inline-block size-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: RARITY_COLOUR[tier.key] }}
                       />
-                      <span className="font-medium">{count === 0 ? "Unclaimed" : tier.label}</span>
+                      <span className="whitespace-nowrap font-medium">{count === 0 ? "Unclaimed" : tier.label}</span>
                       <span>· {shareLabel(share, count)}</span>
                     </p>
                   )}
