@@ -59,8 +59,8 @@ resident survey is a two-minute visual complement, not a substitute:
 | Protocol topic | What Rivulet asks a resident | Status |
 |---|---|---|
 | Physicochemical parameters (pH, oxygen, temperature, nitrate) | Optional test-kit readings, coded with OneAquaHealth codes and UCUM units | Direct, when a resident has a kit |
-| Benthic macroinvertebrates | Which of six recognisable groups they saw | **Proxy** on the BMWP family scale, not a protocol score |
-| Hydromorphology | Flow as seen: normal, low, stagnant, high | **Proxy** |
+| Benthic macroinvertebrates | Which of six recognisable groups they saw | **Proxy** on the BMWP family scale, coded `invertebrate-groups-score` in Rivulet's system, not the guide's `macroinvertebreates` count |
+| Hydromorphology | Flow as seen: normal, low, stagnant, high | **Proxy**, coded `flow-state` in Rivulet's system, not the guide's `hydrology` concept |
 | Water appearance, smell, foam, litter | Colour, clarity, odour, foam, litter | Resident-reported signs, coded in Rivulet's own system, never as laboratory analytes |
 | Fish, birds, diatoms, macrophytes, vegetation, disease vectors | Not asked | Out of scope for a two-minute check |
 

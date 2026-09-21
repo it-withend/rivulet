@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { LineCapStyle, PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { LineCapStyle, PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { supabaseAnon } from "@/lib/db/client";
 import { verifyCredential } from "@/lib/credentials/jwt";
-import { CERTIFICATE, TIER_LABEL, certificateNumber, qrModules } from "@/lib/credentials/certificate-copy";
+import { CERTIFICATE, SIGNATURE, TIER_LABEL, certificateNumber, qrModules } from "@/lib/credentials/certificate-copy";
 
 type CredentialShape = {
   name?: string;
@@ -214,15 +214,25 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     drawParagraph(page, evidence, { x: contentX, y: cursorY - 18, width: contentWidth, size: 9.5, font: sans, color: INK_MUTED, lineHeight: 13 });
   }
 
-  // Signature block: the signatory's typed signature over a rule, then name and role.
+  // Signature block: the drawn signature, then the signatory's name and role.
   const sigX = contentX;
   const sigLineY = 122;
-  page.drawText(CERTIFICATE.signatory.name, { x: sigX + 4, y: sigLineY + 8, size: 30, font: serifItalic, color: INK, rotate: degrees(3) });
-  page.drawLine({ start: { x: sigX, y: sigLineY }, end: { x: sigX + 190, y: sigLineY }, thickness: 0.75, color: INK });
-  page.drawText(`${CERTIFICATE.signatory.name}, ${CERTIFICATE.signatory.title}`, { x: sigX, y: sigLineY - 14, size: 10.5, font: sansBold, color: INK });
+  const sigScale = 150 / SIGNATURE.width;
+  for (const stroke of SIGNATURE.strokes) {
+    page.drawSvgPath(stroke.d, {
+      x: sigX,
+      y: sigLineY + 8 + SIGNATURE.height * sigScale,
+      scale: sigScale,
+      borderColor: INK,
+      borderWidth: stroke.width * sigScale,
+      borderLineCap: LineCapStyle.Round,
+    });
+  }
+  page.drawText(CERTIFICATE.signatory.name, { x: sigX, y: sigLineY - 10, size: 11, font: sansBold, color: INK });
+  page.drawText(CERTIFICATE.signatory.title, { x: sigX, y: sigLineY - 24, size: 9.5, font: sans, color: INK_MUTED });
   const signatureLine =
     verification.status === "verified" ? "Digitally signed · Ed25519 · verified" : "Cannot verify on this deployment";
-  page.drawText(signatureLine, { x: sigX, y: sigLineY - 27, size: 8.5, font: sans, color: INK_MUTED });
+  page.drawText(signatureLine, { x: sigX, y: sigLineY - 38, size: 8.5, font: sans, color: INK_MUTED });
 
   // QR code and verification address, bottom right.
   const modules = qrModules(verifyUrl);

@@ -33,7 +33,7 @@ describe("buildWaterbodyResources", () => {
     observerTrust: 0.6,
   }));
   const oneHealth = readOneHealth(stored, [{ kind: "playground", siteCount: 1, nearestM: 50, nearestName: null }], new Date(exportedAt));
-  const resources = buildWaterbodyResources({ waterbody, rows, wfdClass: "poor", oneHealth, methodVersion: "1.4.0", exportedAt });
+  const resources = buildWaterbodyResources({ waterbody, rows, wfdClass: "poor", oneHealth, methodVersion: "1.5.0", exportedAt });
 
   it("codes measured values with their UCUM unit", () => {
     const ph = resources.find((r) => r.resourceType === "Observation" && r.id === "r1-pH");
@@ -57,7 +57,7 @@ describe("buildWaterbodyResources", () => {
   });
 
   it("raises no DetectedIssue when there is no exposure data", () => {
-    const without = buildWaterbodyResources({ waterbody, rows, wfdClass: null, oneHealth: null, methodVersion: "1.4.0", exportedAt });
+    const without = buildWaterbodyResources({ waterbody, rows, wfdClass: null, oneHealth: null, methodVersion: "1.5.0", exportedAt });
     expect(without.some((r) => r.resourceType === "DetectedIssue")).toBe(false);
   });
 });

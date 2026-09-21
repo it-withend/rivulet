@@ -4,6 +4,7 @@ import { Panel } from "@/components/ui/Panel";
 import { CLASS_LABEL } from "@/lib/ui/wfd-colours";
 import type { AssessmentDelta } from "@/lib/science/delta";
 import type { Badge } from "@/lib/journal/journal";
+import { BADGE_ICON } from "@/components/journal/badge-meta";
 
 export type ObservationResultProps = {
   waterbodyId: string;
@@ -78,9 +79,20 @@ export function ObservationResult({
           <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
             {newBadges.map((badge) => (
               <li key={badge.code}>
-                <Panel tone="ink" className="p-4">
-                  <p className="m-0 text-base font-medium">{badge.title}</p>
-                  <p className="mt-1 mb-0 text-sm">{badge.description}</p>
+                <Panel tone="ink" className="flex gap-3 p-4">
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-paper/40 bg-paper/10 text-[#e3b53c]"
+                  >
+                    {(() => {
+                      const Icon = BADGE_ICON[badge.code];
+                      return <Icon className="size-6" />;
+                    })()}
+                  </span>
+                  <div>
+                    <p className="m-0 text-base font-medium">{badge.title}</p>
+                    <p className="mt-1 mb-0 text-sm">{badge.description}</p>
+                  </div>
                 </Panel>
               </li>
             ))}

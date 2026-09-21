@@ -121,14 +121,14 @@ export function toIndicators(answers: SurveyAnswers): Indicator[] {
   if (observed.length > 0) {
     const score = observed.reduce((acc, t) => acc + TAXON_SENSITIVITY[t], 0);
     indicators.push({
-      code: "macroinvertebreates",
+      code: "invertebrate-groups-score",
       value: score,
       source: BMWP_SOURCE,
     });
   }
 
   indicators.push({
-    code: "hydrology",
+    code: "flow-state",
     value: answers.flow === "stagnant" ? 0 : answers.flow === "low" ? 1 : answers.flow === "high" ? 3 : 2,
     source: `${SURVEY_SOURCE}: flow state as seen by the resident, 0 still to 3 fast`,
   });

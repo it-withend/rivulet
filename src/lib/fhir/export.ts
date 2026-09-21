@@ -129,6 +129,7 @@ export function buildWaterbodyResources(input: WaterbodyExportInput): FhirExport
           code: indicator.code,
           value: { kind: "quantity", value: indicator.value, unit, ucum },
           synthetic: row.is_synthetic,
+          note: indicator.source,
         }),
       );
     }

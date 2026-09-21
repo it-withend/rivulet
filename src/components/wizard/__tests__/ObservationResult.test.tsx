@@ -63,6 +63,7 @@ describe("ObservationResult", () => {
             title: "Gap filler",
             description: "Recorded a stream that had too little data to assess.",
             earned: true,
+            progress: { value: 1, target: 1 },
           },
         ]}
       />,

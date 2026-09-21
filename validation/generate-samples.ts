@@ -77,7 +77,7 @@ const resources = buildWaterbodyResources({
   rows,
   wfdClass: "moderate",
   oneHealth,
-  methodVersion: "1.4.0",
+  methodVersion: "1.5.0",
   exportedAt,
 });
 const self = `https://rivulet-xi.vercel.app/api/fhir/Observation?waterbody=${waterbody.id}`;

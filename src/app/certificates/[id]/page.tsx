@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Download, ShieldCheck } from "lucide-react";
 import { supabaseAnon } from "@/lib/db/client";
 import { verifyCredential } from "@/lib/credentials/jwt";
-import { CERTIFICATE, TIER_LABEL, certificateNumber, qrModules } from "@/lib/credentials/certificate-copy";
+import { CERTIFICATE, SIGNATURE, TIER_LABEL, certificateNumber, qrModules } from "@/lib/credentials/certificate-copy";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 
@@ -155,13 +155,26 @@ export default async function CertificatePage(props: PageProps<"/certificates/[i
 
           <div className="relative flex flex-wrap items-end justify-between gap-4 border-t border-rule pt-4">
             <div>
-              <p className="font-display m-0 -rotate-3 text-3xl italic leading-none text-ink">
-                {CERTIFICATE.signatory.name}
-              </p>
-              <div className="mt-1 h-px w-44 bg-ink" />
-              <p className="m-0 mt-1 text-sm font-medium">
-                {CERTIFICATE.signatory.name}, {CERTIFICATE.signatory.title}
-              </p>
+              <svg
+                viewBox={`0 0 ${SIGNATURE.width} ${SIGNATURE.height}`}
+                role="img"
+                aria-label={`Signature of ${CERTIFICATE.signatory.name}`}
+                className="h-16 w-auto text-ink"
+              >
+                {SIGNATURE.strokes.map((stroke) => (
+                  <path
+                    key={stroke.d}
+                    d={stroke.d}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={stroke.width}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))}
+              </svg>
+              <p className="m-0 text-sm font-medium">{CERTIFICATE.signatory.name}</p>
+              <p className="m-0 text-sm text-ink-muted">{CERTIFICATE.signatory.title}</p>
               <p className="m-0 flex items-center gap-1 text-xs text-ink-muted">
                 <ShieldCheck aria-hidden="true" className="size-3.5" />
                 {status === "verified" && "Digitally signed · Ed25519 · verified"}

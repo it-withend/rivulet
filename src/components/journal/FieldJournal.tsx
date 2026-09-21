@@ -12,6 +12,7 @@ import {
 import { loadJournal } from "@/lib/journal/storage";
 import { ObserverIdentityPanel } from "./ObserverIdentityPanel";
 import { CertificatesPanel } from "./CertificatesPanel";
+import { BadgeGrid } from "./BadgeGrid";
 import { Droplet, FileText, Sparkles, Waves } from "lucide-react";
 
 export function FieldJournal() {
@@ -41,6 +42,11 @@ export function FieldJournal() {
             <Button href="/map">Find a stream</Button>
           </div>
         </Panel>
+        <section className="space-y-3">
+          <p className="field-label m-0">Recognition</p>
+          <h2 className="m-0 text-2xl">Badges to earn</h2>
+          <BadgeGrid badges={evaluateBadges([])} />
+        </section>
       </div>
     );
   }
@@ -88,23 +94,7 @@ export function FieldJournal() {
       <section className="space-y-3">
         <p className="field-label m-0">Recognition</p>
         <h2 className="m-0 text-2xl">Badges</h2>
-        <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
-          {badges.map((badge) => (
-            <li key={badge.code} data-earned={badge.earned}>
-              <div
-                className={
-                  "h-full rounded-md border p-4 " +
-                  (badge.earned
-                    ? "border-ink bg-ink text-paper"
-                    : "border-dashed border-rule-strong bg-paper-raised text-ink-muted")
-                }
-              >
-                <p className="m-0 text-base font-medium">{badge.title}</p>
-                <p className="mt-1 mb-0 text-sm">{badge.description}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <BadgeGrid badges={badges} />
       </section>
 
       <section className="space-y-3">

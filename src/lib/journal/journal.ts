@@ -25,6 +25,8 @@ export type Badge = {
   title: string;
   description: string;
   earned: boolean;
+  /** How far along, capped at the target: 2 of 5 colours, 1 of 3 streams. */
+  progress: { value: number; target: number };
 };
 
 const SENSITIVE_TAXA: TaxonCode[] = ["mayfly", "stonefly", "caddisfly"];
@@ -34,18 +36,21 @@ const RULES: {
   title: string;
   description: string;
   test: (entries: JournalEntry[]) => boolean;
+  progress: (entries: JournalEntry[]) => { value: number; target: number };
 }[] = [
   {
     code: "first-observation",
     title: "First sample",
     description: "Recorded your first observation.",
     test: (entries) => entries.length >= 1,
+    progress: (entries) => ({ value: Math.min(entries.length, 1), target: 1 }),
   },
   {
     code: "colour-collector",
     title: "Colour collector",
     description: "Recorded five different Forel–Ule water colours.",
     test: (entries) => colourCollection(entries).length >= 5,
+    progress: (entries) => ({ value: Math.min(colourCollection(entries).length, 5), target: 5 }),
   },
   {
     code: "clean-water-sentinel",
@@ -54,41 +59,53 @@ const RULES: {
       "Found mayflies, stoneflies or caddisflies — animals that only live in clean water.",
     test: (entries) =>
       entries.some((e) => e.indicatorTaxa.some((t) => SENSITIVE_TAXA.includes(t))),
+    progress: (entries) => ({
+      value: entries.some((e) => e.indicatorTaxa.some((t) => SENSITIVE_TAXA.includes(t))) ? 1 : 0,
+      target: 1,
+    }),
   },
   {
     code: "bloom-spotter",
     title: "Bloom spotter",
     description: "Reported visible algae, an early sign of nutrient pollution.",
     test: (entries) => entries.some((e) => e.visibleAlgae),
+    progress: (entries) => ({ value: entries.some((e) => e.visibleAlgae) ? 1 : 0, target: 1 }),
   },
   {
     code: "stream-explorer",
     title: "Stream explorer",
     description: "Observed three different water bodies.",
     test: (entries) => new Set(entries.map((e) => e.waterbodyId)).size >= 3,
+    progress: (entries) => ({ value: Math.min(new Set(entries.map((e) => e.waterbodyId)).size, 3), target: 3 }),
   },
   {
     code: "returning-guardian",
     title: "Returning guardian",
     description: "Checked the same stream on three separate days.",
     test: returnedOnThreeDays,
+    progress: (entries) => ({ value: Math.min(mostDaysOnOneStream(entries), 3), target: 3 }),
   },
   {
     code: "gap-filler",
     title: "Gap filler",
     description: "Recorded a stream that had too little data to assess.",
     test: (entries) => entries.some((e) => e.wasDataGap),
+    progress: (entries) => ({ value: entries.some((e) => e.wasDataGap) ? 1 : 0, target: 1 }),
   },
 ];
 
-function returnedOnThreeDays(entries: JournalEntry[]): boolean {
+function mostDaysOnOneStream(entries: JournalEntry[]): number {
   const daysByStream = new Map<string, Set<string>>();
   for (const e of entries) {
     const days = daysByStream.get(e.waterbodyId) ?? new Set<string>();
     days.add(e.observedAt.slice(0, 10));
     daysByStream.set(e.waterbodyId, days);
   }
-  return [...daysByStream.values()].some((days) => days.size >= 3);
+  return Math.max(0, ...[...daysByStream.values()].map((days) => days.size));
+}
+
+function returnedOnThreeDays(entries: JournalEntry[]): boolean {
+  return mostDaysOnOneStream(entries) >= 3;
 }
 
 export function colourCollection(entries: JournalEntry[]): number[] {
@@ -99,7 +116,11 @@ export function colourCollection(entries: JournalEntry[]): number[] {
 }
 
 export function evaluateBadges(entries: JournalEntry[]): Badge[] {
-  return RULES.map(({ test, ...badge }) => ({ ...badge, earned: test(entries) }));
+  return RULES.map(({ test, progress, ...badge }) => ({
+    ...badge,
+    earned: test(entries),
+    progress: progress(entries),
+  }));
 }
 
 export function newlyEarned(

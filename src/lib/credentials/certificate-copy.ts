@@ -17,6 +17,24 @@ export const CERTIFICATE = {
     "Rivulet is an independent citizen-science prototype built for the IEEE OneAquaHealth Global Hackathon 2026. This certificate is issued and signed by Rivulet. It is not endorsed by, issued by, or issued on behalf of the EU, IEEE or the OneAquaHealth consortium.",
 } as const;
 
+/**
+ * A drawn signature, as vector strokes in a 240 x 90 box, so the page and the
+ * PDF show the same mark. This one is a test signature; replace the paths with
+ * the signatory's own (an SVG of their real signature) before real use.
+ */
+export const SIGNATURE = {
+  width: 240,
+  height: 90,
+  strokes: [
+    {
+      width: 2.5,
+      d: "M10 68 C 20 46, 31 8, 45 11 C 56 14, 47 52, 41 67 C 46 50, 60 42, 67 47 C 72 52, 63 64, 60 56 C 59 44, 80 32, 88 43 C 92 50, 85 61, 82 53 C 83 40, 98 28, 105 40 C 108 48, 101 58, 99 51 C 101 38, 114 33, 121 43 C 124 50, 117 60, 114 53 C 116 40, 134 29, 145 37 C 152 43, 144 56, 140 48 C 140 36, 156 22, 165 12 C 168 8, 170 14, 167 22 C 163 34, 158 52, 172 50 C 184 48, 196 38, 226 30",
+    },
+    { width: 2, d: "M150 26 C 166 22, 182 26, 200 20" },
+    { width: 1.7, d: "M22 76 C 80 82, 152 78, 218 64" },
+  ],
+} as const;
+
 export const TIER_LABEL: Record<string, string> = {
   contributor: "Contributor",
   data_steward: "Data Steward",

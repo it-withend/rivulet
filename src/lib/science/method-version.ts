@@ -1,7 +1,8 @@
 export const METHOD_VERSION = {
-  version: "1.4.0",
-  publishedAt: "2026-09-16",
+  version: "1.5.0",
+  publishedAt: "2026-09-21",
   notes: [
+    "1.5.0 — Resident-scored flow and the animal-group score no longer borrow the OneAquaHealth codes hydrology and macroinvertebreates: they move to the Rivulet code system as flow-state and invertebrate-groups-score, because a resident's 0-3 flow rating and a BMWP-family sum are not a hydromorphological survey or a benthic macroinvertebrate count. No estimate changes. Each exported Observation also carries the stated derivation of its value as a note.",
     "1.4.0 — Sentinel-2 satellite readings enter computeSnapshot as an independent, coarse cross-check at a fixed evidence weight. The reflectance-to-hue-angle conversion uses CIE 1931 colour-matching weights at each band's centre wavelength and is NOT the published van der Woerd & Wernand Sentinel-2 hue-angle calibration (see satellite.hue-angle-calibration). When the citizen and satellite Forel-Ule readings diverge beyond the declared threshold, every contributing weight for that water body is halved: the posterior widens and data confidence cannot rise because of the diverging pass.",
     "1.3.0 — One Health reading: warning signs from the last 30 days of trust-weighted reports (hazard) combined with playgrounds, schools, parks, bathing and fishing spots and allotments from OpenStreetMap within 150 m (exposure), shown for people, dogs and wildlife. No recent reports reads as unknown, never as safe.",
     "1.2.0 — Observations flagged by plausibility checks no longer count towards assessments, trust or exports until a person reviews them. Resident-reported signs (clarity, sewage odour, algae, foam, dead fish, litter) move from OneAquaHealth analyte codes to the Rivulet code system. Flow and litter are now asked in the survey instead of defaulting.",

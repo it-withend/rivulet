@@ -18,6 +18,7 @@ const ENDPOINTS: { method: string; path: string; what: string; example?: string 
   { method: "GET", path: "/fhir/Location/<id>", what: "One water body as a LocationOah", example: `/fhir/Location/${EXAMPLE}` },
   { method: "GET", path: "/fhir/Observation?subject=Location/<id>", what: "Citizen indicator Observations (ObservationIndicatorsOah) for a water body", example: `/fhir/Observation?subject=Location/${EXAMPLE}` },
   { method: "GET", path: "/fhir/DetectedIssue?implicated=Location/<id>", what: "The One Health warning for a water body, with the reports that evidence it", example: `/fhir/DetectedIssue?implicated=Location/${EXAMPLE}` },
+  { method: "GET", path: "/api/city/<city>/data", what: "A whole city as a CSV: each stream's status class, 90% interval, data confidence, report counts and One Health concern", example: "/api/city/Coimbra/data" },
   { method: "GET", path: "/api/fhir/Observation?waterbody=<id>", what: "The complete export for one water body in a single Bundle: Location, Observations, Provenance and any DetectedIssue", example: `/api/fhir/Observation?waterbody=${EXAMPLE}` },
 ];
 
@@ -113,7 +114,7 @@ export default function OpenDataPage() {
         <h2 id="codes" className="m-0 text-2xl">Code systems</h2>
         <p className="m-0 max-w-2xl">
           Real measurements (pH, dissolved oxygen, water temperature, nitrate) use the OneAquaHealth code system, with UCUM
-          units. What a resident sees but cannot measure (clarity, a sewage smell, algae, foam, dead fish, litter) is never
+          units. What a resident sees but cannot measure (clarity, a sewage smell, algae, foam, dead fish, litter, how fast the water moves, which animal groups they recognised) is never
           passed off as a laboratory analyte such as coliforms or suspended solids. It uses a clearly separated Rivulet code
           system, together with the Forel–Ule index, the indicative status class and the One Health concern, so the boundary
           between adopted and derived vocabulary stays auditable.

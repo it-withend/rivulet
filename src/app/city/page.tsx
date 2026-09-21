@@ -200,9 +200,19 @@ export default async function CityReportPage(props: PageProps<"/city">) {
           Indicative, built from what residents can see and smell — not a laboratory
           or public health assessment.
         </p>
+        <p className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <a
+            href={`/api/city/${city}/data`}
+            className="inline-flex items-center gap-1.5 text-ink underline underline-offset-2 hover:text-river"
+          >
+            <Download aria-hidden="true" className="size-4" />
+            Download {city} as a spreadsheet (CSV)
+          </a>
+          <span>with each stream&apos;s status, interval and confidence.</span>
+        </p>
         <p className="m-0 flex items-center gap-1.5">
           <Download aria-hidden="true" className="size-4" />
-          Researchers and city systems can take the data as FHIR from the{" "}
+          Researchers and city systems can also take the data as FHIR from the{" "}
           <Link href="/open-data" className="text-ink underline underline-offset-2 hover:text-river">
             open data page
           </Link>.

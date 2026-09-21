@@ -216,7 +216,9 @@ Observations declare `…/StructureDefinition/observation-indicators-oah`; each 
 evidenced by the reports behind it. Where the guide's code system
 (`temporarySystem-oah-eu`) has a code for something Rivulet reports (pH, dissolved oxygen, water
 temperature, nitrate, …) that code is used; where it has none (water colour, resident-reported
-signs, the classified outcome) Rivulet's own code system is used and served at its canonical URL.
+signs, the flow state and animal-group score a resident reports, the classified outcome) Rivulet's own
+code system is used and served at its canonical URL. Every exported value also carries the stated way it was
+derived as an `Observation.note`, so a proxy is never mistaken for a measurement.
 
 **Validated in CI with the official HL7 validator.** `.github/workflows/validate-fhir.yml` builds the
 guide from source (`hl7-eu/oah` at a pinned commit, SUSHI 3.20.1), generates FHIR from Rivulet's own

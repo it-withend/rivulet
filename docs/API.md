@@ -52,6 +52,8 @@ body failed validation and `404` an unknown water body; the plausibility checks 
 | Request | Purpose |
 |---|---|
 | `GET /api/city/<city>/map` | Everything the map needs for a city; CDN-cached |
+| `GET /api/city/<city>/data` | The city as a CSV: status class, 90% interval, data confidence, report counts, One Health concern |
+| `GET /api/badges/stats` | How many observers hold each badge, for the rarity on the journal |
 
 ## Credentials
 

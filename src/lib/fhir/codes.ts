@@ -83,6 +83,16 @@ export const RIVULET_CODES = {
     display: "Visible litter",
     definition: "Visible litter on the margins (0 none to 3 a lot) — not a land-use classification",
   },
+  "invertebrate-groups-score": {
+    display: "Invertebrate groups score",
+    definition:
+      "Sum of BMWP-family sensitivity values for the recognisable animal groups a resident reports (1-10 per group) — a simplified proxy, not the OneAquaHealth benthic macroinvertebrate count and not a BMWP protocol score",
+  },
+  "flow-state": {
+    display: "Flow state as seen",
+    definition:
+      "Flow as a resident sees it, 0 still to 3 fast — not a hydromorphological survey, so not the OneAquaHealth hydrology concept",
+  },
   "one-health-concern": {
     display: "One Health concern",
     definition:

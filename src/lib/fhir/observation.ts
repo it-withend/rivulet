@@ -39,6 +39,7 @@ export type FhirObservation = {
   effectiveDateTime: string;
   performer: { display: string }[];
   valueQuantity?: { value: number; unit: string; system?: string; code?: string };
+  note?: { text: string }[];
   valueCodeableConcept?: { coding: FhirCoding[] };
 };
 
@@ -55,6 +56,8 @@ export type IndicatorObservationInput = {
   code: string;
   value: IndicatorValue;
   synthetic?: boolean;
+  /** How the value was derived, carried as Observation.note so a proxy is never mistaken for a measurement. */
+  note?: string;
 };
 
 export function toLocationOah(waterbody: WaterbodyRecord): FhirLocation {
@@ -103,6 +106,8 @@ export function toObservationIndicators(
       },
     ];
   }
+
+  if (input.note) observation.note = [{ text: input.note }];
 
   if (input.value.kind === "quantity") {
     observation.valueQuantity = {

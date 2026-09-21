@@ -48,11 +48,12 @@ describe("toIndicators", () => {
     }
   });
 
-  it("maps observed taxa to a macroinvertebrate indicator", () => {
-    const taxa = toIndicators(clean).find(
-      (i) => i.code === "macroinvertebreates",
-    );
-    expect(taxa).toBeDefined();
+  it("maps observed taxa to a Rivulet proxy, not the OneAquaHealth macroinvertebrate count", () => {
+    const codes = toIndicators(clean).map((i) => i.code);
+    expect(codes).toContain("invertebrate-groups-score");
+    expect(codes).not.toContain("macroinvertebreates");
+    expect(codes).toContain("flow-state");
+    expect(codes).not.toContain("hydrology");
   });
 
   it("cites a source on every indicator", () => {

@@ -3,6 +3,7 @@ import { Bot, Calculator, HeartPulse, Palette, Satellite, ScanEye, ShieldCheck, 
 import type React from "react";
 import { METHOD_PARAMETERS, type MethodParameter } from "@/lib/science/method-parameters";
 import { METHOD_VERSION } from "@/lib/science/method-version";
+import { modelBehaviour, type BehaviourRow } from "@/lib/science/behaviour";
 
 export const metadata = {
   title: "Method — Rivulet",
@@ -77,7 +78,40 @@ function formatValue(value: MethodParameter["value"]): string {
   return text.length > 90 ? `${value.length} values` : text;
 }
 
+function BehaviourTable({ title, rows }: { title: string; rows: BehaviourRow[] }) {
+  return (
+    <div className="space-y-2">
+      <h3 className="m-0 text-lg">{title}</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-rule-strong text-left">
+              <th scope="col" className="field-label px-2 py-2">Situation</th>
+              <th scope="col" className="field-label px-2 py-2 text-right">Mean</th>
+              <th scope="col" className="field-label px-2 py-2 text-right">90% interval</th>
+              <th scope="col" className="field-label px-2 py-2 text-right">Confidence</th>
+              <th scope="col" className="field-label px-2 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.scenario} className="border-b border-rule">
+                <td className="px-2 py-2">{r.scenario}</td>
+                <td className="num px-2 py-2 text-right">{r.mean.toFixed(2)}</td>
+                <td className="num px-2 py-2 text-right">{r.lower.toFixed(2)}–{r.upper.toFixed(2)}</td>
+                <td className="num px-2 py-2 text-right">{r.confidence.toFixed(2)}</td>
+                <td className="px-2 py-2">{r.klass ?? <span className="text-ink-muted">insufficient data</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function MethodPage() {
+  const behaviour = modelBehaviour();
   const groups = new Map<string, MethodParameter[]>();
   for (const parameter of METHOD_PARAMETERS) {
     const key = parameter.id.split(".")[0];
@@ -157,6 +191,23 @@ export default function MethodPage() {
             </details>
           ))}
         </div>
+      </section>
+
+      <section aria-labelledby="behaviour" className="space-y-4">
+        <h2 id="behaviour" className="m-0 text-2xl">How the model behaves</h2>
+        <p className="m-0 max-w-2xl text-ink-muted">
+          The engine&apos;s own answers to fixed, simple situations, computed live rather than described. Each report is from a
+          different observer at neutral trust unless stated. Read the interval, not just the class: one report already gives a
+          class, but with a wide interval, and the interval narrows as reports agree.
+        </p>
+        <BehaviourTable title="Agreeing reports" rows={behaviour.agreeing} />
+        <BehaviourTable title="Disagreeing reports" rows={behaviour.disagreeing} />
+        <BehaviourTable title="Whom you believe" rows={behaviour.trust} />
+        <p className="m-0 max-w-2xl text-sm text-ink-muted">
+          The last table is the point of the trust layer: the same six reports give a different answer depending on who made
+          them, because an observer who has tended to disagree with everyone else counts for less. Mixed evidence lands below
+          the middle because warning signs are weighted more heavily than the absence of them, a declared choice.
+        </p>
       </section>
 
       <section aria-labelledby="limits" className="space-y-3">
