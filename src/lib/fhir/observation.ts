@@ -2,6 +2,7 @@ import {
   OAH_PROFILE_INDICATORS,
   OAH_PROFILE_LOCATION,
   RIVULET_CODES,
+  RIVULET_STATUS_CLASSES,
   RIVULET_WATERBODY_ID_SYSTEM,
   systemFor,
 } from "./codes";
@@ -77,7 +78,7 @@ export function toObservationIndicators(
   const system = systemFor(input.code);
   const display =
     system.includes("rivulet")
-      ? RIVULET_CODES[input.code as keyof typeof RIVULET_CODES]
+      ? RIVULET_CODES[input.code as keyof typeof RIVULET_CODES]?.display
       : undefined;
 
   const observation: FhirObservation = {
@@ -112,7 +113,10 @@ export function toObservationIndicators(
         {
           system: systemFor(input.code),
           code: input.value.code,
-          display: input.value.display,
+          // The Rivulet code system fixes the display for a status class; anything else keeps the caller's.
+          display:
+            RIVULET_STATUS_CLASSES[input.value.code as keyof typeof RIVULET_STATUS_CLASSES]?.display ??
+            input.value.display,
         },
       ],
     };

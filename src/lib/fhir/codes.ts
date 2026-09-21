@@ -44,23 +44,54 @@ export const OAH_CODES = [
   "riparianVegetation",
 ] as const;
 
-// Concepts Rivulet derives that the OAH IG has no code for; each names the gap it fills
+// Concepts Rivulet derives that the OAH IG has no code for; each names the gap it fills.
+// `display` is the short name a FHIR consumer sees; `definition` says what it is and is not.
 export const RIVULET_CODES = {
-  "forel-ule-index": "Forel-Ule index (1-21) — no OAH code for water colour",
-  "wfd-ecological-status":
-    "WFD ecological status class — no OAH code for the classified outcome",
-  "data-confidence":
-    "Rivulet data confidence (0-1) — no OAH code for evidence strength",
-  "visual-clarity":
-    "Visual clarity reported by a resident (0 clear to 3 opaque) — not a suspended-solids measurement, so not OAH tss",
-  "sewage-odour":
-    "Sewage odour reported by a resident — a possible sign of faecal contamination, not a coliform count",
-  "visible-algae":
-    "Green algae or surface scum seen — not a macrophyte survey",
-  "surface-foam": "Foam on the water surface seen by a resident",
-  "dead-fish": "Dead fish seen by a resident",
-  "visible-litter":
-    "Visible litter on the margins (0 none to 3 a lot) — not a land-use classification",
+  "forel-ule-index": {
+    display: "Forel-Ule index",
+    definition: "Forel-Ule colour index (1-21) — no OAH code for water colour",
+  },
+  "wfd-ecological-status": {
+    display: "Indicative status class",
+    definition: "WFD-named indicative status class — no OAH code for the classified outcome; not an official WFD classification",
+  },
+  "data-confidence": {
+    display: "Data confidence",
+    definition: "Rivulet data confidence (0-1) — no OAH code for evidence strength",
+  },
+  "visual-clarity": {
+    display: "Visual clarity",
+    definition: "Visual clarity reported by a resident (0 clear to 3 opaque) — not a suspended-solids measurement, so not OAH tss",
+  },
+  "sewage-odour": {
+    display: "Sewage odour",
+    definition: "Sewage odour reported by a resident — a possible sign of faecal contamination, not a coliform count",
+  },
+  "visible-algae": {
+    display: "Visible algae",
+    definition: "Green algae or surface scum seen — not a macrophyte survey",
+  },
+  "surface-foam": {
+    display: "Surface foam",
+    definition: "Foam on the water surface seen by a resident",
+  },
+  "dead-fish": {
+    display: "Dead fish",
+    definition: "Dead fish seen by a resident",
+  },
+  "visible-litter": {
+    display: "Visible litter",
+    definition: "Visible litter on the margins (0 none to 3 a lot) — not a land-use classification",
+  },
+} as const;
+
+// Values of `wfd-ecological-status`, in the same code system.
+export const RIVULET_STATUS_CLASSES = {
+  high: { display: "High", definition: "Indicative class named high; not an official WFD classification" },
+  good: { display: "Good", definition: "Indicative class named good; not an official WFD classification" },
+  moderate: { display: "Moderate", definition: "Indicative class named moderate; not an official WFD classification" },
+  poor: { display: "Poor", definition: "Indicative class named poor; not an official WFD classification" },
+  bad: { display: "Bad", definition: "Indicative class named bad; not an official WFD classification" },
 } as const;
 
 export type OahCode = (typeof OAH_CODES)[number];

@@ -7,19 +7,23 @@ export type FhirBundle = {
   resourceType: "Bundle";
   type: "searchset";
   total: number;
-  entry: { fullUrl: string; resource: FhirResource }[];
+  link?: { relation: "self"; url: string }[];
+  entry: { fullUrl: string; resource: FhirResource; search: { mode: "match" } }[];
 };
 
-export function buildBundle(resources: FhirResource[]): FhirBundle {
+/** `selfUrl` is the request that produced the bundle, as a searchset should declare. */
+export function buildBundle(resources: FhirResource[], selfUrl?: string): FhirBundle {
   return {
     resourceType: "Bundle",
     type: "searchset",
     total: resources.length,
+    ...(selfUrl ? { link: [{ relation: "self" as const, url: selfUrl }] } : {}),
     // Outside transactions every entry needs a fullUrl, and it is what lets a
     // relative `Location/<id>` reference resolve inside the bundle.
     entry: resources.map((resource) => ({
       fullUrl: `${FHIR_BASE}/${resource.resourceType}/${resource.id}`,
       resource,
+      search: { mode: "match" as const },
     })),
   };
 }

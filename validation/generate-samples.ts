@@ -60,6 +60,6 @@ const resources = buildWaterbodyResources({
   exportedAt: "2026-09-21T12:00:00Z",
 });
 
-writeFileSync(join(out, "Bundle-export.json"), JSON.stringify(buildBundle(resources), null, 2));
+writeFileSync(join(out, "Bundle-export.json"), JSON.stringify(buildBundle(resources, `https://rivulet-xi.vercel.app/api/fhir/Observation?waterbody=${waterbody.id}`), null, 2));
 writeFileSync(join(out, "CodeSystem-rivulet-derived.json"), JSON.stringify(buildRivuletCodeSystem(), null, 2));
 console.log(`Wrote ${resources.length} resources and the Rivulet CodeSystem to ${out}`);

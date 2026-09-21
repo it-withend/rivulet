@@ -84,7 +84,7 @@ export async function GET(request: Request) {
     exportedAt: new Date().toISOString(),
   });
 
-  return NextResponse.json(buildBundle(resources), {
+  return NextResponse.json(buildBundle(resources, request.url), {
     headers: { "content-type": "application/fhir+json" },
   });
 }

@@ -1,4 +1,4 @@
-import { RIVULET_CODES, RIVULET_SYSTEM } from "./codes";
+import { RIVULET_CODES, RIVULET_STATUS_CLASSES, RIVULET_SYSTEM } from "./codes";
 
 /**
  * The CodeSystem behind `RIVULET_SYSTEM`: the concepts Rivulet derives from
@@ -18,10 +18,9 @@ export function buildRivuletCodeSystem() {
     caseSensitive: true,
     description:
       "Concepts Rivulet derives from resident observations that the OneAquaHealth IG code system has no code for. Not endorsed by the OneAquaHealth consortium.",
-    concept: Object.entries(RIVULET_CODES).map(([code, definition]) => ({
-      code,
-      display: code,
-      definition,
-    })),
+    concept: [
+      ...Object.entries(RIVULET_CODES),
+      ...Object.entries(RIVULET_STATUS_CLASSES),
+    ].map(([code, { display, definition }]) => ({ code, display, definition })),
   };
 }
