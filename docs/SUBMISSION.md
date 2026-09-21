@@ -56,7 +56,7 @@ indicative, not laboratory or public-health assessments.
 
 Next.js 16 (App Router, TypeScript strict), React 19, Tailwind CSS 4, MapLibre GL, Supabase (Postgres, PostGIS,
 row-level security with column grants), Zod, `pdf-lib`, `node:crypto` (Ed25519), Groq vision for the optional photo check,
-GitHub Actions, and Vercel. The science engine and the FHIR mapping are pure functions with 204 unit tests; the deployed
+GitHub Actions, and Vercel. The science engine and the FHIR mapping are pure functions with 212 unit tests; the deployed
 pages are thin shells around them. Details: `docs/ARCHITECTURE.md`.
 
 ## Challenges
