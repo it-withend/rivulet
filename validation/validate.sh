@@ -14,14 +14,16 @@ ig="$work/oah/fsh-generated/resources"
 samples="$here/samples/generated"
 log="$work/validation.log"
 
-[[ -d "$ig" ]] || { echo "OAH IG not built; run ./build-ig.sh first" >&2; exit 2; }
-[[ -d "$samples" ]] || { echo "No samples; run: npx tsx validation/generate-samples.ts (from the repo root)" >&2; exit 2; }
+fail() { echo "::error title=FHIR validation setup::$1"; echo "$1" >&2; exit 2; }
+[[ -d "$ig" ]] || fail "OAH IG not built at $ig (contents of .work/oah: $(ls "$work/oah" 2>&1 | tr '
+' ' ' | head -c 300)); run ./build-ig.sh first"
+[[ -d "$samples" ]] || fail "No samples in $samples; run: npx tsx validation/generate-samples.ts (from the repo root)"
 
 if [[ ! -f "$jar" ]]; then
   echo "Downloading validator_cli $VALIDATOR_VERSION"
   mkdir -p "$work"
   curl -fsSL --retry 3 -o "$jar.part" \
-    "https://github.com/hapifhir/org.hl7.fhir.core/releases/download/$VALIDATOR_VERSION/validator_cli.jar" || exit 2
+    "https://github.com/hapifhir/org.hl7.fhir.core/releases/download/$VALIDATOR_VERSION/validator_cli.jar"     || fail "Could not download validator_cli $VALIDATOR_VERSION"
   mv "$jar.part" "$jar"
 fi
 
