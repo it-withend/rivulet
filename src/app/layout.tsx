@@ -1,8 +1,9 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { SiteHeader } from "@/components/ui/SiteHeader";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
+import { OfflineSync } from "@/components/ui/OfflineSync";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import "./globals.css";
 
@@ -29,8 +30,14 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Rivulet — urban streams, read honestly",
+  applicationName: "Rivulet",
+  appleWebApp: { capable: true, title: "Rivulet", statusBarStyle: "default" },
   description:
     "Photograph an urban stream, read its colour on the Forel–Ule scale, and turn citizen observations into uncertainty-aware ecological assessments.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#185157",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -48,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <SiteFooter />
+        <OfflineSync />
       </body>
     </html>
   );

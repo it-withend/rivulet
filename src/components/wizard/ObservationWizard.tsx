@@ -5,6 +5,7 @@ import type React from "react";
 import {
   Camera,
   Clock,
+  CloudOff,
   Eye,
   EyeOff,
   MapPin,
@@ -21,6 +22,7 @@ import { Panel } from "@/components/ui/Panel";
 import { appendEntry, loadJournal } from "@/lib/journal/storage";
 import { evaluateBadges, newlyEarned, type JournalEntry } from "@/lib/journal/journal";
 import { ensureObserver } from "@/lib/identity/client";
+import { enqueueReport } from "@/lib/offline/report-queue";
 import { FU_TABLE } from "@/lib/science/forel-ule-table";
 import type { AssessmentDelta } from "@/lib/science/delta";
 import type { SurveyAnswers } from "@/types/observation";
@@ -73,6 +75,7 @@ export function ObservationWizard({
   const [result, setResult] = useState<ObservationResultProps | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [queued, setQueued] = useState(false);
 
   async function submit() {
     setError(null);
@@ -93,6 +96,30 @@ export function ObservationWizard({
       return;
     }
 
+    const payload = {
+      waterbodyId,
+      observedAt: new Date().toISOString(),
+      longitude: position.coords.longitude,
+      latitude: position.coords.latitude,
+      gpsAccuracyM: Math.round(position.coords.accuracy),
+      forelUleIndex: fu?.index ?? null,
+      forelUleConfidence: fu?.confidence ?? null,
+      survey: { ...survey, forelUle: fu?.index ?? null },
+      ...(thumbnail ? { photoThumbnail: thumbnail } : {}),
+    };
+
+    // No connection at the stream: keep the report on this phone and send it later.
+    function saveForLater() {
+      if (enqueueReport(payload)) setQueued(true);
+      else setError("You are offline and this browser cannot store the report. Please try again with a connection.");
+    }
+
+    if (!navigator.onLine) {
+      saveForLater();
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const observer = await ensureObserver();
 
@@ -102,17 +129,7 @@ export function ObservationWizard({
           "content-type": "application/json",
           ...(observer ? { authorization: `Bearer ${observer.token}` } : {}),
         },
-        body: JSON.stringify({
-          waterbodyId,
-          observedAt: new Date().toISOString(),
-          longitude: position.coords.longitude,
-          latitude: position.coords.latitude,
-          gpsAccuracyM: Math.round(position.coords.accuracy),
-          forelUleIndex: fu?.index ?? null,
-          forelUleConfidence: fu?.confidence ?? null,
-          survey: { ...survey, forelUle: fu?.index ?? null },
-          ...(thumbnail ? { photoThumbnail: thumbnail } : {}),
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -150,8 +167,10 @@ export function ObservationWizard({
         heldForReview: body.heldForReview,
         newBadges: evaluateBadges(after).filter((b) => unlocked.includes(b.code)),
       });
-    } catch {
-      setError("We could not save your report. Please check your connection and try again.");
+    } catch (failure) {
+      // fetch rejects with a TypeError when the network is unreachable.
+      if (failure instanceof TypeError) saveForLater();
+      else setError("We could not save your report. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -159,6 +178,24 @@ export function ObservationWizard({
 
   if (result) {
     return <ObservationResult {...result} />;
+  }
+
+  if (queued) {
+    return (
+      <div className="space-y-4 rounded-md border border-river/40 bg-paper-raised p-5" role="status">
+        <p className="m-0 flex items-center gap-2 text-lg font-medium">
+          <CloudOff aria-hidden="true" className="size-5 text-river" />
+          Saved on this phone
+        </p>
+        <p className="m-0 text-ink-muted">
+          There is no connection right now, so your report is waiting on this phone. It keeps the time you made it
+          and is sent by itself as soon as you are back online. You do not need to do anything.
+        </p>
+        <Button href="/map" variant="secondary">
+          Back to the map
+        </Button>
+      </div>
+    );
   }
 
   const colour = fu ? FU_TABLE.find((e) => e.index === fu.index) : null;

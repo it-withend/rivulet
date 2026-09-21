@@ -11,15 +11,19 @@ export function SiteFooter() {
           </p>
           <p className="field-label mt-5 mb-2">For researchers</p>
           <p className="m-0">
+            <Link href="/method" className="text-ink underline underline-offset-2 hover:text-river">
+              How the science works
+            </Link>
+            {" · "}
             <Link href="/open-data" className="text-ink underline underline-offset-2 hover:text-river">
-              Open data and FHIR export
+              Open data and FHIR
             </Link>
             {" · "}
             <a
               href="https://github.com/it-withend/rivulet"
               className="text-ink underline underline-offset-2 hover:text-river"
             >
-              Source code
+              Source code (Apache-2.0)
             </a>
             {" · "}
             <Link href="/moderate" className="text-ink underline underline-offset-2 hover:text-river">
