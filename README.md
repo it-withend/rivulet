@@ -45,9 +45,9 @@ Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-i
 |---|---|---|
 | ![Rivulet home page with the Forel-Ule colour ribbon](docs/screenshots/home.webp) | ![City report: where to take care and where a visit helps most](docs/screenshots/city.webp) | ![A stream page: status, One Health reading and history](docs/screenshots/water.webp) |
 
-| Report (phone) | Certificate |
-|---|---|
-| ![The two-minute report form on a phone](docs/screenshots/observe-mobile.webp) | ![A signed volunteer certificate](docs/screenshots/certificate.webp) |
+| Report (phone) | Volunteer certificate | Method |
+|---|---|---|
+| ![The two-minute report form on a phone](docs/screenshots/observe-mobile.webp) | ![A signed volunteer certificate with seal, signature and QR code](docs/screenshots/certificate.webp) | ![The method page: the seven-step pipeline and every declared constant](docs/screenshots/method.webp) |
 
 > Screenshots show the live prototype. Coimbra's reports are synthetic demonstration data; see "What Rivulet does not claim".
 
