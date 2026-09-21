@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { SiteHeader } from "@/components/ui/SiteHeader";
+import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import "./globals.css";
 
@@ -38,6 +40,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <SiteHeader />
         <main id="main" className="flex-1">
           {children}

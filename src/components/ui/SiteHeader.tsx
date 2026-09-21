@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, BookOpen, Camera, Map, Trophy } from "lucide-react";
 import { ForelUleRibbon } from "./ForelUleRibbon";
+import { Logo } from "./Logo";
 
 const NAV = [
   { href: "/map", label: "Map", icon: Map },
@@ -26,8 +27,9 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <Link
           href="/"
-          className="flex min-h-11 shrink-0 items-baseline gap-2 py-2 text-ink no-underline"
+          className="flex min-h-11 shrink-0 items-center gap-2 py-2 text-ink no-underline"
         >
+          <Logo className="size-7 shrink-0" />
           <span className="font-display text-[1.625rem] font-medium italic leading-none tracking-tight">
             Rivulet
           </span>

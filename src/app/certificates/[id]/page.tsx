@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { Download, ShieldCheck } from "lucide-react";
 import { supabaseAnon } from "@/lib/db/client";
 import { verifyCredential } from "@/lib/credentials/jwt";
+import { CERTIFICATE, TIER_LABEL, certificateNumber, qrModules } from "@/lib/credentials/certificate-copy";
 import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/ui/Logo";
 
-const TIER_LABEL: Record<string, string> = {
-  contributor: "Contributor",
-  data_steward: "Data Steward",
+export const metadata = {
+  title: "Volunteer certificate — Rivulet",
 };
 
 type CredentialShape = {
@@ -19,17 +20,41 @@ type CredentialShape = {
   evidence?: { description?: string }[];
 };
 
-/** A stand-in for a hand signature and a wax seal: pure CSS/SVG, no image assets. */
+/** The Rivulet seal: the stream mark inside a ring of text, drawn in SVG so it stays sharp when printed. */
 function Seal({ tier }: { tier: string }) {
   return (
-    <div className="relative mx-auto flex size-32 shrink-0 items-center justify-center rounded-full border border-paper/70 text-paper sm:size-36">
-      <div className="absolute inset-2 rounded-full border border-paper/40" />
-      <div className="text-center">
-        <p className="font-display m-0 text-lg italic leading-tight sm:text-xl">Rivulet</p>
-        <p className="field-label m-0 mt-1 text-paper/70">Citizen science</p>
-        <p className="field-label m-0 mt-2 text-[0.65rem] text-paper/50">{tier}</p>
-      </div>
-    </div>
+    <svg viewBox="0 0 200 200" role="img" aria-label="Rivulet seal" className="mx-auto size-40 text-paper sm:size-44">
+      <defs>
+        <path id="seal-ring" d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0" />
+      </defs>
+      <circle cx="100" cy="100" r="94" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" strokeWidth="0.7" />
+      <circle cx="100" cy="100" r="52" fill="none" stroke="currentColor" strokeWidth="0.7" />
+      <text fontSize="11.5" letterSpacing="2.2" fill="currentColor" fontFamily="var(--font-plex-mono), monospace">
+        <textPath href="#seal-ring" startOffset="0">{CERTIFICATE.sealRing.repeat(1)}</textPath>
+      </text>
+      <g transform="translate(70 62) scale(0.94)">
+        <path d="M17 15 C 35 13, 37 29, 27 33 S 26 51, 44 49" fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round" />
+        <circle cx="47" cy="49" r="5.2" fill="#e3b53c" />
+        <circle cx="17" cy="15" r="3" fill="currentColor" />
+      </g>
+      <text x="100" y="150" textAnchor="middle" fontSize="9" letterSpacing="1.6" fill="currentColor" fontFamily="var(--font-plex-mono), monospace">
+        {tier.toUpperCase()}
+      </text>
+    </svg>
+  );
+}
+
+/** The verification link as a QR code, so a printed copy can be checked with a phone. */
+function VerifyQr({ url }: { url: string }) {
+  const rows = qrModules(url);
+  const size = rows.length;
+  return (
+    <svg viewBox={`-2 -2 ${size + 4} ${size + 4}`} role="img" aria-label="QR code for the verification link" className="size-20 shrink-0 bg-white">
+      {rows.flatMap((row, y) =>
+        row.map((on, x) => (on ? <rect key={`${x}-${y}`} x={x} y={y} width="1.02" height="1.02" fill="#151b1c" /> : null)),
+      )}
+    </svg>
   );
 }
 
@@ -58,6 +83,8 @@ export default async function CertificatePage(props: PageProps<"/certificates/[i
     month: "long",
     day: "numeric",
   });
+  const site = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://rivulet-xi.vercel.app").replace(/\/$/, "");
+  const verifyUrl = `${site}/certificates/${certificate.id}`;
 
   const endorsements = Array.isArray(certificate.endorsements)
     ? (certificate.endorsements as unknown[])
@@ -66,7 +93,7 @@ export default async function CertificatePage(props: PageProps<"/certificates/[i
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <p className="field-label m-0">Rivulet certificate — {tierLabel}</p>
+        <p className="field-label m-0">Volunteer certificate — {tierLabel}</p>
         {status !== "revoked" && status !== "invalid" && (
           <Button href={`/api/certificates/${certificate.id}/pdf`} variant="secondary">
             <Download aria-hidden="true" className="size-4" />
@@ -82,22 +109,14 @@ export default async function CertificatePage(props: PageProps<"/certificates/[i
           <div className="flex flex-1 items-center justify-center">
             <Seal tier={tierLabel} />
           </div>
-          <div className="space-y-3">
-            <div className="rounded-sm bg-white/10 px-3 py-2">
-              <p className="m-0 text-xs font-semibold uppercase tracking-wide">
-                {achievement?.name ?? "Rivulet certificate"}
-              </p>
-            </div>
-            {achievement?.description && (
-              <p className="m-0 text-[0.7rem] leading-snug text-paper/60">
-                {achievement.description}
-              </p>
-            )}
+          <div className="space-y-2 text-center sm:text-left">
+            <p className="m-0 text-[0.65rem] uppercase tracking-widest text-paper/60">Certificate no.</p>
+            <p className="num m-0 text-sm">{certificateNumber(certificate.id)}</p>
             <p className="m-0 text-[0.65rem] text-paper/50">rivulet-xi.vercel.app</p>
           </div>
         </div>
 
-        <div className="relative flex flex-col justify-between overflow-hidden px-6 py-6 sm:px-10 sm:py-8">
+        <div className="relative flex flex-col justify-between gap-4 overflow-hidden px-6 py-6 sm:px-10 sm:py-7">
           {/* Faint concentric rings, purely decorative. */}
           <svg
             aria-hidden="true"
@@ -109,47 +128,56 @@ export default async function CertificatePage(props: PageProps<"/certificates/[i
             ))}
           </svg>
 
-          <div className="relative flex items-baseline justify-between">
-            <p className="font-display m-0 text-2xl italic text-river">Rivulet</p>
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Logo className="size-8" />
+              <span className="font-display text-2xl italic text-river">Rivulet</span>
+            </div>
             <p className="num m-0 text-sm text-ink-muted">Issued {issuedDate}</p>
           </div>
 
-          <div className="relative space-y-1">
-            <h1 className="font-display m-0 text-4xl italic sm:text-5xl">
+          <div className="relative space-y-1.5">
+            <p className="field-label m-0 text-river">{CERTIFICATE.title}</p>
+            <p className="m-0 text-sm text-ink-muted">{CERTIFICATE.intro}</p>
+            <h1 className="font-display m-0 text-4xl italic leading-tight sm:text-5xl">
               {certificate.recipient_name}
             </h1>
-            <p className="m-0 text-sm text-ink-muted sm:text-base">
-              has demonstrated stream reporting recognised by Rivulet as a
-            </p>
-            <p className="m-0 text-xl font-medium text-river sm:text-2xl">
-              {achievement?.name ?? "Rivulet certificate"}
-            </p>
+            <p className="m-0 max-w-xl text-sm text-ink sm:text-[0.95rem]">{CERTIFICATE.body}</p>
           </div>
 
-          <div className="relative space-y-2">
-            {achievement?.description && (
-              <p className="m-0 max-w-xl text-sm text-ink">{achievement.description}</p>
-            )}
-            {evidence && <p className="num m-0 max-w-xl text-sm text-ink-muted">{evidence}</p>}
+          <div className="relative space-y-1">
+            <p className="m-0 text-sm text-ink-muted">Volunteer level</p>
+            <p className="m-0 text-lg font-medium text-river sm:text-xl">
+              {achievement?.name ?? "Rivulet Contributor"}
+            </p>
+            {evidence && <p className="num m-0 max-w-xl text-xs text-ink-muted sm:text-sm">{evidence}</p>}
           </div>
 
           <div className="relative flex flex-wrap items-end justify-between gap-4 border-t border-rule pt-4">
             <div>
-              <div className="mb-1 h-px w-40 bg-ink" />
-              <p className="m-0 text-sm font-medium">Rivulet Issuer</p>
+              <p className="font-display m-0 -rotate-3 text-3xl italic leading-none text-ink">
+                {CERTIFICATE.signatory.name}
+              </p>
+              <div className="mt-1 h-px w-44 bg-ink" />
+              <p className="m-0 mt-1 text-sm font-medium">
+                {CERTIFICATE.signatory.name}, {CERTIFICATE.signatory.title}
+              </p>
               <p className="m-0 flex items-center gap-1 text-xs text-ink-muted">
                 <ShieldCheck aria-hidden="true" className="size-3.5" />
-                {status === "verified" && "Signature verified · Ed25519"}
+                {status === "verified" && "Digitally signed · Ed25519 · verified"}
                 {status === "invalid" && "Signature invalid"}
                 {status === "unavailable" && "Cannot verify right now"}
                 {status === "revoked" && "Revoked"}
               </p>
             </div>
-            <div className="text-right">
-              <p className="m-0 text-xs text-ink-muted">Verify this certificate at:</p>
-              <p className="num m-0 max-w-[14rem] break-words text-xs font-medium text-river">
-                rivulet-xi.vercel.app/certificates/{certificate.id}
-              </p>
+            <div className="flex items-end gap-3">
+              <div className="text-right">
+                <p className="m-0 text-xs text-ink-muted">Scan or visit to verify:</p>
+                <p className="num m-0 max-w-[13rem] break-words text-xs font-medium text-river">
+                  {verifyUrl.replace(/^https?:\/\//, "")}
+                </p>
+              </div>
+              <VerifyQr url={verifyUrl} />
             </div>
           </div>
         </div>
@@ -164,9 +192,7 @@ export default async function CertificatePage(props: PageProps<"/certificates/[i
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4 text-sm text-ink-muted print:hidden">
-        <p className="m-0">
-          Not endorsed by the EU, IEEE or the OneAquaHealth consortium.
-        </p>
+        <p className="m-0 max-w-xl">{CERTIFICATE.disclaimer}</p>
         <p className="num m-0">
           <a href={`/api/certificates/${certificate.id}`} className="underline underline-offset-2 hover:text-river">
             View the underlying credential (JSON)
@@ -189,12 +215,6 @@ export default async function CertificatePage(props: PageProps<"/certificates/[i
           </ul>
         )}
       </div>
-
-      <p className="text-xs text-ink-muted print:hidden">
-        Rivulet is an independent citizen-science prototype built for a
-        hackathon. This certificate carries no institutional endorsement
-        unless one is listed above.
-      </p>
     </div>
   );
 }

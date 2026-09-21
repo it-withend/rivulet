@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import type React from "react";
 import { supabaseAnon } from "@/lib/db/client";
 import { contributions, type ContributionRow } from "@/lib/engagement/contribution";
@@ -66,55 +67,72 @@ function CityChip({
   );
 }
 
-async function PeopleLeaderboard({ city }: { city: string | null }) {
-  const db = supabaseAnon();
+/** The ranking is expensive to build and changes slowly, so it is recomputed at most once a minute. */
+const getPeopleRanking = unstable_cache(
+  async (city: string | null) => {
+    const db = supabaseAnon();
 
-  const { data, error } = await selectAll((from, to) => {
-    const query = db
-      .from("observations")
-      .select(
-        "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(display_name, trust_score, is_synthetic), waterbodies!inner(city)",
-      );
-    return (city ? query.eq("waterbodies.city", city) : query)
-      .order("id")
-      .range(from, to);
-  });
-  const rows = error ? [] : (data ?? []);
+    const { data, error } = await selectAll((from, to) => {
+      const query = db
+        .from("observations")
+        .select(
+          "id, waterbody_id, observed_at, created_at, observer_id, quality_weight, validation_status, is_synthetic, observers(display_name, trust_score, is_synthetic), waterbodies!inner(city)",
+        );
+      return (city ? query.eq("waterbodies.city", city) : query)
+        .order("id")
+        .range(from, to);
+    });
+    const rows = error ? [] : (data ?? []);
 
-  const observerInfo = new Map<string, ObserverInfo>();
-  const contributionRows: ContributionRow[] = rows.map((o) => {
-    const observerEmbed = firstOrSelf<{
-      display_name: string;
-      trust_score: number | string | null;
-      is_synthetic: boolean;
-    }>(o.observers);
+    const observerInfo = new Map<string, ObserverInfo>();
+    const contributionRows: ContributionRow[] = rows.map((o) => {
+      const observerEmbed = firstOrSelf<{
+        display_name: string;
+        trust_score: number | string | null;
+        is_synthetic: boolean;
+      }>(o.observers);
 
-    if (o.observer_id && observerEmbed) {
-      observerInfo.set(o.observer_id, {
-        displayName: observerEmbed.display_name,
-        isSynthetic: Boolean(observerEmbed.is_synthetic),
-      });
-    }
+      if (o.observer_id && observerEmbed) {
+        observerInfo.set(o.observer_id, {
+          displayName: observerEmbed.display_name,
+          isSynthetic: Boolean(observerEmbed.is_synthetic),
+        });
+      }
+      return {
+        observerId: o.observer_id,
+        waterbodyId: o.waterbody_id,
+        observedAt: o.observed_at,
+        createdAt: o.created_at,
+        qualityWeight: Number(o.quality_weight),
+        observerTrust: embeddedTrustScore(o.observers) ?? null,
+        validationStatus: o.validation_status,
+        isSynthetic: Boolean(o.is_synthetic),
+        waterbodyCity: embeddedCity(o.waterbodies),
+      };
+    });
+
+    const ranked = contributions(contributionRows)
+      .sort((a, b) => b.points - a.points)
+      .slice(0, TOP_N);
+
+    const hasSynthetic = ranked.some(
+      (r) => observerInfo.get(r.observerId)?.isSynthetic,
+    );
+
     return {
-      observerId: o.observer_id,
-      waterbodyId: o.waterbody_id,
-      observedAt: o.observed_at,
-      createdAt: o.created_at,
-      qualityWeight: Number(o.quality_weight),
-      observerTrust: embeddedTrustScore(o.observers) ?? null,
-      validationStatus: o.validation_status,
-      isSynthetic: Boolean(o.is_synthetic),
-      waterbodyCity: embeddedCity(o.waterbodies),
+      ranked,
+      hasSynthetic,
+      observerInfo: [...observerInfo.entries()],
     };
-  });
+  },
+  ["leaderboard-people-v1"],
+  { revalidate: 60 },
+);
 
-  const ranked = contributions(contributionRows)
-    .sort((a, b) => b.points - a.points)
-    .slice(0, TOP_N);
-
-  const hasSynthetic = ranked.some(
-    (r) => observerInfo.get(r.observerId)?.isSynthetic,
-  );
+async function PeopleLeaderboard({ city }: { city: string | null }) {
+  const data = await getPeopleRanking(city);
+  const { ranked, hasSynthetic } = data;
+  const observerInfo = new Map<string, ObserverInfo>(data.observerInfo);
 
   return (
     <div className="space-y-6">
@@ -219,70 +237,80 @@ async function PeopleLeaderboard({ city }: { city: string | null }) {
   );
 }
 
-async function CitiesLeaderboard() {
-  const db = supabaseAnon();
+const getCityStats = unstable_cache(
+  async () => {
+    const db = supabaseAnon();
 
-  const [
-    { data: waterbodies, error: waterbodiesError },
-    { data: observations, error: observationsError },
-  ] = await Promise.all([
-    selectAll((from, to) =>
-      db.from("waterbodies").select("id, city").in("city", CITIES).order("id").range(from, to),
-    ),
-    selectAll((from, to) =>
-      db
-        .from("observations")
-        .select(
-          "id, waterbody_id, observed_at, observer_id, survey, quality_weight, observers(trust_score), waterbodies!inner(city)",
-        )
-        .in("waterbodies.city", CITIES)
-        .not("validation_status", "in", HELD_FOR_REVIEW_FILTER)
-        .order("id")
-        .range(from, to),
-    ),
-  ]);
+    const [
+      { data: waterbodies, error: waterbodiesError },
+      { data: observations, error: observationsError },
+    ] = await Promise.all([
+      selectAll((from, to) =>
+        db.from("waterbodies").select("id, city").in("city", CITIES).order("id").range(from, to),
+      ),
+      selectAll((from, to) =>
+        db
+          .from("observations")
+          .select(
+            "id, waterbody_id, observed_at, observer_id, survey, quality_weight, observers(trust_score), waterbodies!inner(city)",
+          )
+          .in("waterbodies.city", CITIES)
+          .not("validation_status", "in", HELD_FOR_REVIEW_FILTER)
+          .order("id")
+          .range(from, to),
+      ),
+    ]);
 
-  const waterbodyRows = waterbodiesError ? [] : (waterbodies ?? []);
-  const observationRows = observationsError ? [] : (observations ?? []);
+    const waterbodyRows = waterbodiesError ? [] : (waterbodies ?? []);
+    const observationRows = observationsError ? [] : (observations ?? []);
 
-  const byWaterbody = new Map<string, StoredObservation[]>();
-  const activeObserversByCity = new Map<string, Set<string>>();
-  const cutoff = Date.now() - ACTIVE_OBSERVER_WINDOW_DAYS * 24 * 3_600_000;
+    const byWaterbody = new Map<string, StoredObservation[]>();
+    const activeObserversByCity = new Map<string, Set<string>>();
+    const cutoff = Date.now() - ACTIVE_OBSERVER_WINDOW_DAYS * 24 * 3_600_000;
 
-  for (const o of observationRows) {
-    const list = byWaterbody.get(o.waterbody_id) ?? [];
-    list.push({
-      id: o.id,
-      observedAt: o.observed_at,
-      observerId: o.observer_id,
-      survey: o.survey,
-      qualityWeight: Number(o.quality_weight),
-      observerTrust: embeddedTrustScore(o.observers),
-    });
-    byWaterbody.set(o.waterbody_id, list);
+    for (const o of observationRows) {
+      const list = byWaterbody.get(o.waterbody_id) ?? [];
+      list.push({
+        id: o.id,
+        observedAt: o.observed_at,
+        observerId: o.observer_id,
+        survey: o.survey,
+        qualityWeight: Number(o.quality_weight),
+        observerTrust: embeddedTrustScore(o.observers),
+      });
+      byWaterbody.set(o.waterbody_id, list);
 
-    const cityName = embeddedCity(o.waterbodies);
-    if (cityName && o.observer_id && new Date(o.observed_at).getTime() >= cutoff) {
-      const set = activeObserversByCity.get(cityName) ?? new Set<string>();
-      set.add(o.observer_id);
-      activeObserversByCity.set(cityName, set);
+      const cityName = embeddedCity(o.waterbodies);
+      if (cityName && o.observer_id && new Date(o.observed_at).getTime() >= cutoff) {
+        const set = activeObserversByCity.get(cityName) ?? new Set<string>();
+        set.add(o.observer_id);
+        activeObserversByCity.set(cityName, set);
+      }
     }
-  }
 
-  const stats = CITIES.map((cityName) => {
-    const bodies = waterbodyRows.filter((w) => w.city === cityName);
-    const assessed = bodies.filter(
-      (w) => computeSnapshot(byWaterbody.get(w.id) ?? []).assessment.klass !== null,
-    );
-    const coverage = bodies.length > 0 ? assessed.length / bodies.length : 0;
-    return {
-      city: cityName,
-      totalWaterbodies: bodies.length,
-      assessedWaterbodies: assessed.length,
-      coverage,
-      activeObservers: activeObserversByCity.get(cityName)?.size ?? 0,
-    };
-  }).sort((a, b) => b.coverage - a.coverage || b.activeObservers - a.activeObservers);
+    const stats = CITIES.map((cityName) => {
+      const bodies = waterbodyRows.filter((w) => w.city === cityName);
+      const assessed = bodies.filter(
+        (w) => computeSnapshot(byWaterbody.get(w.id) ?? []).assessment.klass !== null,
+      );
+      const coverage = bodies.length > 0 ? assessed.length / bodies.length : 0;
+      return {
+        city: cityName,
+        totalWaterbodies: bodies.length,
+        assessedWaterbodies: assessed.length,
+        coverage,
+        activeObservers: activeObserversByCity.get(cityName)?.size ?? 0,
+      };
+    }).sort((a, b) => b.coverage - a.coverage || b.activeObservers - a.activeObservers);
+
+    return stats;
+  },
+  ["leaderboard-cities-v1"],
+  { revalidate: 60 },
+);
+
+async function CitiesLeaderboard() {
+  const stats = await getCityStats();
 
   return (
     <div className="overflow-x-auto">

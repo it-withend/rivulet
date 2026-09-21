@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Rivulet">
+  <rect width="64" height="64" rx="14" fill="#185157"/>
+  <path d="M17 15 C 35 13, 37 29, 27 33 S 26 51, 44 49" fill="none" stroke="#eeede5" stroke-width="6.5" stroke-linecap="round"/>
+  <circle cx="47" cy="49" r="5.2" fill="#e3b53c"/>
+  <circle cx="17" cy="15" r="3" fill="#eeede5"/>
+</svg>

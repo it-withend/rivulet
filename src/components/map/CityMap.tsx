@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Map as MapLibreMap } from "maplibre-gl";
+import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { colourForClass, colourForDivergence, PLAIN_CLASS_LABEL } from "@/lib/ui/wfd-colours";
 import { CONCERN_COLOUR, CONCERN_LABEL } from "@/lib/ui/one-health-copy";
@@ -47,6 +47,20 @@ function describe(feature: MapFeature, layer: MapLayer): { colour: string; text:
   };
 }
 
+function toGeoJson(features: MapFeature[], layer: MapLayer) {
+  return {
+    type: "FeatureCollection" as const,
+    features: features.map((f) => {
+      const { colour, known } = describe(f, layer);
+      return {
+        type: "Feature" as const,
+        properties: { id: f.id, colour, known },
+        geometry: { type: "LineString" as const, coordinates: f.coordinates },
+      };
+    }),
+  };
+}
+
 /** Popup content built with DOM APIs, never HTML strings, because stream names come from OpenStreetMap. */
 function popupContent(feature: MapFeature, layer: MapLayer): HTMLElement {
   const { colour, text, known } = describe(feature, layer);
@@ -79,24 +93,36 @@ function popupContent(feature: MapFeature, layer: MapLayer): HTMLElement {
   return root;
 }
 
+/**
+ * The map is created once. Changing city or colour layer only swaps the line
+ * data and moves the camera, so it takes a moment instead of rebuilding the
+ * whole map; `busy` shows a message while the next city's data is on its way.
+ */
 export function CityMap({
   features,
   centre,
   layer = "status",
+  busy = null,
 }: {
   features: MapFeature[];
   centre: [number, number];
   layer?: MapLayer;
+  busy?: string | null;
 }) {
   const container = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const latest = useRef({ features, layer, centre });
+  const [ready, setReady] = useState(false);
 
+  useEffect(() => {
+    latest.current = { features, layer, centre };
+  }, [features, layer, centre]);
+
+  // Create the map once.
   useEffect(() => {
     if (!container.current) return;
 
-    let map: MapLibreMap | undefined;
     let cancelled = false;
-    setLoaded(false);
 
     // MapLibre reads `window` as soon as its module runs, so it is imported
     // dynamically here rather than at module scope. That keeps it out of the
@@ -123,37 +149,22 @@ export function CityMap({
           },
           layers: [{ id: "osm", type: "raster", source: "osm" }],
         },
-        center: centre,
+        center: latest.current.centre,
         zoom: 12,
       });
-      map = instance;
+      mapRef.current = instance;
 
-      instance.addControl(
-        new maplibregl.NavigationControl({ showCompass: false }),
-        "top-right",
-      );
+      instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
       instance.addControl(
         new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true } }),
         "top-right",
       );
 
-      const byId = new Map(features.map((f) => [f.id, f]));
-
       instance.on("load", () => {
-        if (!cancelled) setLoaded(true);
+        if (cancelled) return;
         instance.addSource("waterbodies", {
           type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: features.map((f) => {
-              const { colour, known } = describe(f, layer);
-              return {
-                type: "Feature",
-                properties: { id: f.id, colour, known },
-                geometry: { type: "LineString", coordinates: f.coordinates },
-              };
-            }),
-          },
+          data: toGeoJson(latest.current.features, latest.current.layer),
         });
 
         // line-dasharray does not accept data-driven expressions, so streams
@@ -196,9 +207,10 @@ export function CityMap({
 
         instance.on("click", "waterbody-hit", (event) => {
           const id = event.features?.[0]?.properties?.id;
-          const feature = id ? byId.get(id) : undefined;
+          const { features: current, layer: currentLayer } = latest.current;
+          const feature = id ? current.find((f) => f.id === id) : undefined;
           if (!feature) return;
-          popup.setLngLat(event.lngLat).setDOMContent(popupContent(feature, layer)).addTo(instance);
+          popup.setLngLat(event.lngLat).setDOMContent(popupContent(feature, currentLayer)).addTo(instance);
         });
 
         // Deliberately no per-feature "mouseenter"/"mouseleave" cursor hint:
@@ -208,14 +220,27 @@ export function CityMap({
         // takes seconds to register. The whole map is one big tap target —
         // see the ".maplibregl-canvas-container" rule in globals.css for the
         // static pointer cursor that gives the same affordance for free.
+        setReady(true);
       });
     });
 
     return () => {
       cancelled = true;
-      map?.remove();
+      mapRef.current?.remove();
+      mapRef.current = null;
     };
-  }, [features, centre, layer]);
+  }, []);
+
+  // New data or a new colour layer: swap the lines, keep the map.
+  useEffect(() => {
+    const source = mapRef.current?.getSource("waterbodies") as GeoJSONSource | undefined;
+    source?.setData(toGeoJson(features, layer));
+  }, [features, layer, ready]);
+
+  // A different city: move the camera.
+  useEffect(() => {
+    mapRef.current?.jumpTo({ center: centre, zoom: 12 });
+  }, [centre, ready]);
 
   return (
     <div className="relative h-[62vh] min-h-80 w-full">
@@ -225,12 +250,12 @@ export function CityMap({
         aria-label="Map of urban streams. Tap a stream to see how it is doing."
         className="h-full w-full rounded-md border border-rule"
       />
-      {!loaded && (
+      {(!ready || busy) && (
         <div
           aria-live="polite"
-          className="absolute inset-0 flex items-center justify-center rounded-md border border-rule bg-paper-raised"
+          className="absolute inset-0 flex items-center justify-center rounded-md border border-rule bg-paper-raised/85"
         >
-          <p className="field-label m-0">Loading map…</p>
+          <p className="field-label m-0">{busy ?? "Loading map…"}</p>
         </div>
       )}
     </div>

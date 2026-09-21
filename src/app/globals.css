@@ -204,3 +204,15 @@
 .maplibregl-canvas-container.maplibregl-interactive {
   cursor: pointer !important;
 }
+
+/* Indeterminate progress bar shown while a page navigation is in flight. */
+@keyframes rivulet-progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+.rivulet-progress {
+  animation: rivulet-progress 1.1s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rivulet-progress { animation: none; width: 100%; opacity: 0.6; }
+}
