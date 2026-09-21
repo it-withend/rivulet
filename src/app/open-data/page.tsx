@@ -22,9 +22,9 @@ export default function OpenDataPage() {
         <p className="m-0 max-w-xl">
           Observations are served as a FHIR <code>Bundle</code> whose resources
           declare the OneAquaHealth Implementation Guide profiles for
-          indicators and locations. Its required elements were checked by hand
-          against the guide&rsquo;s source, but the official validator has not
-          been run, and the guide&rsquo;s health-measure
+          indicators and locations. A sample of it passes the official HL7
+          validator against the guide with no errors (see the validation report
+          in the repository), and the guide&rsquo;s health-measure
           profiles are not used. Observations waiting for human review are
           left out.
         </p>

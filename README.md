@@ -60,7 +60,7 @@ Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-i
 | 🛰️ **Satellite cross-check** | Sentinel-2 hue against the resident's photo colour; divergence widens uncertainty instead of overruling |
 | 🗺️ **A report a city can act on** | `/city` names where to take care and where a visit would help most |
 | 🏅 **Recognition that verifies** | Open Badges 3.0 certificates, signed with Ed25519, downloadable as PDF, and honest about having no institutional endorsement |
-| 📤 **FHIR export** | Locations and observations declare the OneAquaHealth IG profiles, with a validation job in CI |
+| 📤 **FHIR export** | Locations and observations declare the OneAquaHealth IG profiles, checked by the HL7 validator in CI (0 errors) |
 | 🔒 **Privacy by design** | Pseudonymous observer, colour read on the device, only a tiny thumbnail ever leaves it, and only for the optional photo check |
 
 ## How a report becomes a status
@@ -184,18 +184,30 @@ Locations declare `…/StructureDefinition/location-oah` and whose Observations 
 temperature, nitrate, …) that code is used; where it has none (water colour, resident-reported
 signs, the classified outcome) Rivulet's own code system is used and served at its canonical URL.
 
-**Checked against the guide's FSH source (2026-09-21), not with the official validator.** The
-profiles' mandatory elements were compared with the export by hand: `Location.identifier`,
-`name`, `mode = instance` and `position` (lon/lat both present); `Observation.status = final`,
-`code`, `subject` → `LocationOah`, `effective[x]`, `performer`, and `value[x]` limited to
-`CodeableConcept` or `Quantity`. That review found and fixed two real defects: profile canonicals
-used the profile *name* instead of its *id*, and `Location` lacked `identifier` and `mode`. The
-official HL7 validator (needs Java 11+) has **not** been run, so full conformance is unconfirmed.
-Known remaining gaps: resident-scored values use the unit `1` or `FU` without a UCUM system;
-`performer` carries a display string, not a reference to a resource; the guide binds `code` to
-its indicator value set as *preferred*, so Rivulet's own codes are permitted but a validator may
-warn. The guide's `foam` concept is defined as "Foam/colour/smell" (three signs in one), so
-Rivulet keeps its narrower `surface-foam` code rather than stretching the guide's meaning.
+**Validated in CI with the official HL7 validator.** `.github/workflows/validate-fhir.yml` builds the
+guide from source (`hl7-eu/oah` at a pinned commit, SUSHI 3.20.1), generates FHIR from Rivulet's own
+mapping code (`validation/generate-samples.ts` calls the same functions the API serves) and runs
+`validator_cli` 6.10.4 against FHIR 4.0.1 plus the guide and Rivulet's own CodeSystem. The workflow
+publishes the full log and the exact resources it checked to the
+[`fhir-validation-report`](https://github.com/it-withend/rivulet/tree/fhir-validation-report) branch.
+**Current result: 0 errors, 32 warnings**, all one best-practice recommendation (`dom-6`: resources
+should carry a narrative). The job found and fixed real defects — profile canonicals built from the
+profile *name* instead of its *id*, `Location` missing the mandatory `identifier` and `mode`, and
+code displays that disagreed with Rivulet's CodeSystem.
+
+What this does and does not show. It covers a bundle built from three representative reports (31
+resources), not every row in the live database. It runs offline (`-tx n/a`), so external
+terminologies (UCUM units, SNOMED) are not checked. Known gaps: resident-scored values use the unit
+`1` or `FU` without a UCUM system; `performer` is a display string, not a reference; the guide binds
+`code` to its indicator value set as *preferred*, so Rivulet's own codes are permitted. The guide's
+`foam` concept is "Foam/colour/smell" (three signs in one), so Rivulet keeps its narrower
+`surface-foam` code rather than stretching the guide's meaning.
+
+To reproduce locally you need Node.js 22 and Java 17+:
+
+```bash
+bash validation/build-ig.sh && npx tsx validation/generate-samples.ts && bash validation/validate.sh
+```
 
 **Not used — OneAquaHealth's applications.** The CitizenScience App, Community, city dashboards
 and Resilience Map are login-gated, and no public API or open-data endpoint for them was found in
@@ -225,7 +237,7 @@ macroinvertebrates from field sampling.
   wrong. The model needs validating against independent measurements before it is relied on.
 - **The satellite check is coarse and uncalibrated.** Most urban streams are narrower than a
   Sentinel-2 pixel; most stay "no clear satellite view".
-- **Not full FHIR IG conformance.** See above: hand-checked, official validator not run.
+- **Validation is not certification.** The export passes the HL7 validator against the OAH IG on sample data, offline; that is not a conformance claim by the guide's authors or a test on production data.
 - **No institutional endorsement.** Certificates and the site are not endorsed by the EU, IEEE or
   the OneAquaHealth consortium.
 - **Demonstration data is synthetic.** Coimbra's seeded observations are flagged
