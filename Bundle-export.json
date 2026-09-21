@@ -1,0 +1,1832 @@
+{
+  "resourceType": "Bundle",
+  "type": "searchset",
+  "total": 30,
+  "link": [
+    {
+      "relation": "self",
+      "url": "https://rivulet-xi.vercel.app/api/fhir/Observation?waterbody=d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+    }
+  ],
+  "entry": [
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001",
+      "resource": {
+        "resourceType": "Location",
+        "id": "d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/location-oah"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://rivulet-xi.vercel.app/fhir/waterbody-id",
+            "value": "d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+          }
+        ],
+        "name": "Ribeira de Coselhas",
+        "mode": "instance",
+        "position": {
+          "longitude": -8.42,
+          "latitude": 40.22
+        },
+        "address": {
+          "city": "Coimbra"
+        }
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-pH",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-pH",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "pH"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field test strip reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 7.4,
+          "unit": "pH",
+          "system": "http://unitsofmeasure.org",
+          "code": "[pH]"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-dissolvedO2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-dissolvedO2",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "dissolvedO2"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field test reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 6.2,
+          "unit": "mg/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/L"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-waterTemperature",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-waterTemperature",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "waterTemperature"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field thermometer reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 17.5,
+          "unit": "degree Celsius",
+          "system": "http://unitsofmeasure.org",
+          "code": "Cel"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-nitrate",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-nitrate",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "nitrate"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field test strip reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "mg/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/L"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-visual-clarity",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-visual-clarity",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visual-clarity",
+              "display": "Visual clarity"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: visual clarity, 0 clear to 3 opaque"
+          }
+        ],
+        "valueQuantity": {
+          "value": 2,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-sewage-odour",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-sewage-odour",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "sewage-odour",
+              "display": "Sewage odour"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: sewage odour reported; a possible sign of faecal contamination, not a coliform count"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-visible-algae",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-visible-algae",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visible-algae",
+              "display": "Visible algae"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: green algae or surface scum seen"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-surface-foam",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-surface-foam",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "surface-foam",
+              "display": "Surface foam"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: foam on the surface"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-dead-fish",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-dead-fish",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "dead-fish",
+              "display": "Dead fish"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: dead fish seen"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-invertebrate-groups-score",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-invertebrate-groups-score",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "invertebrate-groups-score",
+              "display": "Invertebrate groups score"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey: sum of sensitivity values for recognisable groups, set on the BMWP 1-10 family scale; a simplified proxy, not a BMWP protocol score"
+          }
+        ],
+        "valueQuantity": {
+          "value": 15,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-flow-state",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-flow-state",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "flow-state",
+              "display": "Flow state as seen"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: flow state as seen by the resident, 0 still to 3 fast"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-visible-litter",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-visible-litter",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visible-litter",
+              "display": "Visible litter"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a1"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: visible litter, 0 none to 3 a lot"
+          }
+        ],
+        "valueQuantity": {
+          "value": 2,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-rich-fu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-rich-fu",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "forel-ule-index",
+              "display": "Forel-Ule index"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-15T10:00:00Z",
+        "performer": [
+          {
+            "display": "Anonymous citizen scientist"
+          }
+        ],
+        "valueQuantity": {
+          "value": 12,
+          "unit": "Forel-Ule class",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Provenance/obs-rich-provenance",
+      "resource": {
+        "resourceType": "Provenance",
+        "id": "obs-rich-provenance",
+        "target": [
+          {
+            "reference": "Observation/obs-rich-pH"
+          },
+          {
+            "reference": "Observation/obs-rich-dissolvedO2"
+          },
+          {
+            "reference": "Observation/obs-rich-waterTemperature"
+          },
+          {
+            "reference": "Observation/obs-rich-nitrate"
+          },
+          {
+            "reference": "Observation/obs-rich-visual-clarity"
+          },
+          {
+            "reference": "Observation/obs-rich-sewage-odour"
+          },
+          {
+            "reference": "Observation/obs-rich-visible-algae"
+          },
+          {
+            "reference": "Observation/obs-rich-surface-foam"
+          },
+          {
+            "reference": "Observation/obs-rich-dead-fish"
+          },
+          {
+            "reference": "Observation/obs-rich-invertebrate-groups-score"
+          },
+          {
+            "reference": "Observation/obs-rich-flow-state"
+          },
+          {
+            "reference": "Observation/obs-rich-visible-litter"
+          },
+          {
+            "reference": "Observation/obs-rich-fu"
+          }
+        ],
+        "recorded": "2026-09-15T10:00:00Z",
+        "agent": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "author"
+                }
+              ]
+            },
+            "who": {
+              "display": "Observer obs-a1"
+            }
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "assembler"
+                }
+              ]
+            },
+            "who": {
+              "display": "Rivulet web app"
+            }
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-plain-visual-clarity",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-plain-visual-clarity",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visual-clarity",
+              "display": "Visual clarity"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-16T08:30:00Z",
+        "performer": [
+          {
+            "display": "Anonymous citizen scientist"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: visual clarity, 0 clear to 3 opaque"
+          }
+        ],
+        "valueQuantity": {
+          "value": 0,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-plain-flow-state",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-plain-flow-state",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "flow-state",
+              "display": "Flow state as seen"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-16T08:30:00Z",
+        "performer": [
+          {
+            "display": "Anonymous citizen scientist"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: flow state as seen by the resident, 0 still to 3 fast"
+          }
+        ],
+        "valueQuantity": {
+          "value": 2,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-plain-visible-litter",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-plain-visible-litter",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visible-litter",
+              "display": "Visible litter"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-16T08:30:00Z",
+        "performer": [
+          {
+            "display": "Anonymous citizen scientist"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: visible litter, 0 none to 3 a lot"
+          }
+        ],
+        "valueQuantity": {
+          "value": 0,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Provenance/obs-plain-provenance",
+      "resource": {
+        "resourceType": "Provenance",
+        "id": "obs-plain-provenance",
+        "target": [
+          {
+            "reference": "Observation/obs-plain-visual-clarity"
+          },
+          {
+            "reference": "Observation/obs-plain-flow-state"
+          },
+          {
+            "reference": "Observation/obs-plain-visible-litter"
+          }
+        ],
+        "recorded": "2026-09-16T08:30:00Z",
+        "agent": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "author"
+                }
+              ]
+            },
+            "who": {
+              "display": "Anonymous citizen scientist"
+            }
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "assembler"
+                }
+              ]
+            },
+            "who": {
+              "display": "Rivulet web app"
+            }
+          }
+        ]
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-pH",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-pH",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "pH"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field test strip reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 7.4,
+          "unit": "pH",
+          "system": "http://unitsofmeasure.org",
+          "code": "[pH]"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-dissolvedO2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-dissolvedO2",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "dissolvedO2"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field test reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 6.2,
+          "unit": "mg/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/L"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-waterTemperature",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-waterTemperature",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "waterTemperature"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field thermometer reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 17.5,
+          "unit": "degree Celsius",
+          "system": "http://unitsofmeasure.org",
+          "code": "Cel"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-nitrate",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-nitrate",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.eu/fhir/ig/oah/CodeSystem/temporarySystem-oah-eu",
+              "code": "nitrate"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Field test strip reading"
+          }
+        ],
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "mg/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/L"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-visual-clarity",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-visual-clarity",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visual-clarity",
+              "display": "Visual clarity"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: visual clarity, 0 clear to 3 opaque"
+          }
+        ],
+        "valueQuantity": {
+          "value": 2,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-sewage-odour",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-sewage-odour",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "sewage-odour",
+              "display": "Sewage odour"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: sewage odour reported; a possible sign of faecal contamination, not a coliform count"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-visible-algae",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-visible-algae",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visible-algae",
+              "display": "Visible algae"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: green algae or surface scum seen"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-surface-foam",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-surface-foam",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "surface-foam",
+              "display": "Surface foam"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: foam on the surface"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-dead-fish",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-dead-fish",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "dead-fish",
+              "display": "Dead fish"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: dead fish seen"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-invertebrate-groups-score",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-invertebrate-groups-score",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "invertebrate-groups-score",
+              "display": "Invertebrate groups score"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey: sum of sensitivity values for recognisable groups, set on the BMWP 1-10 family scale; a simplified proxy, not a BMWP protocol score"
+          }
+        ],
+        "valueQuantity": {
+          "value": 15,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-flow-state",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-flow-state",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "flow-state",
+              "display": "Flow state as seen"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: flow state as seen by the resident, 0 still to 3 fast"
+          }
+        ],
+        "valueQuantity": {
+          "value": 1,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-visible-litter",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-visible-litter",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "visible-litter",
+              "display": "Visible litter"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Observer obs-a2"
+          }
+        ],
+        "note": [
+          {
+            "text": "Rivulet structured survey, derived proxy: visible litter, 0 none to 3 a lot"
+          }
+        ],
+        "valueQuantity": {
+          "value": 2,
+          "unit": "1",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/obs-demo-fu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-demo-fu",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "forel-ule-index",
+              "display": "Forel-Ule index"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-17T09:00:00Z",
+        "performer": [
+          {
+            "display": "Anonymous citizen scientist"
+          }
+        ],
+        "valueQuantity": {
+          "value": 12,
+          "unit": "Forel-Ule class",
+          "system": "http://unitsofmeasure.org",
+          "code": "1"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Provenance/obs-demo-provenance",
+      "resource": {
+        "resourceType": "Provenance",
+        "id": "obs-demo-provenance",
+        "target": [
+          {
+            "reference": "Observation/obs-demo-pH"
+          },
+          {
+            "reference": "Observation/obs-demo-dissolvedO2"
+          },
+          {
+            "reference": "Observation/obs-demo-waterTemperature"
+          },
+          {
+            "reference": "Observation/obs-demo-nitrate"
+          },
+          {
+            "reference": "Observation/obs-demo-visual-clarity"
+          },
+          {
+            "reference": "Observation/obs-demo-sewage-odour"
+          },
+          {
+            "reference": "Observation/obs-demo-visible-algae"
+          },
+          {
+            "reference": "Observation/obs-demo-surface-foam"
+          },
+          {
+            "reference": "Observation/obs-demo-dead-fish"
+          },
+          {
+            "reference": "Observation/obs-demo-invertebrate-groups-score"
+          },
+          {
+            "reference": "Observation/obs-demo-flow-state"
+          },
+          {
+            "reference": "Observation/obs-demo-visible-litter"
+          },
+          {
+            "reference": "Observation/obs-demo-fu"
+          }
+        ],
+        "recorded": "2026-09-17T09:00:00Z",
+        "agent": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "author"
+                }
+              ]
+            },
+            "who": {
+              "display": "Observer obs-a2"
+            }
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/provenance-participant-type",
+                  "code": "assembler"
+                }
+              ]
+            },
+            "who": {
+              "display": "Rivulet web app"
+            }
+          }
+        ],
+        "meta": {
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        }
+      },
+      "search": {
+        "mode": "include"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Observation/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001-wfd",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001-wfd",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah"
+          ],
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        },
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "wfd-ecological-status",
+              "display": "Indicative status class"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+        },
+        "effectiveDateTime": "2026-09-21T12:00:00Z",
+        "performer": [
+          {
+            "display": "Rivulet method 1.5.0"
+          }
+        ],
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "moderate",
+              "display": "Moderate"
+            }
+          ]
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/DetectedIssue/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001-one-health",
+      "resource": {
+        "resourceType": "DetectedIssue",
+        "id": "d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001-one-health",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+              "code": "one-health-concern",
+              "display": "One Health concern"
+            }
+          ]
+        },
+        "severity": "high",
+        "implicated": [
+          {
+            "reference": "Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+          }
+        ],
+        "identifiedDateTime": "2026-09-21T12:00:00Z",
+        "detail": "Avoid contact with the water. Based on 3 resident report(s) in the last 30 days and nearby places people and animals use. Indicative, not a public-health assessment.",
+        "evidence": [
+          {
+            "code": [
+              {
+                "coding": [
+                  {
+                    "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+                    "code": "sewage-odour"
+                  }
+                ]
+              }
+            ],
+            "detail": [
+              {
+                "reference": "Observation/obs-rich-sewage-odour"
+              },
+              {
+                "reference": "Observation/obs-demo-sewage-odour"
+              }
+            ]
+          },
+          {
+            "code": [
+              {
+                "coding": [
+                  {
+                    "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+                    "code": "visible-algae"
+                  }
+                ]
+              }
+            ],
+            "detail": [
+              {
+                "reference": "Observation/obs-rich-visible-algae"
+              },
+              {
+                "reference": "Observation/obs-demo-visible-algae"
+              }
+            ]
+          },
+          {
+            "code": [
+              {
+                "coding": [
+                  {
+                    "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+                    "code": "surface-foam"
+                  }
+                ]
+              }
+            ],
+            "detail": [
+              {
+                "reference": "Observation/obs-rich-surface-foam"
+              },
+              {
+                "reference": "Observation/obs-demo-surface-foam"
+              }
+            ]
+          },
+          {
+            "code": [
+              {
+                "coding": [
+                  {
+                    "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+                    "code": "dead-fish"
+                  }
+                ]
+              }
+            ],
+            "detail": [
+              {
+                "reference": "Observation/obs-rich-dead-fish"
+              },
+              {
+                "reference": "Observation/obs-demo-dead-fish"
+              }
+            ]
+          },
+          {
+            "code": [
+              {
+                "coding": [
+                  {
+                    "system": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+                    "code": "visible-litter"
+                  }
+                ]
+              }
+            ],
+            "detail": [
+              {
+                "reference": "Observation/obs-rich-visible-litter"
+              },
+              {
+                "reference": "Observation/obs-plain-visible-litter"
+              },
+              {
+                "reference": "Observation/obs-demo-visible-litter"
+              }
+            ]
+          }
+        ],
+        "meta": {
+          "tag": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActReason",
+              "code": "HTEST",
+              "display": "test health data"
+            }
+          ]
+        }
+      },
+      "search": {
+        "mode": "include"
+      }
+    }
+  ]
+}

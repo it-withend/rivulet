@@ -1,0 +1,95 @@
+{
+  "resourceType": "CapabilityStatement",
+  "id": "rivulet-capability",
+  "url": "https://rivulet-xi.vercel.app/fhir/metadata",
+  "version": "1.0.0",
+  "name": "RivuletReadOnlyFhirEndpoint",
+  "title": "Rivulet read-only FHIR endpoint",
+  "status": "draft",
+  "experimental": true,
+  "date": "2026-09-21",
+  "publisher": "Rivulet (independent prototype)",
+  "description": "Read-only FHIR R4 access to Rivulet's citizen stream observations, mapped to the OneAquaHealth Implementation Guide profiles. Not endorsed by the OneAquaHealth consortium. Observations held for human review are never served; demonstration data is tagged HTEST.",
+  "kind": "instance",
+  "software": {
+    "name": "Rivulet",
+    "version": "0.1.0"
+  },
+  "implementation": {
+    "description": "Rivulet on Vercel",
+    "url": "https://rivulet-xi.vercel.app/fhir"
+  },
+  "fhirVersion": "4.0.1",
+  "format": [
+    "json",
+    "application/fhir+json"
+  ],
+  "rest": [
+    {
+      "mode": "server",
+      "documentation": "Codes Rivulet adds beyond the OneAquaHealth code system are defined at https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived.",
+      "resource": [
+        {
+          "type": "Location",
+          "profile": "http://hl7.eu/fhir/ig/oah/StructureDefinition/location-oah",
+          "interaction": [
+            {
+              "code": "read"
+            },
+            {
+              "code": "search-type"
+            }
+          ],
+          "searchParam": [
+            {
+              "name": "city",
+              "type": "string",
+              "documentation": "Water bodies in a city, e.g. Coimbra (required)"
+            },
+            {
+              "name": "_count",
+              "type": "number",
+              "documentation": "Page size, default 50, at most 200"
+            },
+            {
+              "name": "_offset",
+              "type": "number",
+              "documentation": "Zero-based offset into the result"
+            }
+          ]
+        },
+        {
+          "type": "Observation",
+          "profile": "http://hl7.eu/fhir/ig/oah/StructureDefinition/observation-indicators-oah",
+          "interaction": [
+            {
+              "code": "search-type"
+            }
+          ],
+          "searchParam": [
+            {
+              "name": "subject",
+              "type": "reference",
+              "documentation": "Location/[id] of the water body (required)"
+            }
+          ]
+        },
+        {
+          "type": "DetectedIssue",
+          "interaction": [
+            {
+              "code": "search-type"
+            }
+          ],
+          "searchParam": [
+            {
+              "name": "implicated",
+              "type": "reference",
+              "documentation": "Location/[id] of the water body (required)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

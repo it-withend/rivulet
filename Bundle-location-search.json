@@ -1,0 +1,43 @@
+{
+  "resourceType": "Bundle",
+  "type": "searchset",
+  "total": 1,
+  "link": [
+    {
+      "relation": "self",
+      "url": "https://rivulet-xi.vercel.app/fhir/Location?city=Coimbra"
+    }
+  ],
+  "entry": [
+    {
+      "fullUrl": "https://rivulet-xi.vercel.app/fhir/Location/d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001",
+      "resource": {
+        "resourceType": "Location",
+        "id": "d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001",
+        "meta": {
+          "profile": [
+            "http://hl7.eu/fhir/ig/oah/StructureDefinition/location-oah"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://rivulet-xi.vercel.app/fhir/waterbody-id",
+            "value": "d3b0c6a4-5f0e-4c2e-9d55-2f6c1a7b0001"
+          }
+        ],
+        "name": "Ribeira de Coselhas",
+        "mode": "instance",
+        "position": {
+          "longitude": -8.42,
+          "latitude": 40.22
+        },
+        "address": {
+          "city": "Coimbra"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    }
+  ]
+}

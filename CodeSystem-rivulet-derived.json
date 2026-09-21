@@ -1,0 +1,99 @@
+{
+  "resourceType": "CodeSystem",
+  "id": "rivulet-derived",
+  "url": "https://rivulet-xi.vercel.app/fhir/CodeSystem/rivulet-derived",
+  "name": "RivuletDerived",
+  "title": "Rivulet derived concepts",
+  "status": "draft",
+  "experimental": true,
+  "content": "complete",
+  "caseSensitive": true,
+  "description": "Concepts Rivulet derives from resident observations that the OneAquaHealth IG code system has no code for. Not endorsed by the OneAquaHealth consortium.",
+  "concept": [
+    {
+      "code": "forel-ule-index",
+      "display": "Forel-Ule index",
+      "definition": "Forel-Ule colour index (1-21) — no OAH code for water colour"
+    },
+    {
+      "code": "wfd-ecological-status",
+      "display": "Indicative status class",
+      "definition": "WFD-named indicative status class — no OAH code for the classified outcome; not an official WFD classification"
+    },
+    {
+      "code": "data-confidence",
+      "display": "Data confidence",
+      "definition": "Rivulet data confidence (0-1) — no OAH code for evidence strength"
+    },
+    {
+      "code": "visual-clarity",
+      "display": "Visual clarity",
+      "definition": "Visual clarity reported by a resident (0 clear to 3 opaque) — not a suspended-solids measurement, so not OAH tss"
+    },
+    {
+      "code": "sewage-odour",
+      "display": "Sewage odour",
+      "definition": "Sewage odour reported by a resident — a possible sign of faecal contamination, not a coliform count"
+    },
+    {
+      "code": "visible-algae",
+      "display": "Visible algae",
+      "definition": "Green algae or surface scum seen — not a macrophyte survey"
+    },
+    {
+      "code": "surface-foam",
+      "display": "Surface foam",
+      "definition": "Foam on the water surface seen by a resident"
+    },
+    {
+      "code": "dead-fish",
+      "display": "Dead fish",
+      "definition": "Dead fish seen by a resident"
+    },
+    {
+      "code": "visible-litter",
+      "display": "Visible litter",
+      "definition": "Visible litter on the margins (0 none to 3 a lot) — not a land-use classification"
+    },
+    {
+      "code": "invertebrate-groups-score",
+      "display": "Invertebrate groups score",
+      "definition": "Sum of BMWP-family sensitivity values for the recognisable animal groups a resident reports (1-10 per group) — a simplified proxy, not the OneAquaHealth benthic macroinvertebrate count and not a BMWP protocol score"
+    },
+    {
+      "code": "flow-state",
+      "display": "Flow state as seen",
+      "definition": "Flow as a resident sees it, 0 still to 3 fast — not a hydromorphological survey, so not the OneAquaHealth hydrology concept"
+    },
+    {
+      "code": "one-health-concern",
+      "display": "One Health concern",
+      "definition": "Indicative concern for people, dogs and wildlife near a stream, from recent resident-reported warning signs and nearby places people use — a prompt to take care, not a public-health assessment"
+    },
+    {
+      "code": "high",
+      "display": "High",
+      "definition": "Indicative class named high; not an official WFD classification"
+    },
+    {
+      "code": "good",
+      "display": "Good",
+      "definition": "Indicative class named good; not an official WFD classification"
+    },
+    {
+      "code": "moderate",
+      "display": "Moderate",
+      "definition": "Indicative class named moderate; not an official WFD classification"
+    },
+    {
+      "code": "poor",
+      "display": "Poor",
+      "definition": "Indicative class named poor; not an official WFD classification"
+    },
+    {
+      "code": "bad",
+      "display": "Bad",
+      "definition": "Indicative class named bad; not an official WFD classification"
+    }
+  ]
+}
