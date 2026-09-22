@@ -48,6 +48,8 @@ export function ModeratorQueue() {
 
   useEffect(() => {
     try {
+      // One-time read of a client-only store (sessionStorage) on mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(sessionStorage.getItem(STORAGE_KEY));
     } catch {
       // Private browsing or blocked storage — fall back to asking every load.
@@ -79,6 +81,8 @@ export function ModeratorQueue() {
   }
 
   useEffect(() => {
+    // Fetches the queue whenever the token changes; `load` sets state from the response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (token) void load(token);
   }, [token]);
 

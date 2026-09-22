@@ -3,7 +3,6 @@ import { METHOD_PARAMETERS, type MethodParameter } from "../method-parameters";
 import { EVIDENCE_WEIGHTS } from "../indicators";
 import { OBSERVATION_WEIGHTING } from "../weighting";
 import { DATA_CONFIDENCE } from "../bayes";
-import { MIN_CONFIDENCE_FOR_CLASS, WFD_BOUNDARIES } from "../wfd";
 
 type Prior = Extract<MethodParameter, { kind: "prior" }>;
 

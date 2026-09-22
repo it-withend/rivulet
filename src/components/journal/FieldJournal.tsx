@@ -21,6 +21,7 @@ export function FieldJournal() {
   // localStorage exists only in the browser; reading it during render would
   // make the server HTML disagree with the first client render.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEntries(loadJournal());
   }, []);
 

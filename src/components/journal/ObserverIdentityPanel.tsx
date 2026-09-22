@@ -39,6 +39,7 @@ export function ObserverIdentityPanel() {
 
   useEffect(() => {
     const current = getObserver();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setObserver(current);
     if (!current) return;
     setName(current.displayName);
