@@ -312,6 +312,13 @@ per city.
 
 To add a city whose OpenStreetMap name differs from its display name, pass the OSM name third:
 `seed-city.ts Tashkent 4 "Toshkent shahri"` (canals are included, as urban aryks are where residents meet water).
+The original seed (`fetch-waterbodies.ts`) only queried `river|stream`, so Coimbra, Toulouse, Oslo and Gent were
+missing their real canals — Ghent in particular is known for them. `scripts/seed/add-canals.ts <City>
+<admin_level>` tops a city up with just its `waterway=canal` ways; it cannot duplicate an existing row, since the
+original seed never fetched that kind. Where the named-area query is too expensive for the public Overpass mirrors
+(it is, for Gent), pass a bounding box instead: `add-canals.ts Gent bbox "50.98,3.58,51.14,3.88"`. Agricultural
+drainage (`waterway=drain`/`ditch`) is deliberately left out — almost entirely unnamed and outside what a resident
+would call an urban stream.
 Sentinel-2 readings are pre-fetched with `npx tsx --env-file=.env.local scripts/satellite/ingest.ts Coimbra 6`, which
 reads each band once per scene for the whole city (a few minutes per scene); the live site never calls a satellite
 API. Most urban streams are narrower than a 10 m pixel, so most get an honest "no clear satellite view". To add a
