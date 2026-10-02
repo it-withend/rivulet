@@ -19,3 +19,6 @@ jobs:
       - run: npx tsc --noEmit
       - run: npx eslint .
       - run: npm test
+      # Informational: a new advisory should be visible, but must not block a deploy of unrelated work.
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true

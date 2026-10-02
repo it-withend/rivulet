@@ -31,6 +31,8 @@ by design, serving only data that is already public.
 - Row-level security in Postgres, with column-level grants — anonymous reads cannot reach GPS accuracy,
   precise report locations, or moderation fields.
 - Certificates are signed (Ed25519) and independently verifiable; a tampered or revoked one is refused.
-- Dependencies: `npm audit` is run before each release; see the [CI workflow](.github/workflows/ci.yml).
+- Dependencies: `npm audit --omit=dev` runs in the [CI workflow](.github/workflows/ci.yml) on every push
+  (informational) and reported 0 vulnerabilities on 2026-10-02, after updating Next.js to 16.3.8 to close a
+  published advisory (the vulnerable `next/og` image API was not used by Rivulet).
 - A baseline set of security headers (CSP, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) is
   set in `next.config.ts`.

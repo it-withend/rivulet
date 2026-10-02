@@ -51,7 +51,7 @@ Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-i
 | Build | [![CI](https://github.com/it-withend/rivulet/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/it-withend/rivulet/actions/workflows/ci.yml) — type-check, ESLint and the Vitest suite |
 | FHIR conformance | [![Validate FHIR](https://github.com/it-withend/rivulet/actions/workflows/validate-fhir.yml/badge.svg?style=flat-square)](https://github.com/it-withend/rivulet/actions/workflows/validate-fhir.yml) — [full validator log](https://github.com/it-withend/rivulet/tree/fhir-validation-report) |
 | Standard | ![FHIR R4](https://img.shields.io/badge/FHIR-R4%20(4.0.1)-orange?style=flat-square) ![OneAquaHealth IG](https://img.shields.io/badge/profiles-OneAquaHealth%20IG-0aa?style=flat-square) |
-| Dependencies | `npm audit` runs clean; see [`ci.yml`](.github/workflows/ci.yml) |
+| Dependencies | `npm audit --omit=dev` reports 0 vulnerabilities (checked 2026-10-02); [`ci.yml`](.github/workflows/ci.yml) re-checks on every push |
 
 ## How it works
 
@@ -354,9 +354,9 @@ Library and jsdom. The `@/*` import alias resolves to `src/`.
 
 ## Contributing & security
 
-Issues and pull requests are welcome. `main` is protected by CI: a change must type-check, pass ESLint with zero
-warnings, pass the Vitest suite, and — if it touches FHIR mapping or the science engine that feeds it — pass the
-HL7 validator against the OneAquaHealth guide (see [`.github/workflows/`](.github/workflows/)). Found a security
+Issues and pull requests are welcome. Every push and pull request runs CI: the change should type-check, pass
+ESLint with zero warnings, pass the Vitest suite, and — if it touches FHIR mapping or the science engine that feeds
+it — pass the HL7 validator against the OneAquaHealth guide (see [`.github/workflows/`](.github/workflows/)). Found a security
 issue? Please read [`SECURITY.md`](SECURITY.md) rather than opening a public issue.
 
 ## Licence and attribution
