@@ -3,6 +3,30 @@
 Copy-ready text for the OneAquaHealth IEEE Global Hackathon 2026 submission. Every claim here is checked against the
 repository; anything not done is in "Limitations".
 
+## Devpost form, field by field
+
+| Devpost field | Paste |
+|---|---|
+| Project name | `Rivulet` |
+| Tagline (60 characters) | `How far to trust a citizen report on an urban stream` |
+| Elevator pitch, if asked | The one-line description below |
+| About the project | *Inspiration*, then the project description, *How it uses OneAquaHealth*, *How we built it*, *Challenges*, *Accomplishments*, *What we learned*, *Limitations*, *What is next* (all below) |
+| Track statement, if asked | The track alignment statement below |
+| Built with | The tags in "Built with" below |
+| Try it out links | Live site, repository, validation report, method page (see "Links") |
+| Video | A public or unlisted YouTube link that opens without signing in; 3 to 5 minutes, see `docs/DEMO_SCRIPT.md` |
+| Image gallery | JPG, PNG or GIF, 3:2 works best: cover, stream page, city report, report form on a phone, method, certificate |
+
+No login is needed to try the product, so no test account is required. The `/moderate` page is protected by a passphrase and
+is deliberately not shared.
+
+## Inspiration
+
+Small urban streams are everywhere and almost no one checks them, yet people and dogs touch the water every day. Citizen
+science can fill the gap, but collecting reports is the easy half. A report on its own is hard to believe and hard to
+compare, so what a city needs first is an answer to "how far do I trust this?". Rivulet is built around that question: it
+weighs reports, says how sure it is, and says "insufficient data" when it does not know.
+
 ## Track alignment statement
 
 **Primary: Track 2, Data-to-Insight.** Rivulet turns citizen stream observations into interpretable, decision-ready
@@ -89,7 +113,8 @@ know yet" in a way people can act on.
 - Class limits are priors, not calibrated ecological quality ratio boundaries; colour is an uncalibrated phone proxy.
 - Trust is peer agreement, not truth; the model is not yet validated against independent measurements.
 - Validation shows a sample passing the HL7 validator offline, not conformance of every database row.
-- Coimbra's reports are synthetic demonstration data, tagged `HTEST`; real reports are few (Tashkent). No traction is claimed.
+- Coimbra's reports are synthetic demonstration data, tagged `HTEST`. The real reports are 12, all from one observer
+  (Tashkent 6, Coimbra 4, Benevento 2). No traction is claimed.
 - Not endorsed by the EU, IEEE or the OneAquaHealth consortium.
 
 ## What is next: a pilot that tests the model
