@@ -205,6 +205,11 @@
   cursor: pointer !important;
 }
 
+/* The attribution links must not rely on colour alone to read as links (WCAG 1.4.1). */
+.maplibregl-ctrl-attrib a {
+  text-decoration: underline;
+}
+
 /* Indeterminate progress bar shown while a page navigation is in flight. */
 @keyframes rivulet-progress {
   0% { transform: translateX(-100%); }

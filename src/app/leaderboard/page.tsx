@@ -156,7 +156,7 @@ async function PeopleLeaderboard({ city }: { city: string | null }) {
           No validated observations yet{city ? ` in ${city}` : ""}.
         </p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" aria-label="People leaderboard" tabIndex={0}>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-rule-strong text-left">
@@ -313,7 +313,7 @@ async function CitiesLeaderboard() {
   const stats = await getCityStats();
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" role="region" aria-label="Cities leaderboard" tabIndex={0}>
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-rule-strong text-left">

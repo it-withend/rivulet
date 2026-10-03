@@ -52,7 +52,7 @@ export default function OpenDataPage() {
           Base URL <code>https://rivulet-xi.vercel.app/fhir</code>. Everything is read-only. Try the examples: each link
           returns real data for one Coimbra stream.
         </p>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" aria-label="FHIR endpoints" tabIndex={0}>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-rule-strong text-left">
@@ -88,7 +88,7 @@ export default function OpenDataPage() {
 
       <section aria-labelledby="model" className="space-y-3">
         <h2 id="model" className="m-0 text-2xl">Resource model</h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" aria-label="Resource model" tabIndex={0}>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-rule-strong text-left">

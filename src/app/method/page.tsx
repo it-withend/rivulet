@@ -82,7 +82,7 @@ function BehaviourTable({ title, rows }: { title: string; rows: BehaviourRow[] }
   return (
     <div className="space-y-2">
       <h3 className="m-0 text-lg">{title}</h3>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" role="region" aria-label={title} tabIndex={0}>
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-rule-strong text-left">
