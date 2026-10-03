@@ -19,8 +19,7 @@ in, an uncertainty-aware stream status, a One Health reading and a FHIR export o
 
 [Map](https://rivulet-xi.vercel.app/map) · [City report](https://rivulet-xi.vercel.app/city) ·
 [Method](https://rivulet-xi.vercel.app/method) · [Open data](https://rivulet-xi.vercel.app/open-data) ·
-[Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Science](docs/SCIENCE.md) ·
-[Submission text](docs/SUBMISSION.md)
+[Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) · [Science](docs/SCIENCE.md)
 
 Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-ieee-hackathon.devpost.com/).
 
@@ -33,7 +32,7 @@ Built for the [OneAquaHealth IEEE Global Hackathon 2026](https://oneaquahealth-i
 [Why this exists](#why-this-exists) · [Status](#status) · [How it works](#how-it-works) ·
 [Screenshots](#screenshots) · [Documentation](#documentation) · [Highlights](#highlights) ·
 [Scientific basis](#scientific-basis) · [Relationship to OneAquaHealth](#relationship-to-oneaquahealth) ·
-[What Rivulet does not claim](#what-rivulet-does-not-claim) ·
+[What Rivulet does not claim](#what-rivulet-does-not-claim) · [What is next](#what-is-next-a-pilot) ·
 [Synthetic demonstration data](#synthetic-demonstration-data) · [Getting started](#getting-started) ·
 [Project layout](#project-layout) · [Contributing &amp; security](#contributing--security) ·
 [Licence and attribution](#licence-and-attribution)
@@ -117,8 +116,6 @@ Screenshots show the live prototype. Coimbra's reports are synthetic demonstrati
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layers, data model, security and privacy, performance
 - [`docs/SCIENCE.md`](docs/SCIENCE.md) — the science engine, its basis, and how the survey relates to the OneAquaHealth field protocols
 - [`docs/API.md`](docs/API.md) — every endpoint, including the read-only FHIR API
-- [`docs/SUBMISSION.md`](docs/SUBMISSION.md) — Devpost text, track statement, limitations and the pilot plan
-- [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) — the 3–5 minute video, second by second
 - [`/method`](https://rivulet-xi.vercel.app/method) — the method as a live page, every constant included, generated from the code's own registry
 
 ## Highlights
@@ -259,6 +256,19 @@ wildlife, erosion or macroinvertebrates from field sampling.
 - **Demonstration data is synthetic.** Coimbra's seeded observations are flagged `is_synthetic = true` and tagged `HTEST` in FHIR; they show the product working, not the real state of any stream.
 - **The photo check is a screening aid.** A small thumbnail goes to a third-party model; a confident "not water" only sends the report to a human, and a missing key or timeout skips it.
 - **No traction claimed.** The pilot has few real reports; the counters on the home page show real and synthetic data separately.
+
+## What is next: a pilot
+
+The model has not yet been validated against independent measurements. A pilot would do that:
+
+1. Choose a city and a set of streams with a partner, and agree a protocol.
+2. Recruit volunteers and collect reports.
+3. Compare Rivulet's estimates and trust scores with independent measurements (the OneAquaHealth field sampling
+   protocols), and calibrate or retire the declared priors.
+4. Measure whether the result is useful to city services.
+
+Success would be judged on repeat participation, the share of streams with a fresh report, the share of raised warnings
+that independent checks confirm, and the time and cost of a useful check.
 
 ## Synthetic demonstration data
 

@@ -28,12 +28,26 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const DESCRIPTION =
+  "Photograph an urban stream, read its colour on the Forel–Ule scale, and turn citizen observations into uncertainty-aware ecological assessments.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://rivulet-xi.vercel.app"),
   title: "Rivulet — urban streams, read honestly",
   applicationName: "Rivulet",
   appleWebApp: { capable: true, title: "Rivulet", statusBarStyle: "default" },
-  description:
-    "Photograph an urban stream, read its colour on the Forel–Ule scale, and turn citizen observations into uncertainty-aware ecological assessments.",
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Rivulet",
+    title: "Rivulet — how far to trust a citizen report on an urban stream",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rivulet — how far to trust a citizen report on an urban stream",
+    description: DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {

@@ -44,3 +44,8 @@ next-env.d.ts
 
 # MapLibre worker, copied from node_modules on install
 /public/maplibre/
+
+# local assistant and tooling files
+/AGENTS.md
+/CLAUDE.md
+/.claude/

@@ -1,6 +1,13 @@
 {
   "name": "rivulet",
   "version": "0.1.0",
+  "description": "Rivulet: a trust and quality layer for citizen observations of urban streams, with an uncertainty-aware status, a One Health reading and a FHIR export.",
+  "license": "Apache-2.0",
+  "homepage": "https://rivulet-xi.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/it-withend/rivulet.git"
+  },
   "private": true,
   "scripts": {
     "postinstall": "node scripts/copy-maplibre-worker.mjs",

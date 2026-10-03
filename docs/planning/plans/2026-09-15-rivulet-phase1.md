@@ -1,6 +1,5 @@
 # Rivulet Phase 1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the must-have tier of Rivulet — a citizen can submit an observation with live Forel–Ule feedback, and the city map and water body page show a Bayesian, uncertainty-aware WFD class that is fully traceable and exportable as OneAquaHealth-conformant FHIR.
 

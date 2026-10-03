@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 // A real water body with reports, so every example link below returns data.
-const EXAMPLE = "303820be-c065-4dea-ad28-17c4287e3826";
+const EXAMPLE = "8a823a1f-5385-4052-97ac-121832042c38"; // Rio Mondego, Coimbra
 const REPORT_URL = "https://github.com/it-withend/rivulet/tree/fhir-validation-report";
 
 const ENDPOINTS: { method: string; path: string; what: string; example?: string }[] = [

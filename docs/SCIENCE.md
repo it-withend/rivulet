@@ -68,4 +68,4 @@ resident survey is a two-minute visual complement, not a substitute:
 
 Colour comes from an uncalibrated phone camera; the class limits are priors; trust is agreement, not truth; the satellite
 conversion is a declared placeholder; there has been no validation against independent measurements yet. The pilot's
-purpose is to obtain that comparison (see the pilot plan in [SUBMISSION.md](SUBMISSION.md)).
+purpose is to obtain that comparison (see the pilot plan in the [README](../README.md#what-is-next-a-pilot)).
