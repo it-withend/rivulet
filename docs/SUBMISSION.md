@@ -3,6 +3,9 @@
 Copy-ready text for the OneAquaHealth IEEE Global Hackathon 2026 submission. Every claim here is checked against the
 repository; anything not done is in "Limitations".
 
+> The final text pasted into the Devpost "About the project" field, with image captions, is in
+> [`docs/DEVPOST_ABOUT.md`](DEVPOST_ABOUT.md). Where the two differ, that file is the later one.
+
 ## Devpost form, field by field
 
 | Devpost field | Paste |

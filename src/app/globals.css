@@ -206,7 +206,7 @@
 }
 
 /* The attribution links must not rely on colour alone to read as links (WCAG 1.4.1). */
-.maplibregl-ctrl-attrib a {
+.maplibregl-ctrl.maplibregl-ctrl-attrib a {
   text-decoration: underline;
 }
 
